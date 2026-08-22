@@ -1,0 +1,38 @@
+# Gradle
+.gradle/
+build/
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android
+local.properties
+*.iml
+.idea/
+.cxx/
+captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+
+# Signing (never commit)
+*.keystore
+*.jks
+keystore.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+hs_err_pid*
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+# Node / Plan files (none currently, defensive)
+node_modules/

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hermes Companion</string>
+    <string name="title_agents">Agents</string>
+    <string name="title_chat">Chat</string>
+    <string name="title_activity">Activity</string>
+    <string name="title_node">Node</string>
+    <string name="title_settings">Settings</string>
+</resources>
