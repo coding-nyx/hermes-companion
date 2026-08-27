@@ -1,5 +1,7 @@
 package com.hermes.companion.ui.node
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,6 +44,7 @@ import com.hermes.companion.ui.theme.StatusOk
 import com.hermes.companion.ui.theme.StatusWarn
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -63,6 +66,7 @@ fun NodeScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val node = state.node
+    val context = LocalContext.current
 
     Column(
         Modifier
@@ -215,8 +219,15 @@ fun NodeScreen(
                 }
             }
 
-            OutlinedButton(onClick = {}) {
-                Text("Reconcile")
+            OutlinedButton(onClick = {
+                runCatching {
+                    context.startActivity(
+                        Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
+                }
+            }) {
+                Text("Notification access")
             }
         }
 

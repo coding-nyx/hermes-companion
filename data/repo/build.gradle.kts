@@ -22,6 +22,7 @@ dependencies {
     // Transport is an implementation detail of the data layer: this is the
     // dependency that keeps :app from ever naming an HTTP type.
     implementation(project(":transport:hermes"))
+    implementation(project(":node"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 

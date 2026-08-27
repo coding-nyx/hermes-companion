@@ -129,12 +129,12 @@ data class PrivacyLogEntry(
 )
 
 data class NodeState(
-    val nodeName: String = "Galaxy S22",
-    val nodeId: String = "node_s22",
-    val sequence: Long = 8842L,
-    val brokerStatus: String = "Broker connected",
-    val batteryMode: String = "unrestricted",
-    val linkType: String = "wss tailnet",
+    val nodeName: String = "This device",
+    val nodeId: String = "",
+    val sequence: Long = 0L,
+    val brokerStatus: String = "Not paired",
+    val batteryMode: String = "unknown",
+    val linkType: String = "none",
     val capabilities: List<NodeCapabilityItem> = emptyList(),
     val leases: List<HardwareLease> = emptyList(),
     val privacyLog: List<PrivacyLogEntry> = emptyList(),

@@ -282,39 +282,89 @@ internal class DefaultActivityRepository(
     }
 }
 
-internal class DefaultNodeRepository : NodeRepository {
-    // Honest placeholder until the node runtime + real Android adapters land
-    // (Phase 5). It advertises NO capability it cannot actually serve, so the
-    // Node screen shows an unpaired device rather than fabricated coverage.
-    private val state = kotlinx.coroutines.flow.MutableStateFlow(
-        NodeState(
-            nodeName = "This device",
+internal class DefaultNodeRepository(
+    private val registry: com.hermes.companion.node.AdapterRegistry,
+) : NodeRepository {
+
+    private val canary = kotlinx.coroutines.flow.MutableStateFlow(CanaryState())
+
+    private val ticker = kotlinx.coroutines.flow.flow {
+        while (true) {
+            emit(Unit)
+            kotlinx.coroutines.delay(3_000)
+        }
+    }
+
+    override fun observeNodeState(): Flow<NodeState> =
+        combine(ticker, canary) { _, c -> buildState(c) }
+
+    override suspend fun runCanary(): Result<List<String>> = runCatching {
+        canary.value = CanaryState(running = true)
+        val steps = mutableListOf<String>()
+        val notif = registry.forFamily("notifications.read")
+        val listenerOk = notif?.health() == com.hermes.companion.domain.CapabilityHealth.Working
+        steps += if (listenerOk) {
+            "notification listener connected → live snapshot available"
+        } else {
+            "notification access NOT granted — enable it in Full Node Mode"
+        }
+        val status = registry.forFamily("device.status")
+        steps += if (status?.health() == com.hermes.companion.domain.CapabilityHealth.Working) {
+            "device.status readable → battery and network reported"
+        } else {
+            "device.status unavailable"
+        }
+        steps += "broker delivery pending — node pairing lands in a later step"
+        canary.value = CanaryState(running = false, passed = listenerOk, steps = steps)
+        steps
+    }
+
+    private fun buildState(c: CanaryState): NodeState {
+        val coverage = registry.coverage()
+        val ds = (registry.forFamily("device.status")
+            as? com.hermes.companion.node.adapters.DeviceStatusAdapter)?.snapshot()
+        return NodeState(
+            nodeName = android.os.Build.MODEL ?: "This device",
             nodeId = "",
             sequence = 0L,
             brokerStatus = "Not paired",
-            batteryMode = "unknown",
-            linkType = "none",
-            capabilities = emptyList(),
+            batteryMode = ds?.let { "${it.batteryPercent}%" + if (it.charging) " · charging" else "" } ?: "unknown",
+            linkType = ds?.network ?: "none",
+            capabilities = coverage.map { cov ->
+                NodeCapabilityItem(
+                    id = cov.capability.family,
+                    name = cov.capability.family,
+                    status = cov.health.toStatus(),
+                    stateLabel = cov.detail,
+                    description = describeCapability(cov.capability.family),
+                )
+            },
             leases = emptyList(),
             privacyLog = emptyList(),
+            canaryRunning = c.running,
+            canaryPassed = c.passed,
+            canarySteps = c.steps,
         )
-    )
-
-    override fun observeNodeState(): Flow<NodeState> = state
-
-    override suspend fun runCanary(): Result<List<String>> = runCatching {
-        state.value = state.value.copy(canaryRunning = true, canaryPassed = false)
-        val steps = listOf(
-            "Node is not paired yet — pair a gateway and enable Full Node Mode.",
-            "The end-to-end canary runs once real capabilities are wired (Phase 5).",
-        )
-        state.value = state.value.copy(
-            canaryRunning = false,
-            canaryPassed = false,
-            canarySteps = steps,
-        )
-        steps
     }
+}
+
+private data class CanaryState(
+    val running: Boolean = false,
+    val passed: Boolean = false,
+    val steps: List<String> = emptyList(),
+)
+
+private fun com.hermes.companion.domain.CapabilityHealth.toStatus(): CapabilityStatus = when (this) {
+    com.hermes.companion.domain.CapabilityHealth.Working -> CapabilityStatus.Working
+    com.hermes.companion.domain.CapabilityHealth.PermissionMissing -> CapabilityStatus.MissingPermission
+    com.hermes.companion.domain.CapabilityHealth.OsLimited -> CapabilityStatus.OsLimited
+    com.hermes.companion.domain.CapabilityHealth.Unavailable -> CapabilityStatus.Unavailable
+}
+
+private fun describeCapability(family: String): String = when (family) {
+    "device.status" -> "Battery, network and charging state"
+    "notifications.read" -> "Reads active and incoming notifications"
+    else -> family
 }
 
 internal class DefaultOutboxRepository(
