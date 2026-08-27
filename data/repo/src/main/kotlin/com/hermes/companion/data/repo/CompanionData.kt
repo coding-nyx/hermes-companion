@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 class CompanionData(
     context: Context,
     private val scope: CoroutineScope,
+    private val gate: com.hermes.companion.common.BiometricGate = com.hermes.companion.common.AllowAllGate,
 ) {
     private val store = openCompanionStore(context)
     private val adapters = com.hermes.companion.node.defaultAdapterRegistry(context)
@@ -26,9 +27,9 @@ class CompanionData(
     private val tracker = RunTracker(scope, registry, store)
 
     val fleet: FleetRepository = DefaultFleetRepository(store, registry)
-    val conversations: ConversationRepository = DefaultConversationRepository(store, registry, tracker)
+    val conversations: ConversationRepository = DefaultConversationRepository(store, registry, tracker, gate)
     val activity: ActivityRepository = DefaultActivityRepository(store)
-    val node: NodeRepository = DefaultNodeRepository(context, adapters, store, nodeConnections)
+    val node: NodeRepository = DefaultNodeRepository(context, adapters, store, nodeConnections, gate)
     val discovery: DiscoveryRepository = DefaultDiscoveryRepository(context)
     val outbox: OutboxRepository = DefaultOutboxRepository(store, registry, tracker)
 

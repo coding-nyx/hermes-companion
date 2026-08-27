@@ -1,6 +1,7 @@
 package com.hermes.companion.di
 
 import android.content.Context
+import com.hermes.companion.common.BiometricGate
 import com.hermes.companion.data.repo.ActivityRepository
 import com.hermes.companion.data.repo.CompanionData
 import com.hermes.companion.data.repo.ConnectionSupervisor
@@ -13,6 +14,7 @@ import com.hermes.companion.data.repo.OutboxRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import com.hermes.companion.security.AndroidBiometricGate
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
@@ -43,10 +45,15 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideBiometricGate(impl: AndroidBiometricGate): BiometricGate = impl
+
+    @Provides
+    @Singleton
     fun provideCompanionData(
         @ApplicationContext context: Context,
         @AppScope scope: CoroutineScope,
-    ): CompanionData = CompanionData(context, scope)
+        gate: BiometricGate,
+    ): CompanionData = CompanionData(context, scope, gate)
 
     @Provides
     fun provideFleetRepository(data: CompanionData): FleetRepository = data.fleet

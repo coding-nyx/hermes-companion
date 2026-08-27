@@ -4,45 +4,93 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
+import com.hermes.companion.common.BiometricGate
 import com.hermes.companion.service.CompanionConnectionService
 import com.hermes.companion.ui.shell.Shell
 import com.hermes.companion.ui.theme.HermesTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
+
+    @Inject lateinit var gate: BiometricGate
 
     private val requestNotifications =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* status reflected in UI */ }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         maybeRequestNotifications()
-        // Started from a visible Activity: Android 12+ refuses a background
-        // foreground-service start.
         CompanionConnectionService.start(this)
         enableEdgeToEdge()
         setContent {
             HermesTheme {
-                val size = calculateWindowSizeClass(this)
-                Shell(size = size)
+                var unlocked by remember { mutableStateOf(false) }
+                val scope = rememberCoroutineScope()
+                if (unlocked) {
+                    val size = calculateWindowSizeClass(this)
+                    Shell(size = size)
+                } else {
+                    LockScreen(onUnlock = { scope.launch { unlocked = gate.require(BiometricGate.Gate.APP_LAUNCH) } })
+                    // Auto-prompt once on entry; AllowAllGate returns immediately.
+                    androidx.compose.runtime.LaunchedEffect(Unit) {
+                        unlocked = gate.require(BiometricGate.Gate.APP_LAUNCH)
+                    }
+                }
             }
         }
     }
 
-    /** Android 13+ needs runtime consent before the service notification shows. */
     private fun maybeRequestNotifications() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
         if (!granted) requestNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun LockScreen(onUnlock: () -> Unit) {
+    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Column(
+            Modifier.fillMaxSize().padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text("Hermes Companion", style = MaterialTheme.typography.titleLarge)
+            Text(
+                "Locked",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))
+            Button(onClick = onUnlock) { Text("Unlock") }
+        }
     }
 }

@@ -1,5 +1,7 @@
 package com.hermes.companion.data.repo
 
+import com.hermes.companion.common.AllowAllGate
+import com.hermes.companion.common.BiometricGate
 import com.hermes.companion.common.reason
 import com.hermes.companion.data.db.CompanionStore
 import com.hermes.companion.data.db.GatewayEntity
@@ -122,6 +124,7 @@ internal class DefaultConversationRepository(
     private val store: CompanionStore,
     private val registry: BackendRegistry,
     private val tracker: RunTracker,
+    private val gate: BiometricGate = AllowAllGate,
 ) : ConversationRepository {
 
     override fun conversation(route: ConversationRoute): Flow<ConversationState> = combine(
@@ -217,6 +220,7 @@ internal class DefaultConversationRepository(
         requestId: String,
         option: ApprovalOption,
     ): Result<Unit> = runCatching {
+        if (!gate.require(BiometricGate.Gate.APPROVAL_DECISION)) error("approval not authenticated")
         val backend = registry.backendFor(route.gatewayId) ?: error("no backend for ${route.gatewayId}")
         backend.decideApproval(route, runId, requestId, option)
         // Re-observe: the original stream ended at run.approval_required, so
@@ -288,6 +292,7 @@ internal class DefaultNodeRepository(
     private val registry: com.hermes.companion.node.AdapterRegistry,
     private val store: com.hermes.companion.data.db.CompanionStore,
     private val connections: NodeConnectionManager,
+    private val gate: BiometricGate = AllowAllGate,
 ) : NodeRepository {
 
     override fun observePairings(): Flow<List<NodePairing>> =
@@ -342,6 +347,7 @@ internal class DefaultNodeRepository(
         }
 
     override suspend fun setGrant(gatewayId: String, nodeId: String, profileId: String, capability: String, mode: String): Result<Unit> = runCatching {
+        if (!gate.require(BiometricGate.Gate.CAPABILITY_CHANGE)) error("capability change not authenticated")
         store.grants.upsert(
             com.hermes.companion.data.db.GrantEntity(
                 gatewayId = gatewayId, profileId = profileId, nodeId = nodeId,
