@@ -105,3 +105,20 @@ data class OutboundEntity(
     val attachmentBytes: Long,
     val lastError: String?,
 )
+
+/**
+ * A paired node's identity + broker credential, per gateway. Kept OUT of
+ * GatewayEntity/GatewayConnection so the token never reaches a UI-facing type
+ * (the compile-time boundary). Phase 10 seals [token] in the Keystore; today it
+ * is a plaintext column that only the data-layer node code reads.
+ */
+@Entity(tableName = "node_identity")
+data class NodeIdentityEntity(
+    @PrimaryKey val gatewayId: String,
+    val nodeId: String,
+    val brokerUrl: String,
+    val token: String,
+    val expiresAt: Long,
+    val grantedCapsCsv: String,
+    val pairedAt: Long,
+)

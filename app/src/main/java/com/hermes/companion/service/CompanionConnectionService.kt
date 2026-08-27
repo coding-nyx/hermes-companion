@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import com.hermes.companion.MainActivity
 import com.hermes.companion.R
 import com.hermes.companion.data.repo.ConnectionSupervisor
+import com.hermes.companion.data.repo.NodeConnectionManager
 import com.hermes.companion.data.repo.FleetStatus
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +36,7 @@ import javax.inject.Inject
 class CompanionConnectionService : Service() {
 
     @Inject lateinit var supervisor: ConnectionSupervisor
+    @Inject lateinit var nodeConnections: NodeConnectionManager
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var supervision: Job? = null
@@ -47,6 +49,7 @@ class CompanionConnectionService : Service() {
         startForeground(NOTIFICATION_ID, notification(FleetStatus()))
 
         supervision = supervisor.start(scope)
+        nodeConnections.start(scope)
         scope.launch {
             supervisor.status.collectLatest { status ->
                 notificationManager().notify(NOTIFICATION_ID, notification(status))

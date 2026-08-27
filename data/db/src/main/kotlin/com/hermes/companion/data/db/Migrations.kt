@@ -39,6 +39,27 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
+/** v3: paired-node identity + broker credential (kept out of the gateway row). */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `node_identity` (
+                `gatewayId` TEXT NOT NULL,
+                `nodeId` TEXT NOT NULL,
+                `brokerUrl` TEXT NOT NULL,
+                `token` TEXT NOT NULL,
+                `expiresAt` INTEGER NOT NULL,
+                `grantedCapsCsv` TEXT NOT NULL,
+                `pairedAt` INTEGER NOT NULL,
+                PRIMARY KEY(`gatewayId`)
+            )
+            """.trimIndent(),
+        )
+    }
+}
+
 val ALL_MIGRATIONS: Array<Migration> = arrayOf(
     MIGRATION_1_2,
+    MIGRATION_2_3,
 )

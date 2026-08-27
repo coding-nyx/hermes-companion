@@ -2,6 +2,8 @@ package com.hermes.companion.data.repo
 
 import com.hermes.companion.data.db.CompanionStore
 import com.hermes.companion.data.db.OutboundDao
+import com.hermes.companion.data.db.NodeIdentityDao
+import com.hermes.companion.data.db.NodeIdentityEntity
 import com.hermes.companion.data.db.OutboundEntity
 import com.hermes.companion.data.db.GatewayDao
 import com.hermes.companion.data.db.GatewayEntity
@@ -138,7 +140,8 @@ internal class Fakes {
     val messages = FakeMessageDao()
     val runs = FakeRunDao()
     val outbound = FakeOutboundDao()
-    val store = CompanionStore(gateways, profiles, sessions, messages, runs, outbound)
+    val nodeIdentity = FakeNodeIdentityDao()
+    val store = CompanionStore(gateways, profiles, sessions, messages, runs, outbound, nodeIdentity)
 }
 
 internal class FakeOutboundDao : OutboundDao {
@@ -152,4 +155,16 @@ internal class FakeOutboundDao : OutboundDao {
     }
     override suspend fun delete(id: String) { rows.value = rows.value.filterNot { it.id == id } }
     override suspend fun deleteForGateway(gatewayId: String) { rows.value = rows.value.filterNot { it.gatewayId == gatewayId } }
+}
+
+internal class FakeNodeIdentityDao : NodeIdentityDao {
+    private val rows = kotlinx.coroutines.flow.MutableStateFlow<List<NodeIdentityEntity>>(emptyList())
+    override fun observeAll() = rows
+    override suspend fun find(gatewayId: String) = rows.value.firstOrNull { it.gatewayId == gatewayId }
+    override suspend fun upsert(identity: NodeIdentityEntity) {
+        rows.value = rows.value.filterNot { it.gatewayId == identity.gatewayId } + identity
+    }
+    override suspend fun deleteForGateway(gatewayId: String) {
+        rows.value = rows.value.filterNot { it.gatewayId == gatewayId }
+    }
 }

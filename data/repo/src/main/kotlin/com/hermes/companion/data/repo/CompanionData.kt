@@ -21,13 +21,14 @@ class CompanionData(
 ) {
     private val store = openCompanionStore(context)
     private val adapters = com.hermes.companion.node.defaultAdapterRegistry(context)
+    val nodeConnections = NodeConnectionManager(store, adapters)
     private val registry = BackendRegistry(emptyList())
     private val tracker = RunTracker(scope, registry, store)
 
     val fleet: FleetRepository = DefaultFleetRepository(store, registry)
     val conversations: ConversationRepository = DefaultConversationRepository(store, registry, tracker)
     val activity: ActivityRepository = DefaultActivityRepository(store)
-    val node: NodeRepository = DefaultNodeRepository(context, adapters)
+    val node: NodeRepository = DefaultNodeRepository(context, adapters, store, nodeConnections)
     val outbox: OutboxRepository = DefaultOutboxRepository(store, registry, tracker)
 
     /** Driven by the foreground service; see plan/10-architecture/runtime.md. */

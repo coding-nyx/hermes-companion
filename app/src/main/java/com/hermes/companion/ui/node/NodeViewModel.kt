@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hermes.companion.data.repo.CapabilityStatus
 import com.hermes.companion.data.repo.NodeCapabilityItem
+import com.hermes.companion.data.repo.NodePairing
 import com.hermes.companion.data.repo.NodeRepository
 import com.hermes.companion.data.repo.NodeState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -48,9 +49,21 @@ class NodeViewModel @Inject constructor(
         filter.value = status
     }
 
+    val pairings: StateFlow<List<NodePairing>> = repo.observePairings()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     fun runCanary() {
+        viewModelScope.launch { repo.runCanary() }
+    }
+
+    fun pair(baseUrl: String, setupCode: String, onResult: (String?) -> Unit) {
         viewModelScope.launch {
-            repo.runCanary()
+            val err = repo.pairNode(baseUrl.trim(), setupCode.trim()).exceptionOrNull()?.message
+            onResult(err)
         }
+    }
+
+    fun unpair(gatewayId: String) {
+        viewModelScope.launch { repo.unpairNode(gatewayId) }
     }
 }

@@ -6,6 +6,7 @@ import com.hermes.companion.data.repo.CompanionData
 import com.hermes.companion.data.repo.ConnectionSupervisor
 import com.hermes.companion.data.repo.ConversationRepository
 import com.hermes.companion.data.repo.FleetRepository
+import com.hermes.companion.data.repo.NodeConnectionManager
 import com.hermes.companion.data.repo.NodeRepository
 import com.hermes.companion.data.repo.OutboxRepository
 import dagger.Module
@@ -64,4 +65,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideConnectionSupervisor(data: CompanionData): ConnectionSupervisor = data.supervisor
+
+    @Provides
+    @Singleton
+    fun provideNodeConnectionManager(data: CompanionData): NodeConnectionManager = data.nodeConnections
 }

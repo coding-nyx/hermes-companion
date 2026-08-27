@@ -128,6 +128,15 @@ data class PrivacyLogEntry(
     val text: String,
 )
 
+/** A paired node (this phone against a gateway's companion plugin). */
+data class NodePairing(
+    val gatewayId: String,
+    val nodeId: String,
+    val brokerUrl: String,
+    val connected: Boolean,
+    val grantedCaps: List<String>,
+)
+
 /** One rung of the Full Node Mode setup ladder, shaped for the UI. */
 data class SetupRung(
     val id: String,

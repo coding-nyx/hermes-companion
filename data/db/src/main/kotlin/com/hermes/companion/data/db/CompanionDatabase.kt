@@ -13,8 +13,9 @@ import androidx.room.RoomDatabase
         MessageEntity::class,
         RunEntity::class,
         OutboundEntity::class,
+        NodeIdentityEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 internal abstract class CompanionDatabase : RoomDatabase() {
@@ -24,6 +25,7 @@ internal abstract class CompanionDatabase : RoomDatabase() {
     abstract fun messages(): MessageDao
     abstract fun runs(): RunDao
     abstract fun outbound(): OutboundDao
+    abstract fun nodeIdentity(): NodeIdentityDao
 }
 
 /**
@@ -41,6 +43,7 @@ class CompanionStore(
     val messages: MessageDao,
     val runs: RunDao,
     val outbound: OutboundDao,
+    val nodeIdentity: NodeIdentityDao,
 )
 
 fun openCompanionStore(context: Context): CompanionStore {
@@ -50,5 +53,5 @@ fun openCompanionStore(context: Context): CompanionStore {
     val db = Room.databaseBuilder(context, CompanionDatabase::class.java, "companion.db")
         .addMigrations(*ALL_MIGRATIONS)
         .build()
-    return CompanionStore(db.gateways(), db.profiles(), db.sessions(), db.messages(), db.runs(), db.outbound())
+    return CompanionStore(db.gateways(), db.profiles(), db.sessions(), db.messages(), db.runs(), db.outbound(), db.nodeIdentity())
 }

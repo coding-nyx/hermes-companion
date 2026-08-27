@@ -154,3 +154,18 @@ interface OutboundDao {
     @Query("DELETE FROM outbound WHERE gatewayId = :gatewayId")
     suspend fun deleteForGateway(gatewayId: String)
 }
+
+@Dao
+interface NodeIdentityDao {
+    @Query("SELECT * FROM node_identity")
+    fun observeAll(): Flow<List<NodeIdentityEntity>>
+
+    @Query("SELECT * FROM node_identity WHERE gatewayId = :gatewayId")
+    suspend fun find(gatewayId: String): NodeIdentityEntity?
+
+    @Upsert
+    suspend fun upsert(identity: NodeIdentityEntity)
+
+    @Query("DELETE FROM node_identity WHERE gatewayId = :gatewayId")
+    suspend fun deleteForGateway(gatewayId: String)
+}

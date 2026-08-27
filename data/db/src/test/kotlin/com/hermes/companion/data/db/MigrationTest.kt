@@ -55,6 +55,22 @@ class MigrationTest {
         db.close()
     }
 
+
+    @Test
+    fun migrate2To3_addsNodeIdentity() {
+        helper.createDatabase(dbName, 1).close()
+        // Walk the full chain so ordering is exercised.
+        val db = helper.runMigrationsAndValidate(dbName, 3, true, MIGRATION_1_2, MIGRATION_2_3)
+        db.execSQL(
+            "INSERT INTO node_identity (gatewayId,nodeId,brokerUrl,token,expiresAt,grantedCapsCsv,pairedAt) " +
+                "VALUES ('gw-1','node-1','ws://x/ws/node','tok',1,'device.status',1)",
+        )
+        db.query("SELECT token FROM node_identity WHERE gatewayId='gw-1'").use { c ->
+            c.moveToFirst(); assertEquals("tok", c.getString(0))
+        }
+        db.close()
+    }
+
     @Suppress("unused")
     private fun ctx() = ApplicationProvider.getApplicationContext<android.content.Context>()
 }

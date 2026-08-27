@@ -285,7 +285,28 @@ internal class DefaultActivityRepository(
 internal class DefaultNodeRepository(
     private val context: android.content.Context,
     private val registry: com.hermes.companion.node.AdapterRegistry,
+    private val store: com.hermes.companion.data.db.CompanionStore,
+    private val connections: NodeConnectionManager,
 ) : NodeRepository {
+
+    override fun observePairings(): Flow<List<NodePairing>> =
+        combine(store.nodeIdentity.observeAll(), connections.connections) { rows, states ->
+            rows.map { row ->
+                NodePairing(
+                    gatewayId = row.gatewayId,
+                    nodeId = row.nodeId,
+                    brokerUrl = row.brokerUrl,
+                    connected = states[row.gatewayId] == com.hermes.companion.broker.BrokerConnectionState.Connected,
+                    grantedCaps = row.grantedCapsCsv.split(",").filter { it.isNotBlank() },
+                )
+            }
+        }
+
+    override suspend fun pairNode(baseUrl: String, setupCode: String): Result<Unit> =
+        connections.pair(baseUrl, setupCode)
+
+    override suspend fun unpairNode(gatewayId: String): Result<Unit> =
+        connections.unpair(gatewayId)
 
     override fun observeSetup(): Flow<List<SetupRung>> =
         combine(ticker, canary) { _, _ ->

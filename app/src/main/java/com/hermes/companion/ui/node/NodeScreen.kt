@@ -44,6 +44,12 @@ import com.hermes.companion.ui.theme.StatusOk
 import com.hermes.companion.ui.theme.StatusWarn
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,6 +85,8 @@ fun NodeScreen(
         Button(onClick = onOpenSetup, modifier = Modifier.fillMaxWidth()) {
             Text("Set up Full Node Mode")
         }
+
+        NodePairingSection(vm)
         Text("Node", style = MaterialTheme.typography.titleLarge)
 
         // Device summary card
@@ -387,6 +395,81 @@ private fun PrivacyLogRow(entry: PrivacyLogEntry) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
             modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun NodePairingSection(vm: NodeViewModel) {
+    val pairings by vm.pairings.collectAsStateWithLifecycle()
+    var showDialog by remember { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("PAIRED WITH HERMES", style = MaterialTheme.typography.labelMedium)
+            OutlinedButton(onClick = { showDialog = true }) { Text("Pair as node") }
+        }
+        if (pairings.isEmpty()) {
+            Text(
+                "Not paired. Pair with a gateway's companion plugin to let Hermes read and control this device.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        pairings.forEach { p ->
+            Card(
+                Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            ) {
+                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(p.nodeId.ifBlank { p.gatewayId }, style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            (if (p.connected) "connected · " else "offline · ") + "${p.grantedCaps.size} caps",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (p.connected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    TextButton(onClick = { vm.unpair(p.gatewayId) }) { Text("Unpair") }
+                }
+            }
+        }
+    }
+
+    if (showDialog) {
+        var url by remember { mutableStateOf("") }
+        var code by remember { mutableStateOf("") }
+        var error by remember { mutableStateOf<String?>(null) }
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Pair this phone as a node") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = url, onValueChange = { url = it },
+                        label = { Text("Plugin base URL") },
+                        placeholder = { Text("http://host:9120") },
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        value = code, onValueChange = { code = it },
+                        label = { Text("Setup code") },
+                        singleLine = true,
+                    )
+                    error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = url.isNotBlank() && code.isNotBlank(),
+                    onClick = { vm.pair(url, code) { err -> if (err == null) showDialog = false else error = err } },
+                ) { Text("Pair") }
+            },
+            dismissButton = { TextButton(onClick = { showDialog = false }) { Text("Cancel") } },
         )
     }
 }
