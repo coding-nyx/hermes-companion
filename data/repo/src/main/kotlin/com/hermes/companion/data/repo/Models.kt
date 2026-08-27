@@ -128,6 +128,17 @@ data class PrivacyLogEntry(
     val text: String,
 )
 
+/** One rung of the Full Node Mode setup ladder, shaped for the UI. */
+data class SetupRung(
+    val id: String,
+    val kind: com.hermes.companion.domain.RequirementKind,
+    val label: String,
+    val detail: String,
+    val satisfied: Boolean,
+    val target: String,
+    val enablesCount: Int,
+)
+
 data class NodeState(
     val nodeName: String = "This device",
     val nodeId: String = "",

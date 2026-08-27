@@ -62,6 +62,7 @@ private val LimitedColor = StatusDim
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun NodeScreen(
+    onOpenSetup: () -> Unit = {},
     vm: NodeViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -75,6 +76,9 @@ fun NodeScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        Button(onClick = onOpenSetup, modifier = Modifier.fillMaxWidth()) {
+            Text("Set up Full Node Mode")
+        }
         Text("Node", style = MaterialTheme.typography.titleLarge)
 
         // Device summary card

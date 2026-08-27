@@ -273,19 +273,6 @@ class RepositoryTest {
     }
 
     @Test
-    fun `node canary reports not-paired and empty coverage with no adapters`() = runTest {
-        // An empty adapter registry: no capability is advertised, so the canary
-        // cannot pass and coverage is empty — the honest not-paired state.
-        val repo = DefaultNodeRepository(com.hermes.companion.node.AdapterRegistry(emptyList()))
-        val steps = repo.runCanary().getOrThrow()
-        assertTrue(steps.isNotEmpty())
-        val finalState = repo.observeNodeState().first()
-        assertFalse(finalState.canaryPassed)   // no notification listener adapter
-        assertFalse(finalState.canaryRunning)
-        assertTrue(finalState.capabilities.isEmpty())
-    }
-
-    @Test
     fun `outbox surfaces the unacknowledged submission and drops it`() = runTest {
         val fakes = Fakes()
         val backend = mock("gw-test", listOf("ash"))

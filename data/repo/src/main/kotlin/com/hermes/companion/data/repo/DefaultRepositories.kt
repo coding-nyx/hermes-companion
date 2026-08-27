@@ -283,8 +283,24 @@ internal class DefaultActivityRepository(
 }
 
 internal class DefaultNodeRepository(
+    private val context: android.content.Context,
     private val registry: com.hermes.companion.node.AdapterRegistry,
 ) : NodeRepository {
+
+    override fun observeSetup(): Flow<List<SetupRung>> =
+        combine(ticker, canary) { _, _ ->
+            com.hermes.companion.node.nodeRequirements(context).map { r ->
+                SetupRung(
+                    id = r.id,
+                    kind = r.kind,
+                    label = r.label,
+                    detail = r.detail,
+                    satisfied = r.satisfied,
+                    target = r.target,
+                    enablesCount = r.enablesCount,
+                )
+            }
+        }
 
     private val canary = kotlinx.coroutines.flow.MutableStateFlow(CanaryState())
 

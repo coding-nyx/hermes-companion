@@ -38,6 +38,7 @@ interface ActivityRepository {
 
 interface NodeRepository {
     fun observeNodeState(): Flow<NodeState>
+    fun observeSetup(): Flow<List<SetupRung>>
     suspend fun runCanary(): Result<List<String>>
 }
 
