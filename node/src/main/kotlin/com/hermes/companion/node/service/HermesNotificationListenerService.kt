@@ -17,12 +17,28 @@ import java.util.concurrent.atomic.AtomicReference
 class HermesNotificationListenerService : NotificationListenerService() {
 
     override fun onListenerConnected() {
+        instance = this
         connected.set(true)
         reconcile()
     }
 
     override fun onListenerDisconnected() {
         connected.set(false)
+        if (instance === this) instance = null
+    }
+
+    /** Cancel/dismiss a notification by its key. */
+    fun dismiss(key: String): Boolean = runCatching { cancelNotification(key); true }.getOrDefault(false)
+
+    /** Send an inline reply into a notification that offers a RemoteInput action. */
+    fun reply(key: String, text: String): Boolean {
+        val sbn = runCatching { activeNotifications?.firstOrNull { it.key == key } }.getOrNull() ?: return false
+        val action = sbn.notification?.actions?.firstOrNull { !it.remoteInputs.isNullOrEmpty() } ?: return false
+        val inputs = action.remoteInputs ?: return false
+        val intent = android.content.Intent()
+        val results = android.os.Bundle().apply { inputs.forEach { putCharSequence(it.resultKey, text) } }
+        android.app.RemoteInput.addResultsToIntent(inputs, intent, results)
+        return runCatching { action.actionIntent?.send(this, 0, intent); true }.getOrDefault(false)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) = reconcile()
@@ -56,6 +72,8 @@ class HermesNotificationListenerService : NotificationListenerService() {
     companion object {
         private val connected = AtomicBoolean(false)
         private val active = AtomicReference<List<ActiveNotification>>(emptyList())
+        @Volatile private var instance: HermesNotificationListenerService? = null
+        fun current(): HermesNotificationListenerService? = instance
 
         fun isConnected(): Boolean = connected.get()
         fun activeSnapshot(): List<ActiveNotification> = active.get()
