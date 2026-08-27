@@ -135,6 +135,7 @@ class WebSocketNodeBroker(
             NodeCommand(
                 requestId = requestId,
                 capability = capability,
+                profile = frame.profile ?: "",
                 params = frame.params?.toString() ?: "{}",
                 grantId = frame.grantId,
                 expiresAt = frame.expiresAt,

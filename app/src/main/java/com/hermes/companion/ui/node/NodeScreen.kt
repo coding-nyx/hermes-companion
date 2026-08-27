@@ -69,6 +69,7 @@ private val LimitedColor = StatusDim
 @Composable
 fun NodeScreen(
     onOpenSetup: () -> Unit = {},
+    onOpenGrants: () -> Unit = {},
     vm: NodeViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -82,8 +83,13 @@ fun NodeScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Button(onClick = onOpenSetup, modifier = Modifier.fillMaxWidth()) {
-            Text("Set up Full Node Mode")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onOpenSetup, modifier = Modifier.weight(1f)) {
+                Text("Full Node Mode")
+            }
+            OutlinedButton(onClick = onOpenGrants, modifier = Modifier.weight(1f)) {
+                Text("Grants")
+            }
         }
 
         NodePairingSection(vm)

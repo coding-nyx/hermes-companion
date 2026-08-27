@@ -71,6 +71,24 @@ class MigrationTest {
         db.close()
     }
 
+
+    @Test
+    fun migrate3To4_addsGrantsAndLeases() {
+        helper.createDatabase(dbName, 1).close()
+        val db = helper.runMigrationsAndValidate(dbName, 4, true, MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+        db.execSQL(
+            "INSERT INTO grants (gatewayId,profileId,nodeId,capability,mode,expiry,policy,updatedAt) " +
+                "VALUES ('gw','','n','device.status','AllowWhileUnlocked',NULL,NULL,1)",
+        )
+        db.execSQL(
+            "INSERT INTO leases (capability,gatewayId,profileId,requestId,acquiredAt,expiresAt) " +
+                "VALUES ('camera.snap','gw','','r1',1,999)",
+        )
+        db.query("SELECT COUNT(*) FROM grants").use { c -> c.moveToFirst(); assertEquals(1, c.getInt(0)) }
+        db.query("SELECT COUNT(*) FROM leases").use { c -> c.moveToFirst(); assertEquals(1, c.getInt(0)) }
+        db.close()
+    }
+
     @Suppress("unused")
     private fun ctx() = ApplicationProvider.getApplicationContext<android.content.Context>()
 }

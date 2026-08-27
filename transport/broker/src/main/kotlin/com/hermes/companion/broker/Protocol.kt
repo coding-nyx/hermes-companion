@@ -26,6 +26,7 @@ data class WireFrame(
     val params: JsonObject? = null,
     val grantId: String? = null,
     val expiresAt: Long? = null,
+    val profile: String? = null,
     // receipt (phone -> gateway)
     val status: String? = null,
     val detail: String? = null,

@@ -42,6 +42,8 @@ interface NodeRepository {
     fun observePairings(): Flow<List<NodePairing>>
     suspend fun pairNode(baseUrl: String, setupCode: String): Result<Unit>
     suspend fun unpairNode(gatewayId: String): Result<Unit>
+    fun observeGrants(): Flow<List<NodeGrantItem>>
+    suspend fun setGrant(gatewayId: String, nodeId: String, profileId: String, capability: String, mode: String): Result<Unit>
     suspend fun runCanary(): Result<List<String>>
 }
 

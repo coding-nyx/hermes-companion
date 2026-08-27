@@ -122,3 +122,31 @@ data class NodeIdentityEntity(
     val grantedCapsCsv: String,
     val pairedAt: Long,
 )
+
+/** Capability grants, scoped to (gateway, profile, node, capability) — never global. */
+@Entity(tableName = "grants", primaryKeys = ["gatewayId", "profileId", "nodeId", "capability"])
+data class GrantEntity(
+    val gatewayId: String,
+    val profileId: String,
+    val nodeId: String,
+    val capability: String,
+    val mode: String,
+    val expiry: Long?,
+    val policy: String?,
+    val updatedAt: Long,
+)
+
+/**
+ * Exclusive-capability leases. The PRIMARY KEY is the capability, so mutual
+ * exclusion is a uniqueness constraint rather than a lock
+ * (`plan/10-architecture/capabilities.md`).
+ */
+@Entity(tableName = "leases")
+data class LeaseEntity(
+    @PrimaryKey val capability: String,
+    val gatewayId: String,
+    val profileId: String,
+    val requestId: String,
+    val acquiredAt: Long,
+    val expiresAt: Long,
+)

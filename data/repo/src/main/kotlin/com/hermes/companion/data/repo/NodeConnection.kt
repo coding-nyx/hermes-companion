@@ -8,7 +8,9 @@ import com.hermes.companion.broker.nodePairingClient
 import com.hermes.companion.broker.webSocketNodeBroker
 import com.hermes.companion.broker.WireCap
 import com.hermes.companion.data.db.CompanionStore
+import com.hermes.companion.data.db.GrantEntity
 import com.hermes.companion.data.db.NodeIdentityEntity
+import com.hermes.companion.domain.GrantMode
 import com.hermes.companion.domain.NodeEventFrame
 import com.hermes.companion.domain.Receipt
 import com.hermes.companion.domain.ReceiptStatus
@@ -32,22 +34,49 @@ import java.util.concurrent.atomic.AtomicLong
  * too). Grant/lease gates slot in front of invoke() in a later step.
  */
 internal class NodeDispatcher(
+    private val gatewayId: String,
+    private val nodeId: String,
     private val registry: AdapterRegistry,
     private val broker: NodeBroker,
+    private val grants: GrantChecker,
+    private val leases: LeaseManager,
 ) {
     fun run(scope: CoroutineScope): Job = scope.launch {
-        broker.commands().collect { command ->
-            val adapter = registry.forFamily(command.capability)
-            val receipt = if (adapter == null) {
-                Receipt(command.requestId, command.capability, ReceiptStatus.Refused, "unknown capability", "{}", System.currentTimeMillis())
-            } else {
-                runCatching { adapter.invoke(command) }.getOrElse { t ->
-                    Receipt(command.requestId, command.capability, ReceiptStatus.Failed, t.message ?: "adapter error", "{}", System.currentTimeMillis())
-                }
+        broker.commands().collect { command -> broker.sendReceipt(dispatch(command)) }
+    }
+
+    // broker frame -> validate grant -> lease if exclusive -> invoke -> receipt.
+    // Every gate refuses with a named reason, and a refusal is a receipt too.
+    internal suspend fun dispatch(command: com.hermes.companion.domain.NodeCommand): Receipt {
+        val adapter = registry.forFamily(command.capability)
+            ?: return refuse(command, "unknown capability")
+
+        val decision = grants.evaluate(gatewayId, command.profile, nodeId, command.capability)
+        if (decision is GrantDecision.Denied) return refuse(command, decision.reason)
+
+        if (!adapter.exclusive) return invoke(adapter, command)
+
+        val lease = leases.acquire(command.capability, gatewayId, command.profile, command.requestId, ttlMs = 30_000)
+        return when (lease) {
+            is com.hermes.companion.domain.LeaseResult.Held -> refuse(
+                command,
+                "held by ${lease.by.gatewayId}/@${lease.by.profileId} until ${lease.until}",
+            )
+            is com.hermes.companion.domain.LeaseResult.Acquired -> try {
+                invoke(adapter, command)
+            } finally {
+                leases.release(command.capability, command.requestId)
             }
-            broker.sendReceipt(receipt)
         }
     }
+
+    private suspend fun invoke(adapter: com.hermes.companion.node.CapabilityAdapter, command: com.hermes.companion.domain.NodeCommand): Receipt =
+        runCatching { adapter.invoke(command) }.getOrElse { t ->
+            Receipt(command.requestId, command.capability, ReceiptStatus.Failed, t.message ?: "adapter error", "{}", System.currentTimeMillis())
+        }
+
+    private fun refuse(command: com.hermes.companion.domain.NodeCommand, reason: String) =
+        Receipt(command.requestId, command.capability, ReceiptStatus.Refused, reason, "{}", System.currentTimeMillis())
 }
 
 /**
@@ -105,6 +134,12 @@ class NodeConnectionManager internal constructor(
 ) {
     private data class Live(val broker: NodeBroker, val jobs: List<Job>)
 
+    private val grantChecker = GrantChecker(store)
+    private val leaseManager = LeaseManager(store)
+
+    /** Exposed so the Node screen can render live leases with holder + expiry. */
+    fun leases() = leaseManager.observe()
+
     private val live = ConcurrentHashMap<String, Live>()
     private val _connections = MutableStateFlow<Map<String, BrokerConnectionState>>(emptyMap())
     val connections: StateFlow<Map<String, BrokerConnectionState>> = _connections.asStateFlow()
@@ -123,7 +158,7 @@ class NodeConnectionManager internal constructor(
         val broker = brokerFactory(row.brokerUrl, row.token) { helloFor(row.nodeId) }
         broker.start(scope)
         val jobs = listOf(
-            NodeDispatcher(registry, broker).run(scope),
+            NodeDispatcher(row.gatewayId, row.nodeId, registry, broker, grantChecker, leaseManager).run(scope),
             NodeEventPump(row.nodeId, row.gatewayId, broker).run(scope),
             scope.launch {
                 broker.connection.collect { state ->
@@ -165,6 +200,7 @@ class NodeConnectionManager internal constructor(
             requestedCaps = requested,
         ).mapCatching { r ->
             val gatewayId = "node-" + Integer.toHexString(baseUrl.hashCode())
+            val now = System.currentTimeMillis()
             store.nodeIdentity.upsert(
                 NodeIdentityEntity(
                     gatewayId = gatewayId,
@@ -173,8 +209,15 @@ class NodeConnectionManager internal constructor(
                     token = r.token,
                     expiresAt = r.expiresAt,
                     grantedCapsCsv = r.grantedCaps.joinToString(","),
-                    pairedAt = System.currentTimeMillis(),
+                    pairedAt = now,
                 ),
+            )
+            // Seed a default grant per granted capability (profile "" = any),
+            // mode AllowWhileUnlocked. The Grants screen lets Nyx tighten each.
+            store.grants.upsertAll(
+                r.grantedCaps.map { cap ->
+                    GrantEntity(gatewayId, "", r.nodeId, cap, GrantMode.AllowWhileUnlocked.name, null, null, now)
+                },
             )
             Unit
         }
@@ -183,5 +226,7 @@ class NodeConnectionManager internal constructor(
     suspend fun unpair(gatewayId: String): Result<Unit> = runCatching {
         stop(gatewayId)
         store.nodeIdentity.deleteForGateway(gatewayId)
+        store.grants.deleteForGateway(gatewayId)
+        store.leases.deleteForGateway(gatewayId)
     }
 }

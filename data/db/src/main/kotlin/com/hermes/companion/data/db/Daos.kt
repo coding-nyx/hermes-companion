@@ -169,3 +169,48 @@ interface NodeIdentityDao {
     @Query("DELETE FROM node_identity WHERE gatewayId = :gatewayId")
     suspend fun deleteForGateway(gatewayId: String)
 }
+
+@Dao
+interface GrantDao {
+    @Query("SELECT * FROM grants WHERE gatewayId = :gatewayId AND nodeId = :nodeId")
+    fun observeForNode(gatewayId: String, nodeId: String): Flow<List<GrantEntity>>
+
+    @Query("SELECT * FROM grants")
+    fun observeAll(): Flow<List<GrantEntity>>
+
+    @Query(
+        "SELECT * FROM grants WHERE gatewayId = :gatewayId AND profileId = :profileId " +
+            "AND nodeId = :nodeId AND capability = :capability",
+    )
+    suspend fun find(gatewayId: String, profileId: String, nodeId: String, capability: String): GrantEntity?
+
+    @Upsert
+    suspend fun upsert(grant: GrantEntity)
+
+    @Upsert
+    suspend fun upsertAll(grants: List<GrantEntity>)
+
+    @Query("DELETE FROM grants WHERE gatewayId = :gatewayId")
+    suspend fun deleteForGateway(gatewayId: String)
+}
+
+@Dao
+interface LeaseDao {
+    @Query("SELECT * FROM leases")
+    fun observeAll(): Flow<List<LeaseEntity>>
+
+    @Query("DELETE FROM leases WHERE expiresAt < :now")
+    suspend fun purgeExpired(now: Long)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insert(lease: LeaseEntity)
+
+    @Query("SELECT * FROM leases WHERE capability = :capability")
+    suspend fun find(capability: String): LeaseEntity?
+
+    @Query("DELETE FROM leases WHERE capability = :capability AND requestId = :requestId")
+    suspend fun release(capability: String, requestId: String)
+
+    @Query("DELETE FROM leases WHERE gatewayId = :gatewayId")
+    suspend fun deleteForGateway(gatewayId: String)
+}

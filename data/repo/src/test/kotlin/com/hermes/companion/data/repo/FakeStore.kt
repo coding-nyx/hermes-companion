@@ -2,6 +2,10 @@ package com.hermes.companion.data.repo
 
 import com.hermes.companion.data.db.CompanionStore
 import com.hermes.companion.data.db.OutboundDao
+import com.hermes.companion.data.db.GrantDao
+import com.hermes.companion.data.db.GrantEntity
+import com.hermes.companion.data.db.LeaseDao
+import com.hermes.companion.data.db.LeaseEntity
 import com.hermes.companion.data.db.NodeIdentityDao
 import com.hermes.companion.data.db.NodeIdentityEntity
 import com.hermes.companion.data.db.OutboundEntity
@@ -141,7 +145,9 @@ internal class Fakes {
     val runs = FakeRunDao()
     val outbound = FakeOutboundDao()
     val nodeIdentity = FakeNodeIdentityDao()
-    val store = CompanionStore(gateways, profiles, sessions, messages, runs, outbound, nodeIdentity)
+    val grants = FakeGrantDao()
+    val leases = FakeLeaseDao()
+    val store = CompanionStore(gateways, profiles, sessions, messages, runs, outbound, nodeIdentity, grants, leases)
 }
 
 internal class FakeOutboundDao : OutboundDao {
@@ -167,4 +173,32 @@ internal class FakeNodeIdentityDao : NodeIdentityDao {
     override suspend fun deleteForGateway(gatewayId: String) {
         rows.value = rows.value.filterNot { it.gatewayId == gatewayId }
     }
+}
+
+internal class FakeGrantDao : GrantDao {
+    val rows = kotlinx.coroutines.flow.MutableStateFlow<List<GrantEntity>>(emptyList())
+    private fun key(g: GrantEntity) = listOf(g.gatewayId, g.profileId, g.nodeId, g.capability)
+    override fun observeForNode(gatewayId: String, nodeId: String) =
+        rows.map { it.filter { g -> g.gatewayId == gatewayId && g.nodeId == nodeId } }
+    override fun observeAll() = rows
+    override suspend fun find(gatewayId: String, profileId: String, nodeId: String, capability: String) =
+        rows.value.firstOrNull { it.gatewayId == gatewayId && it.profileId == profileId && it.nodeId == nodeId && it.capability == capability }
+    override suspend fun upsert(grant: GrantEntity) { rows.value = rows.value.filterNot { key(it) == key(grant) } + grant }
+    override suspend fun upsertAll(grants: List<GrantEntity>) { grants.forEach { upsert(it) } }
+    override suspend fun deleteForGateway(gatewayId: String) { rows.value = rows.value.filterNot { it.gatewayId == gatewayId } }
+}
+
+internal class FakeLeaseDao : LeaseDao {
+    val rows = kotlinx.coroutines.flow.MutableStateFlow<List<LeaseEntity>>(emptyList())
+    override fun observeAll() = rows
+    override suspend fun purgeExpired(now: Long) { rows.value = rows.value.filterNot { it.expiresAt < now } }
+    override suspend fun insert(lease: LeaseEntity) {
+        if (rows.value.any { it.capability == lease.capability }) throw IllegalStateException("UNIQUE constraint failed: leases.capability")
+        rows.value = rows.value + lease
+    }
+    override suspend fun find(capability: String) = rows.value.firstOrNull { it.capability == capability }
+    override suspend fun release(capability: String, requestId: String) {
+        rows.value = rows.value.filterNot { it.capability == capability && it.requestId == requestId }
+    }
+    override suspend fun deleteForGateway(gatewayId: String) { rows.value = rows.value.filterNot { it.gatewayId == gatewayId } }
 }

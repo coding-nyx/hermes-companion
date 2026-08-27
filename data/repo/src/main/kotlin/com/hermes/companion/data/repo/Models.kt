@@ -128,6 +128,15 @@ data class PrivacyLogEntry(
     val text: String,
 )
 
+/** A capability grant row, shaped for the Grants screen. */
+data class NodeGrantItem(
+    val gatewayId: String,
+    val nodeId: String,
+    val profileId: String,
+    val capability: String,
+    val mode: String,
+)
+
 /** A paired node (this phone against a gateway's companion plugin). */
 data class NodePairing(
     val gatewayId: String,

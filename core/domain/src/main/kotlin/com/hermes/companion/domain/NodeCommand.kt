@@ -9,6 +9,7 @@ package com.hermes.companion.domain
 data class NodeCommand(
     val requestId: String,
     val capability: String,
+    val profile: String = "",
     val params: String = "{}",
     val grantId: String? = null,
     val expiresAt: Long? = null,

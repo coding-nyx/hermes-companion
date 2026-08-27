@@ -37,6 +37,7 @@ import com.hermes.companion.ui.activity.ActivityScreen
 import com.hermes.companion.ui.agents.AgentsScreen
 import com.hermes.companion.ui.chat.ChatScreen
 import com.hermes.companion.ui.nav.Route
+import com.hermes.companion.ui.node.NodeGrantsScreen
 import com.hermes.companion.ui.node.NodeScreen
 import com.hermes.companion.ui.setup.NodeSetupScreen
 import com.hermes.companion.ui.outbox.OutboxScreen
@@ -123,10 +124,16 @@ private fun NavGraph(nav: androidx.navigation.NavHostController, padding: Paddin
             ActivityScreen()
         }
         composable(Route.Node.path) {
-            NodeScreen(onOpenSetup = { nav.navigate(Route.NodeSetup.path) })
+            NodeScreen(
+                onOpenSetup = { nav.navigate(Route.NodeSetup.path) },
+                onOpenGrants = { nav.navigate(Route.NodeGrants.path) },
+            )
         }
         composable(Route.NodeSetup.path) {
             NodeSetupScreen(onBack = { nav.popBackStack() })
+        }
+        composable(Route.NodeGrants.path) {
+            NodeGrantsScreen(onBack = { nav.popBackStack() })
         }
         composable(Route.Settings.path) {
             SettingsScreen(onOpenOutbox = { nav.navigate(Route.Outbox.path) })

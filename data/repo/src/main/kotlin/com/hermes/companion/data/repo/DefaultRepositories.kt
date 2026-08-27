@@ -333,7 +333,22 @@ internal class DefaultNodeRepository(
     }
 
     override fun observeNodeState(): Flow<NodeState> =
-        combine(ticker, canary) { _, c -> buildState(c) }
+        combine(ticker, canary, connections.leases()) { _, c, leases -> buildState(c, leases) }
+
+    override fun observeGrants(): Flow<List<NodeGrantItem>> =
+        store.grants.observeAll().map { rows ->
+            rows.map { g -> NodeGrantItem(g.gatewayId, g.nodeId, g.profileId, g.capability, g.mode) }
+        }
+
+    override suspend fun setGrant(gatewayId: String, nodeId: String, profileId: String, capability: String, mode: String): Result<Unit> = runCatching {
+        store.grants.upsert(
+            com.hermes.companion.data.db.GrantEntity(
+                gatewayId = gatewayId, profileId = profileId, nodeId = nodeId,
+                capability = capability, mode = mode, expiry = null, policy = null,
+                updatedAt = System.currentTimeMillis(),
+            ),
+        )
+    }
 
     override suspend fun runCanary(): Result<List<String>> = runCatching {
         canary.value = CanaryState(running = true)
@@ -356,7 +371,7 @@ internal class DefaultNodeRepository(
         steps
     }
 
-    private fun buildState(c: CanaryState): NodeState {
+    private fun buildState(c: CanaryState, leases: List<com.hermes.companion.domain.Lease>): NodeState {
         val coverage = registry.coverage()
         val ds = (registry.forFamily("device.status")
             as? com.hermes.companion.node.adapters.DeviceStatusAdapter)?.snapshot()
@@ -376,7 +391,13 @@ internal class DefaultNodeRepository(
                     description = describeCapability(cov.capability.family),
                 )
             },
-            leases = emptyList(),
+            leases = leases.map { l ->
+                HardwareLease(
+                    capability = l.capability,
+                    holder = "${l.gatewayId} › @${l.profileId.ifBlank { "any" }}",
+                    isAvailable = false,
+                )
+            },
             privacyLog = emptyList(),
             canaryRunning = c.running,
             canaryPassed = c.passed,

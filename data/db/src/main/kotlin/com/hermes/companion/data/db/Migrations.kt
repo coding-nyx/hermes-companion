@@ -59,7 +59,42 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+/** v4: capability grants + exclusive leases. */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `grants` (
+                `gatewayId` TEXT NOT NULL,
+                `profileId` TEXT NOT NULL,
+                `nodeId` TEXT NOT NULL,
+                `capability` TEXT NOT NULL,
+                `mode` TEXT NOT NULL,
+                `expiry` INTEGER,
+                `policy` TEXT,
+                `updatedAt` INTEGER NOT NULL,
+                PRIMARY KEY(`gatewayId`, `profileId`, `nodeId`, `capability`)
+            )
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `leases` (
+                `capability` TEXT NOT NULL,
+                `gatewayId` TEXT NOT NULL,
+                `profileId` TEXT NOT NULL,
+                `requestId` TEXT NOT NULL,
+                `acquiredAt` INTEGER NOT NULL,
+                `expiresAt` INTEGER NOT NULL,
+                PRIMARY KEY(`capability`)
+            )
+            """.trimIndent(),
+        )
+    }
+}
+
 val ALL_MIGRATIONS: Array<Migration> = arrayOf(
     MIGRATION_1_2,
     MIGRATION_2_3,
+    MIGRATION_3_4,
 )

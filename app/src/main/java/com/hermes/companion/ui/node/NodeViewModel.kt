@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hermes.companion.data.repo.CapabilityStatus
 import com.hermes.companion.data.repo.NodeCapabilityItem
+import com.hermes.companion.data.repo.NodeGrantItem
 import com.hermes.companion.data.repo.NodePairing
 import com.hermes.companion.data.repo.NodeRepository
 import com.hermes.companion.data.repo.NodeState
@@ -65,5 +66,14 @@ class NodeViewModel @Inject constructor(
 
     fun unpair(gatewayId: String) {
         viewModelScope.launch { repo.unpairNode(gatewayId) }
+    }
+
+    val grants: StateFlow<List<NodeGrantItem>> = repo.observeGrants()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun setGrant(item: NodeGrantItem, mode: String) {
+        viewModelScope.launch {
+            repo.setGrant(item.gatewayId, item.nodeId, item.profileId, item.capability, mode)
+        }
     }
 }
