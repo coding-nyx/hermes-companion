@@ -56,3 +56,14 @@ val StatusOk = Teal80        // working / connected
 val StatusWarn = Sand80      // needs a permission or role
 val StatusError = Coral80    // failed / OS-limited hard block
 val StatusDim = Color(0xFF8A8A96) // idle / not-applicable
+
+// ── Theme-aware status colours (via LocalHermesStatus) ───────────────────
+data class HermesStatusColors(
+    val ok: Color,
+    val warn: Color,
+    val error: Color,
+    val dim: Color,
+)
+
+val LightStatusColors = HermesStatusColors(ok = Teal40, warn = Sand40, error = Coral40, dim = Color(0xFF8A8A96))
+val DarkStatusColors = HermesStatusColors(ok = Teal80, warn = Sand80, error = Coral80, dim = Color(0xFF8A8A96))

@@ -17,6 +17,7 @@ sealed class Route(val path: String) {
     data object Discover : Route("discover")
     data object Diagnostics : Route("diagnostics")
     data object StreamRules : Route("stream_rules")
+    data object Appearance : Route("appearance")
 
     data class Chat(val conversation: ConversationRoute) : Route("chat/${conversation.gatewayId}/${conversation.profileId}/${conversation.sessionId}") {
         companion object {

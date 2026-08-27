@@ -28,6 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.hermes.companion.common.BiometricGate
+import com.hermes.companion.settings.ThemeMode
+import com.hermes.companion.settings.ThemePrefs
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hermes.companion.service.CompanionConnectionService
 import com.hermes.companion.ui.shell.Shell
 import com.hermes.companion.ui.theme.HermesTheme
@@ -39,6 +43,7 @@ import javax.inject.Inject
 class MainActivity : FragmentActivity() {
 
     @Inject lateinit var gate: BiometricGate
+    @Inject lateinit var themePrefs: ThemePrefs
 
     private val requestNotifications =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -50,7 +55,14 @@ class MainActivity : FragmentActivity() {
         CompanionConnectionService.start(this)
         enableEdgeToEdge()
         setContent {
-            HermesTheme {
+            val mode by themePrefs.mode.collectAsStateWithLifecycle(ThemeMode.System)
+            val dynamic by themePrefs.dynamic.collectAsStateWithLifecycle(false)
+            val dark = when (mode) {
+                ThemeMode.System -> isSystemInDarkTheme()
+                ThemeMode.Light -> false
+                ThemeMode.Dark -> true
+            }
+            HermesTheme(darkTheme = dark, dynamicColor = dynamic) {
                 var unlocked by remember { mutableStateOf(false) }
                 val scope = rememberCoroutineScope()
                 if (unlocked) {

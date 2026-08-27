@@ -6,7 +6,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import android.os.Build
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -87,15 +93,28 @@ private val HermesShapes = Shapes(
  * identity. Follows the system by default; an explicit override arrives with
  * the appearance setting (Phase 7).
  */
+/** Theme-aware status colours; read via LocalHermesStatus.current. */
+val LocalHermesStatus = staticCompositionLocalOf { DarkStatusColors }
+
 @Composable
 fun HermesTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
-        typography = HermesTypography,
-        shapes = HermesShapes,
-        content = content,
-    )
+    val context = LocalContext.current
+    val scheme = when {
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        darkTheme -> DarkColors
+        else -> LightColors
+    }
+    CompositionLocalProvider(LocalHermesStatus provides if (darkTheme) DarkStatusColors else LightStatusColors) {
+        MaterialTheme(
+            colorScheme = scheme,
+            typography = HermesTypography,
+            shapes = HermesShapes,
+            content = content,
+        )
+    }
 }

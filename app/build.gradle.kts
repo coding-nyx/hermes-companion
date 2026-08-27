@@ -92,6 +92,7 @@ dependencies {
 
     // Biometric gates (Phase 2 wiring; harmless to include now)
     implementation(libs.androidx.biometric)
+    implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.kotlinx.coroutines.android)
 

@@ -44,6 +44,7 @@ import com.hermes.companion.ui.setup.NodeSetupScreen
 import com.hermes.companion.ui.outbox.OutboxScreen
 import com.hermes.companion.ui.diagnostics.DiagnosticsScreen
 import com.hermes.companion.ui.discover.DiscoverScreen
+import com.hermes.companion.ui.settings.AppearanceScreen
 import com.hermes.companion.ui.settings.SettingsScreen
 
 private data class TabItem(val route: Route, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
@@ -147,6 +148,7 @@ private fun NavGraph(nav: androidx.navigation.NavHostController, padding: Paddin
                 onOpenOutbox = { nav.navigate(Route.Outbox.path) },
                 onOpenDiscover = { nav.navigate(Route.Discover.path) },
                 onOpenDiagnostics = { nav.navigate(Route.Diagnostics.path) },
+                onOpenAppearance = { nav.navigate(Route.Appearance.path) },
             )
         }
         composable(Route.Discover.path) {
@@ -154,6 +156,9 @@ private fun NavGraph(nav: androidx.navigation.NavHostController, padding: Paddin
         }
         composable(Route.Diagnostics.path) {
             DiagnosticsScreen(onBack = { nav.popBackStack() })
+        }
+        composable(Route.Appearance.path) {
+            AppearanceScreen(onBack = { nav.popBackStack() })
         }
         composable(Route.Outbox.path) {
             OutboxScreen(onBack = { nav.popBackStack() })
