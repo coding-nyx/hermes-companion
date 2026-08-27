@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -107,12 +108,19 @@ private fun GatewayGroup(
                     .background(view.connectivity.dotColor()),
             )
             Box(Modifier.size(8.dp))
-            Text(view.gateway.label, style = MaterialTheme.typography.titleMedium)
+            Text(
+                view.gateway.label,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
             Box(Modifier.size(8.dp))
             Text(
                 view.gateway.kind.name,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                maxLines = 1,
             )
             if (view.tier == com.hermes.companion.domain.TransportTier.Limited) {
                 Box(Modifier.size(6.dp))
@@ -160,14 +168,17 @@ private fun ProfileRow(
     ) {
         Column(Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("@${view.profile.handle.display}", style = MaterialTheme.typography.titleMedium)
+                Text("@${view.profile.handle.display}", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Box(Modifier.size(8.dp))
                 Text(
                     view.profile.displayName,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
                 )
-                Box(Modifier.weight(1f))
+                Box(Modifier.size(8.dp))
                 IconButton(
                     onClick = onNewThread,
                     modifier = Modifier.size(32.dp),
@@ -206,9 +217,11 @@ private fun SessionRow(session: Session, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(session.title, style = MaterialTheme.typography.bodyLarge)
+                Text(session.title, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     "state=${session.runState.name} · unread=${session.unreadCount}",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )

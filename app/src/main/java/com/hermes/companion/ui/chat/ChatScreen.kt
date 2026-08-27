@@ -28,7 +28,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -48,11 +50,14 @@ fun ChatScreen(
     route: ConversationRoute,
     onBack: () -> Unit,
     vm: ChatViewModel = hiltViewModel(),
+    showBack: Boolean = true,
+    contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
 ) {
     LaunchedEffect(route) { vm.bind(route) }
     val state by vm.state.collectAsStateWithLifecycle()
 
     Scaffold(
+        contentWindowInsets = contentWindowInsets,
         topBar = {
             TopAppBar(
                 title = {
@@ -67,8 +72,10 @@ fun ChatScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    if (showBack) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
                     }
                 },
                 actions = {

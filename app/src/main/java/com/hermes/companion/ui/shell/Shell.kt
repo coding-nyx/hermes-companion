@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -38,6 +40,7 @@ import androidx.navigation.navArgument
 import com.hermes.companion.domain.ConversationRoute
 import com.hermes.companion.ui.activity.ActivityScreen
 import com.hermes.companion.ui.agents.AgentsScreen
+import com.hermes.companion.ui.chat.ChatHome
 import com.hermes.companion.ui.chat.ChatScreen
 import com.hermes.companion.ui.nav.Route
 import com.hermes.companion.ui.node.NodeGrantsScreen
@@ -56,6 +59,7 @@ private data class TabItem(val route: Route, val label: String, val icon: androi
 fun Shell(size: WindowSizeClass) {
     val nav = rememberNavController()
     val tabs = listOf(
+        TabItem(Route.ChatTab, "Chat", Icons.AutoMirrored.Filled.Chat),
         TabItem(Route.Agents, "Agents", Icons.Filled.Hub),
         TabItem(Route.Activity, "Activity", Icons.Filled.Notifications),
         TabItem(Route.Node, "Node", Icons.Filled.PhoneAndroid),
@@ -71,7 +75,10 @@ fun Shell(size: WindowSizeClass) {
     var lastRoute by remember { mutableStateOf<ConversationRoute?>(null) }
     val onOpenChat: (ConversationRoute) -> Unit = { r ->
         lastRoute = r
-        nav.navigate("chat/${r.gatewayId}/${r.profileId}/${r.sessionId}")
+        nav.navigate(Route.ChatTab.path) {
+            popUpTo(Route.ChatTab.path) { inclusive = false }
+            launchSingleTop = true
+        }
     }
 
     if (expanded) {
@@ -82,7 +89,7 @@ fun Shell(size: WindowSizeClass) {
                         selected = current == tab.route.path,
                         onClick = {
                             nav.navigate(tab.route.path) {
-                                popUpTo(Route.Agents.path) { inclusive = false }
+                                popUpTo(Route.ChatTab.path) { inclusive = false }
                                 launchSingleTop = true
                             }
                         },
@@ -93,11 +100,12 @@ fun Shell(size: WindowSizeClass) {
             }
             Column(Modifier.weight(1f)) {
                 if (onTab) RouteCapsule(lastRoute) { switcherOpen = true }
-                NavGraph(nav, padding = PaddingValues(0.dp), onOpenChat = onOpenChat)
+                NavGraph(nav, padding = PaddingValues(0.dp), onOpenChat = onOpenChat, lastRoute = lastRoute, onOpenSwitcher = { switcherOpen = true })
             }
         }
     } else {
         Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = { if (onTab) RouteCapsule(lastRoute) { switcherOpen = true } },
             bottomBar = {
                 if (onTab) {
@@ -107,7 +115,7 @@ fun Shell(size: WindowSizeClass) {
                                 selected = current == tab.route.path,
                                 onClick = {
                                     nav.navigate(tab.route.path) {
-                                        popUpTo(Route.Agents.path) { inclusive = false }
+                                        popUpTo(Route.ChatTab.path) { inclusive = false }
                                         launchSingleTop = true
                                     }
                                 },
@@ -119,7 +127,7 @@ fun Shell(size: WindowSizeClass) {
                 }
             },
         ) { padding ->
-            NavGraph(nav, padding, onOpenChat = onOpenChat)
+            NavGraph(nav, padding, onOpenChat = onOpenChat, lastRoute = lastRoute, onOpenSwitcher = { switcherOpen = true })
         }
     }
 
@@ -136,12 +144,17 @@ private fun NavGraph(
     nav: androidx.navigation.NavHostController,
     padding: PaddingValues,
     onOpenChat: (ConversationRoute) -> Unit,
+    lastRoute: ConversationRoute?,
+    onOpenSwitcher: () -> Unit,
 ) {
     NavHost(
         navController = nav,
-        startDestination = Route.Agents.path,
+        startDestination = Route.ChatTab.path,
         modifier = Modifier.padding(padding),
     ) {
+        composable(Route.ChatTab.path) {
+            ChatHome(route = lastRoute, onOpenSwitcher = onOpenSwitcher)
+        }
         composable(Route.Agents.path) {
             AgentsScreen(onOpenChat = onOpenChat)
         }
