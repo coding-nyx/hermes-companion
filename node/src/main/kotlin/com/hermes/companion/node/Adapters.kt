@@ -15,6 +15,7 @@ import com.hermes.companion.node.adapters.NotificationsReadAdapter
 import com.hermes.companion.node.adapters.NotificationsReplyAdapter
 import com.hermes.companion.node.adapters.ScreenCaptureAdapter
 import com.hermes.companion.node.adapters.ScreenInputAdapter
+import com.hermes.companion.node.adapters.ShellExecAdapter
 
 /**
  * The adapters this build ships, in coverage order. Grows as each capability
@@ -39,6 +40,8 @@ fun defaultAdapters(context: Context): List<CapabilityAdapter> = listOf(
     // Accessibility tier (interactive remote control)
     ScreenInputAdapter(context),
     ScreenCaptureAdapter(context),
+    // Elevated tier (Shizuku / root)
+    ShellExecAdapter(),
 )
 
 fun defaultAdapterRegistry(context: Context): AdapterRegistry =

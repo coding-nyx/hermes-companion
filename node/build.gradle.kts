@@ -21,6 +21,11 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation("androidx.annotation:annotation:1.8.0")
 
+    // Elevated tier (Shizuku / root)
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
+    implementation(libs.libsu.core)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)

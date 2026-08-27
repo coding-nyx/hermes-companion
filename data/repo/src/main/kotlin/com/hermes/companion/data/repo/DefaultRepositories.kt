@@ -406,6 +406,8 @@ internal class DefaultNodeRepository(
                 )
             },
             privacyLog = emptyList(),
+            tier = com.hermes.companion.node.detectNodeTier(context).name,
+            activeTiers = com.hermes.companion.node.activeTiers(context).map { it.name },
             canaryRunning = c.running,
             canaryPassed = c.passed,
             canarySteps = c.steps,

@@ -23,6 +23,9 @@ class CompanionData(
     private val store = openCompanionStore(context)
     private val adapters = com.hermes.companion.node.defaultAdapterRegistry(context)
     val nodeConnections = NodeConnectionManager(store, adapters)
+
+    /** Registers the Shizuku binder listeners; safe when Shizuku is absent. */
+    fun installElevatedTier() = com.hermes.companion.node.installElevatedTier()
     private val registry = BackendRegistry(emptyList())
     private val tracker = RunTracker(scope, registry, store)
 

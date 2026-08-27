@@ -2,6 +2,8 @@ package com.hermes.companion.node
 
 import android.content.Context
 import com.hermes.companion.domain.RequirementKind
+import com.hermes.companion.node.elevated.RootDetector
+import com.hermes.companion.node.elevated.ShizukuGateway
 import com.hermes.companion.node.service.HermesAccessibilityService
 import com.hermes.companion.node.service.HermesNotificationListenerService
 
@@ -45,6 +47,8 @@ fun nodeRequirements(context: Context): List<NodeRequirementStatus> {
             "Foreground app usage over the last day.", "usage-access"),
         RungSpec("battery", RequirementKind.SystemSetting, "Battery unrestricted",
             "Keeps the node broker alive overnight (plus Samsung autostart).", "battery-unrestricted"),
+        RungSpec("shizuku", RequirementKind.ElevatedTier, "Elevated tier (Shizuku / root)",
+            "Allowlisted elevated shell for system.shell and silent permission grants.", "shizuku"),
     )
 
     return rungs.map { r ->
@@ -70,6 +74,7 @@ private fun isSatisfied(context: Context, r: RungSpec): Boolean = when (r.id) {
     "a11y" -> HermesAccessibilityService.isEnabled(context)
     "usage" -> context.hasUsageStatsAccess()
     "battery" -> isIgnoringBatteryOptimizations(context)
+    "shizuku" -> ShizukuGateway.isGranted() || RootDetector.isRootGranted()
     else -> context.hasPermission(r.target)
 }
 

@@ -40,6 +40,7 @@ class CompanionApp : Application() {
             override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
             override fun onActivityDestroyed(activity: Activity) {}
         })
+        data.installElevatedTier()
         scope.launch {
             data.bootstrap(emptyList())
             data.fleet.refresh()

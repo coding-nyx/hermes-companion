@@ -184,6 +184,8 @@ data class NodeState(
     val capabilities: List<NodeCapabilityItem> = emptyList(),
     val leases: List<HardwareLease> = emptyList(),
     val privacyLog: List<PrivacyLogEntry> = emptyList(),
+    val tier: String = "Standard",
+    val activeTiers: List<String> = listOf("Standard"),
     val canaryRunning: Boolean = false,
     val canaryPassed: Boolean = false,
     val canarySteps: List<String> = emptyList(),
