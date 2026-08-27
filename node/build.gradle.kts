@@ -19,6 +19,7 @@ dependencies {
     // transport, no Room, no DI. That constraint is what makes them testable.
     api(project(":core:domain"))
     implementation(libs.kotlinx.coroutines.core)
+    implementation("androidx.annotation:annotation:1.8.0")
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

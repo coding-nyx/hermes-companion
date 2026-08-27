@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_description">Lets a granted Hermes profile inspect and drive this device (tap, swipe, type) as interactive remote control. Enable only if you want screen input automation.</string>
+</resources>

@@ -66,6 +66,8 @@ fun NodeSetupScreen(
         }
         RequirementKind.NotificationListener ->
             openSettings(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).let {}
+        RequirementKind.AccessibilityService ->
+            openSettings(Settings.ACTION_ACCESSIBILITY_SETTINGS).let {}
         RequirementKind.SystemSetting -> when (rung.target) {
             "usage-access" -> openSettings(Settings.ACTION_USAGE_ACCESS_SETTINGS).let {}
             "battery-unrestricted" -> openSettings(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, withData = true).let {}

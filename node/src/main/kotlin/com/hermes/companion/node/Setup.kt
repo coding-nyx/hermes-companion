@@ -2,6 +2,7 @@ package com.hermes.companion.node
 
 import android.content.Context
 import com.hermes.companion.domain.RequirementKind
+import com.hermes.companion.node.service.HermesAccessibilityService
 import com.hermes.companion.node.service.HermesNotificationListenerService
 
 /**
@@ -38,6 +39,8 @@ fun nodeRequirements(context: Context): List<NodeRequirementStatus> {
             "Missed / received / dialed outcomes that survive process death.", "android.permission.READ_CALL_LOG"),
         RungSpec("location", RequirementKind.RuntimePermission, "Location",
             "Last-known location for location.read.", "android.permission.ACCESS_FINE_LOCATION"),
+        RungSpec("a11y", RequirementKind.AccessibilityService, "Accessibility (remote control)",
+            "Screen inspection + input injection for interactive remote control.", "accessibility"),
         RungSpec("usage", RequirementKind.SystemSetting, "Usage access",
             "Foreground app usage over the last day.", "usage-access"),
         RungSpec("battery", RequirementKind.SystemSetting, "Battery unrestricted",
@@ -54,6 +57,7 @@ fun nodeRequirements(context: Context): List<NodeRequirementStatus> {
             target = r.target,
             enablesCount = when (r.id) {
                 "notif" -> enables["notification access"] ?: 0
+                "a11y" -> enables["accessibility"] ?: 0
                 "usage" -> enables["usage access"] ?: 0
                 else -> enables[r.target] ?: 0
             },
@@ -63,6 +67,7 @@ fun nodeRequirements(context: Context): List<NodeRequirementStatus> {
 
 private fun isSatisfied(context: Context, r: RungSpec): Boolean = when (r.id) {
     "notif" -> HermesNotificationListenerService.isEnabled(context)
+    "a11y" -> HermesAccessibilityService.isEnabled(context)
     "usage" -> context.hasUsageStatsAccess()
     "battery" -> isIgnoringBatteryOptimizations(context)
     else -> context.hasPermission(r.target)

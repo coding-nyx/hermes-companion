@@ -13,6 +13,8 @@ import com.hermes.companion.node.adapters.LocationReadAdapter
 import com.hermes.companion.node.adapters.NotificationsDismissAdapter
 import com.hermes.companion.node.adapters.NotificationsReadAdapter
 import com.hermes.companion.node.adapters.NotificationsReplyAdapter
+import com.hermes.companion.node.adapters.ScreenCaptureAdapter
+import com.hermes.companion.node.adapters.ScreenInputAdapter
 
 /**
  * The adapters this build ships, in coverage order. Grows as each capability
@@ -34,6 +36,9 @@ fun defaultAdapters(context: Context): List<CapabilityAdapter> = listOf(
     ClipboardWriteAdapter(context),
     NotificationsDismissAdapter(context),
     NotificationsReplyAdapter(context),
+    // Accessibility tier (interactive remote control)
+    ScreenInputAdapter(context),
+    ScreenCaptureAdapter(context),
 )
 
 fun defaultAdapterRegistry(context: Context): AdapterRegistry =
