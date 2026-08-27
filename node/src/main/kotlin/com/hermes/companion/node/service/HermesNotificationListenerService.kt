@@ -6,6 +6,9 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * The source of truth for notifications (`plan/03-android/notification-correctness.md`).
@@ -59,6 +62,7 @@ class HermesNotificationListenerService : NotificationListenerService() {
                     )
                 },
         )
+        postings.value = postings.value + 1 // wake the event pump immediately
     }
 
     /** A minimal, already-safe view. Bodies never enter this snapshot. */
@@ -74,6 +78,10 @@ class HermesNotificationListenerService : NotificationListenerService() {
         private val active = AtomicReference<List<ActiveNotification>>(emptyList())
         @Volatile private var instance: HermesNotificationListenerService? = null
         fun current(): HermesNotificationListenerService? = instance
+
+        private val postings = MutableStateFlow(0)
+        /** Increments on every posted/removed notification — an event-driven wake for the pump. */
+        fun postings(): StateFlow<Int> = postings.asStateFlow()
 
         fun isConnected(): Boolean = connected.get()
         fun activeSnapshot(): List<ActiveNotification> = active.get()

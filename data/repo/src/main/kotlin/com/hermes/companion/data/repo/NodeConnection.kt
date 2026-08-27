@@ -100,14 +100,15 @@ internal class NodeEventPump(
 
     fun run(scope: CoroutineScope): Job = scope.launch {
         var seen = emptySet<String>()
-        while (isActive) {
-            if (HermesNotificationListenerService.isConnected()) {
-                val snapshot = HermesNotificationListenerService.activeSnapshot()
-                val fresh = snapshot.filter { it.key !in seen }
-                fresh.forEach { n -> forward(n.packageName, n.title, n.postedAt) }
-                seen = snapshot.map { it.key }.toSet()
-            }
-            delay(4_000)
+        // Push on every posting (event-driven), plus a slow safety poll that
+        // also survives a listener reconnect. No busy-loop.
+        val safety = kotlinx.coroutines.flow.flow { while (true) { emit(-1); delay(30_000) } }
+        kotlinx.coroutines.flow.merge(HermesNotificationListenerService.postings(), safety).collect {
+            if (!HermesNotificationListenerService.isConnected()) return@collect
+            val snapshot = HermesNotificationListenerService.activeSnapshot()
+            val fresh = snapshot.filter { it.key !in seen }
+            fresh.forEach { n -> forward(n.packageName, n.title, n.postedAt) }
+            seen = snapshot.map { it.key }.toSet()
         }
     }
 

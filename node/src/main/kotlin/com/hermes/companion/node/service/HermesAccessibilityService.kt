@@ -45,6 +45,15 @@ class HermesAccessibilityService : AccessibilityService() {
         return performGlobalAction(action)
     }
 
+    /** Press the IME action (Enter/Go/Search) on the focused field. API 30+. */
+    fun imeEnter(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return false
+        val node = findFocus(AccessibilityNodeInfo.FOCUS_INPUT) ?: return false
+        return runCatching {
+            node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id)
+        }.getOrDefault(false)
+    }
+
     /** Set text into the currently focused editable field. */
     fun setText(text: String): Boolean {
         val node: AccessibilityNodeInfo = findFocus(AccessibilityNodeInfo.FOCUS_INPUT) ?: return false

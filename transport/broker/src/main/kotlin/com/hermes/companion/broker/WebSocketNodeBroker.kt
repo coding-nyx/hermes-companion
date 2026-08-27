@@ -71,11 +71,27 @@ class WebSocketNodeBroker(
             _connection.value = BrokerConnectionState.Connecting
             val opened = openOnce()
             if (opened) {
-                failures = 0
-                // Block until this socket dies; the listener flips state.
-                while (running && s.isActive && _connection.value == BrokerConnectionState.Connected) {
+                // Hold while the socket is alive. Right after openOnce the state
+                // is still Connecting (onOpen has not fired), so wait until it
+                // reaches Connected or dies — never spin reopening. Reset the
+                // backoff only once we actually connect.
+                var everConnected = false
+                var connectingMs = 0L
+                while (running && s.isActive && _connection.value != BrokerConnectionState.Disconnected) {
+                    if (_connection.value == BrokerConnectionState.Connected) {
+                        everConnected = true
+                        failures = 0
+                        connectingMs = 0
+                    } else {
+                        connectingMs += 500
+                        if (connectingMs > 15_000) {
+                            runCatching { socket?.cancel() }
+                            _connection.value = BrokerConnectionState.Disconnected
+                        }
+                    }
                     kotlinx.coroutines.delay(500)
                 }
+                if (!everConnected) failures++
             } else {
                 failures++
             }

@@ -9,6 +9,8 @@ import com.hermes.companion.domain.Receipt
 import com.hermes.companion.domain.ReceiptStatus
 import com.hermes.companion.domain.RequirementKind
 import com.hermes.companion.node.CapabilityAdapter
+import com.hermes.companion.node.elevated.ElevatedRoute
+import com.hermes.companion.node.elevated.ElevatedShell
 import com.hermes.companion.node.service.HermesAccessibilityService
 import org.json.JSONObject
 
@@ -41,12 +43,38 @@ class ScreenInputAdapter(private val context: Context) : CapabilityAdapter {
             )
             "text" -> svc.setText(o.optString("text"))
             "global" -> svc.globalAction(o.optString("name"))
+            "key" -> return key(command, o.optString("name"), o.optInt("code", -1), svc)
             else -> return fail(command, "unknown action: $action")
         }
         return if (ok) done(command, "did $action") else fail(command, "$action failed")
     }
 
+    // Enter/Tab/etc. Elevated route (input keyevent) is exact for any key; the
+    // accessibility fallback can only submit the IME action (Enter/Go/Search).
+    private suspend fun key(command: NodeCommand, name: String, explicitCode: Int, svc: HermesAccessibilityService): Receipt {
+        val code = if (explicitCode >= 0) explicitCode else KEYCODES[name.lowercase()]
+            ?: return fail(command, "unknown key: $name")
+        if (ElevatedShell.route() != ElevatedRoute.None) {
+            val r = ElevatedShell.run(listOf("input", "keyevent", code.toString()))
+            return if (r.ok) done(command, "keyevent $code") else fail(command, r.err.firstOrNull() ?: "keyevent failed")
+        }
+        // No elevated route: only the IME action is reachable via accessibility.
+        return if (code == 66 && svc.imeEnter()) done(command, "ime enter")
+        else fail(command, "key '$name' needs the elevated tier (Shizuku/root)")
+    }
+
     private fun done(c: NodeCommand, d: String) = Receipt(c.requestId, c.capability, ReceiptStatus.Completed, d, "{}", System.currentTimeMillis())
     private fun fail(c: NodeCommand, d: String) = Receipt(c.requestId, c.capability, ReceiptStatus.Failed, d, "{}", System.currentTimeMillis())
     private fun refuse(c: NodeCommand, d: String) = Receipt(c.requestId, c.capability, ReceiptStatus.Refused, d, "{}", System.currentTimeMillis())
+
+    private companion object {
+        // Android KeyEvent codes for the keys Hermes commonly needs.
+        val KEYCODES = mapOf(
+            "enter" to 66, "tab" to 61, "back" to 4, "home" to 3, "menu" to 82,
+            "del" to 67, "backspace" to 67, "forward_del" to 112, "space" to 62,
+            "search" to 84, "escape" to 111, "esc" to 111,
+            "up" to 19, "down" to 20, "left" to 21, "right" to 22, "center" to 23,
+            "page_up" to 92, "page_down" to 93,
+        )
+    }
 }
