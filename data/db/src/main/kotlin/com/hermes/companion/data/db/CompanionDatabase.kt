@@ -12,8 +12,9 @@ import androidx.room.RoomDatabase
         SessionEntity::class,
         MessageEntity::class,
         RunEntity::class,
+        OutboundEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 internal abstract class CompanionDatabase : RoomDatabase() {
@@ -22,15 +23,16 @@ internal abstract class CompanionDatabase : RoomDatabase() {
     abstract fun sessions(): SessionDao
     abstract fun messages(): MessageDao
     abstract fun runs(): RunDao
+    abstract fun outbound(): OutboundDao
 }
 
 /**
- * The five DAOs, and nothing else. Room itself never appears in this module's
- * public API, so no dependent module — and therefore not `:app` — can reach a
+ * The DAOs, and nothing else. Room itself never appears in this module's public
+ * API, so no dependent module — and therefore not `:app` — can reach a
  * `RoomDatabase` or open a second connection to the same file.
  *
  * The constructor is public so tests can substitute in-memory doubles for the
- * five DAOs without a device.
+ * DAOs without a device.
  */
 class CompanionStore(
     val gateways: GatewayDao,
@@ -38,11 +40,15 @@ class CompanionStore(
     val sessions: SessionDao,
     val messages: MessageDao,
     val runs: RunDao,
+    val outbound: OutboundDao,
 )
 
 fun openCompanionStore(context: Context): CompanionStore {
     // No fallbackToDestructiveMigration: losing an operator's transcript to a
-    // schema bump is not an acceptable default.
-    val db = Room.databaseBuilder(context, CompanionDatabase::class.java, "companion.db").build()
-    return CompanionStore(db.gateways(), db.profiles(), db.sessions(), db.messages(), db.runs())
+    // schema bump is not an acceptable default. Every version bump adds a tested
+    // migration to ALL_MIGRATIONS.
+    val db = Room.databaseBuilder(context, CompanionDatabase::class.java, "companion.db")
+        .addMigrations(*ALL_MIGRATIONS)
+        .build()
+    return CompanionStore(db.gateways(), db.profiles(), db.sessions(), db.messages(), db.runs(), db.outbound())
 }

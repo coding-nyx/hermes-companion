@@ -4,6 +4,9 @@ import com.hermes.companion.common.reason
 import com.hermes.companion.data.db.CompanionStore
 import com.hermes.companion.data.db.GatewayEntity
 import com.hermes.companion.data.db.MessageEntity
+import com.hermes.companion.domain.SubmissionState
+import com.hermes.companion.domain.Submission
+import com.hermes.companion.data.db.OutboundEntity
 import com.hermes.companion.data.db.toDomain
 import com.hermes.companion.data.db.toEntity
 import com.hermes.companion.domain.ApprovalOption
@@ -156,27 +159,54 @@ internal class DefaultConversationRepository(
         val backend = registry.backendFor(route.gatewayId)
             ?: return Result.failure(IllegalStateException("no backend for ${route.gatewayId}"))
 
-        // The operator's own message lands immediately and stays marked pending
-        // until the gateway confirms it. Step 5 turns this into a real outbox.
+        val id = UUID.randomUUID().toString()
+        val key = UUID.randomUUID().toString()
+        val now = System.currentTimeMillis()
+
+        // Journal to the durable outbox BEFORE the network. The display bubble
+        // shares the submission id so the two stay correlated.
+        val submission = Submission(
+            id = id,
+            gatewayId = route.gatewayId,
+            profileId = route.profileId,
+            sessionId = route.sessionId,
+            text = text,
+            idempotencyKey = key,
+            createdAt = now,
+            state = SubmissionState.Queued,
+        )
+        store.outbound.upsert(submission.toEntity())
+
         val local = MessageEntity(
-            id = UUID.randomUUID().toString(),
+            id = id,
             gatewayId = route.gatewayId,
             profileId = route.profileId,
             sessionId = route.sessionId,
             role = "user",
             text = text,
             toolRunsJson = "",
-            createdAt = System.currentTimeMillis(),
+            createdAt = now,
             runId = null,
             streaming = false,
             pending = true,
         )
         store.messages.upsert(local)
 
-        return runCatching { backend.submit(route, text) }
+        return runCatching { backend.submit(route, text, key) }
             .onSuccess { runId ->
+                store.outbound.upsert(
+                    submission.copy(state = SubmissionState.Acknowledged, runId = runId, attempts = 1).toEntity(),
+                )
                 store.messages.upsert(local.copy(pending = false, runId = runId))
                 tracker.observe(route, runId)
+            }
+            .onFailure { t ->
+                // Written and transmitted with no confirmed run id: ambiguous,
+                // never silently retried. The operator decides in the Outbox.
+                store.outbound.upsert(
+                    submission.copy(state = SubmissionState.Unacknowledged, attempts = 1)
+                        .toEntity(lastError = t.reason()),
+                )
             }
     }
 
@@ -289,43 +319,70 @@ internal class DefaultNodeRepository : NodeRepository {
 
 internal class DefaultOutboxRepository(
     private val store: CompanionStore,
-    private val conversations: ConversationRepository,
+    private val registry: BackendRegistry,
+    private val tracker: RunTracker,
 ) : OutboxRepository {
-    override fun observeOutbox(): Flow<OutboxState> = store.messages.observeAll().map { messages ->
-        // Real pending submissions only. The dedicated outbound table with
-        // idempotency-key replay and the "unacknowledged" terminal state lands
-        // in Phase 2; today a pending message row is the stand-in.
-        val items = messages.filter { it.pending }.map { m ->
-            OutboxItem(
-                id = m.id,
-                route = ConversationRoute(m.gatewayId, m.profileId, m.sessionId),
-                routeDisplay = "${m.gatewayId} › @${m.profileId} › ${m.sessionId.takeLast(6)}",
-                text = m.text,
-                createdAt = m.createdAt,
-                state = if (m.runId != null) "in flight" else "unacknowledged",
-                needsDecision = m.runId == null,
-            )
-        }
-        OutboxState(
-            items = items,
-            messagesHeld = items.size,
-            maxMessages = 50,
-        )
+
+    override fun observeOutbox(): Flow<OutboxState> = store.outbound.observeAll().map { rows ->
+        val items = rows
+            .filter { it.state != SubmissionState.Acknowledged.name && it.state != SubmissionState.Expired.name }
+            .map { it.toItem() }
+        OutboxState(items = items, messagesHeld = items.size, maxMessages = 50)
     }
 
     override suspend fun retrySubmission(id: String): Result<Unit> = runCatching {
-        val msg = store.messages.observeAll().first().firstOrNull { it.id == id }
-            ?: error("submission $id not found")
-        val route = ConversationRoute(msg.gatewayId, msg.profileId, msg.sessionId)
-        // Drop the stale local row, then resubmit its text. Phase 2 replaces
-        // this with an idempotency-key replay against the outbound table.
-        store.messages.delete(id)
-        conversations.submit(route, msg.text).getOrThrow()
+        val row = store.outbound.find(id) ?: error("submission $id not found")
+        val backend = registry.backendFor(row.gatewayId) ?: error("no backend for ${row.gatewayId}")
+        val route = ConversationRoute(row.gatewayId, row.profileId, row.sessionId)
+        // Replay under the SAME idempotency key: a gateway that already saw this
+        // submission returns the original run id instead of creating a duplicate.
+        val runId = backend.submit(route, row.text, row.idempotencyKey)
+        store.outbound.upsert(
+            row.copy(state = SubmissionState.Acknowledged.name, runId = runId, attempts = row.attempts + 1, lastError = null),
+        )
+        store.messages.upsert(
+            MessageEntity(
+                id = row.id,
+                gatewayId = row.gatewayId,
+                profileId = row.profileId,
+                sessionId = row.sessionId,
+                role = "user",
+                text = row.text,
+                toolRunsJson = "",
+                createdAt = row.createdAt,
+                runId = runId,
+                streaming = false,
+                pending = false,
+            ),
+        )
+        tracker.observe(route, runId)
         Unit
     }
 
     override suspend fun dropSubmission(id: String): Result<Unit> = runCatching {
+        store.outbound.delete(id)
         store.messages.delete(id)
+    }
+
+    private fun OutboundEntity.toItem(): OutboxItem {
+        val st = runCatching { SubmissionState.valueOf(state) }.getOrDefault(SubmissionState.Queued)
+        val display = when (st) {
+            SubmissionState.Acknowledged -> "acked"
+            SubmissionState.Sent -> "in flight"
+            SubmissionState.Queued -> "queued"
+            SubmissionState.Unacknowledged -> "no answer"
+            SubmissionState.Failed -> "failed"
+            SubmissionState.Expired -> "expired"
+        }
+        return OutboxItem(
+            id = id,
+            route = ConversationRoute(gatewayId, profileId, sessionId),
+            routeDisplay = "$gatewayId › @$profileId › ${sessionId.takeLast(6)}",
+            text = text,
+            createdAt = createdAt,
+            state = display,
+            needsDecision = st == SubmissionState.Unacknowledged || st == SubmissionState.Failed,
+        )
     }
 }
 

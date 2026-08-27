@@ -50,7 +50,7 @@ class ConnectionSupervisorTest {
                 title = title,
             )
         override suspend fun listMessages(route: ConversationRoute) = emptyList<com.hermes.companion.domain.Message>()
-        override suspend fun submit(route: ConversationRoute, text: String) = "run-x"
+        override suspend fun submit(route: ConversationRoute, text: String, idempotencyKey: String) = "run-x"
         override fun runEvents(route: ConversationRoute, runId: String): Flow<RunEvent> =
             kotlinx.coroutines.flow.emptyFlow()
         override suspend fun stopRun(route: ConversationRoute, runId: String) = Unit

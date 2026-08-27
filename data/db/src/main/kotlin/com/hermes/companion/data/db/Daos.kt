@@ -130,3 +130,27 @@ interface RunDao {
     @Query("DELETE FROM runs WHERE gatewayId = :gatewayId")
     suspend fun deleteForGateway(gatewayId: String)
 }
+
+@Dao
+interface OutboundDao {
+    @Query("SELECT * FROM outbound ORDER BY createdAt DESC")
+    fun observeAll(): Flow<List<OutboundEntity>>
+
+    @Query("SELECT * FROM outbound WHERE state IN ('Queued', 'Unacknowledged') ORDER BY createdAt ASC")
+    suspend fun pending(): List<OutboundEntity>
+
+    @Query("SELECT * FROM outbound WHERE id = :id")
+    suspend fun find(id: String): OutboundEntity?
+
+    @Query("SELECT * FROM outbound WHERE idempotencyKey = :key")
+    suspend fun findByKey(key: String): OutboundEntity?
+
+    @Upsert
+    suspend fun upsert(row: OutboundEntity)
+
+    @Query("DELETE FROM outbound WHERE id = :id")
+    suspend fun delete(id: String)
+
+    @Query("DELETE FROM outbound WHERE gatewayId = :gatewayId")
+    suspend fun deleteForGateway(gatewayId: String)
+}

@@ -133,12 +133,13 @@ internal class HttpHermesBackend(
 
     // ----- streaming -----
 
-    override suspend fun submit(route: ConversationRoute, text: String): String =
+    override suspend fun submit(route: ConversationRoute, text: String, idempotencyKey: String): String =
         withContext(Dispatchers.IO) {
             val body = buildJsonObject {
                 put("session_id", JsonPrimitive(route.sessionId))
                 put("profile", JsonPrimitive(route.profileId))
                 put("text", JsonPrimitive(text))
+                if (idempotencyKey.isNotBlank()) put("idempotency_key", JsonPrimitive(idempotencyKey))
             }.toString()
             postJson("/v1/runs", body).str("run_id") ?: throw IOException("run without run_id")
         }

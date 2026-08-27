@@ -19,6 +19,9 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     testOptions { unitTests.isIncludeAndroidResources = true }
+
+    // Migration tests read the committed schema JSONs from assets under Robolectric.
+    sourceSets { getByName("test").assets.srcDir("$projectDir/schemas") }
 }
 
 dependencies {
@@ -30,4 +33,8 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("org.robolectric:robolectric:4.12.2")
+    testImplementation("androidx.room:room-testing:2.6.1")
+    testImplementation("androidx.test:core-ktx:1.6.1")
+    testImplementation("androidx.test.ext:junit-ktx:1.2.1")
 }

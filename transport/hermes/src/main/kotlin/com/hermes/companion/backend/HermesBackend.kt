@@ -41,7 +41,7 @@ interface HermesBackend {
      * outlives the screen that started it, so starting one and observing one
      * are separate operations.
      */
-    suspend fun submit(route: ConversationRoute, text: String): String
+    suspend fun submit(route: ConversationRoute, text: String, idempotencyKey: String = ""): String
 
     /**
      * Observe a run by id. Safe to call again after an approval decision, a

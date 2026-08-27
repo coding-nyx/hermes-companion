@@ -79,3 +79,29 @@ data class RunEntity(
     val approvalJson: String?,
     val updatedAt: Long,
 )
+
+/**
+ * The durable outbound journal (`plan/05-reliability/offline-behavior.md`). A
+ * submission is written here BEFORE the network, replayed under its unique
+ * [idempotencyKey], and only ever reaches a terminal state on a real answer —
+ * an unanswered send becomes `unacknowledged`, never `sent`.
+ */
+@Entity(
+    tableName = "outbound",
+    indices = [Index(value = ["idempotencyKey"], unique = true)],
+)
+data class OutboundEntity(
+    @PrimaryKey val id: String,
+    val gatewayId: String,
+    val profileId: String,
+    val sessionId: String,
+    val text: String,
+    val idempotencyKey: String,
+    val createdAt: Long,
+    val attempts: Int,
+    val state: String,
+    val runId: String?,
+    val expiresAt: Long?,
+    val attachmentBytes: Long,
+    val lastError: String?,
+)

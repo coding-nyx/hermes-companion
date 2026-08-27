@@ -413,9 +413,20 @@ async function route(req, res) {
     const body = await jsonBody(req).catch(() => ({}));
     const sessionId = String(body.session_id ?? '');
     const text = String(body.text ?? '');
+    const idem = String(body.idempotency_key ?? '');
     if (!sessionId || !text) return send(res, 400, { error: 'session_id_and_text_required' });
     if (!g.sessions.has(sessionId)) return send(res, 404, { error: 'unknown_session', session_id: sessionId });
+    // Idempotent replay: a key seen before returns its original run.
+    if (idem) {
+      if (!g.idem) g.idem = new Map();
+      const existing = g.idem.get(idem);
+      if (existing && g.runs.has(existing)) {
+        const prior = g.runs.get(existing);
+        return send(res, 202, { run_id: existing, session_id: prior.session_id, state: prior.state, replayed: true });
+      }
+    }
     const run = createRun(g, sessionId, text);
+    if (idem) { if (!g.idem) g.idem = new Map(); g.idem.set(idem, run.run_id); }
     return send(res, 202, { run_id: run.run_id, session_id: sessionId, state: run.state });
   }
 

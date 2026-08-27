@@ -41,6 +41,7 @@ class MockHermesBackend(
     /** Gated runs awaiting a decision, and the resolution once decided. */
     private val gatedRuns = ConcurrentHashMap<String, String>()
     private val resolutions = ConcurrentHashMap<String, List<RunEvent>>()
+    private val idemKeys = ConcurrentHashMap<String, String>()  // idempotencyKey -> runId
 
     init {
         // Each profile starts with one seeded session for the PoC.
@@ -117,9 +118,12 @@ class MockHermesBackend(
         return messages[route.sessionId].orEmpty().toList()
     }
 
-    override suspend fun submit(route: ConversationRoute, text: String): String {
+    override suspend fun submit(route: ConversationRoute, text: String, idempotencyKey: String): String {
         ensureRoute(route)
+        // Replay: a submission seen under the same key returns its original run.
+        if (idempotencyKey.isNotBlank()) idemKeys[idempotencyKey]?.let { return it }
         val runId = "run-" + UUID.randomUUID().toString().take(8)
+        if (idempotencyKey.isNotBlank()) idemKeys[idempotencyKey] = runId
         val now = System.currentTimeMillis()
 
         messages.getOrPut(route.sessionId) { mutableListOf() }.add(

@@ -8,6 +8,8 @@ import com.hermes.companion.domain.Message
 import com.hermes.companion.domain.ProfileHandle
 import com.hermes.companion.domain.RunState
 import com.hermes.companion.domain.Session
+import com.hermes.companion.domain.Submission
+import com.hermes.companion.domain.SubmissionState
 import com.hermes.companion.domain.ToolRun
 import com.hermes.companion.domain.ToolStatus
 import kotlinx.serialization.Serializable
@@ -147,3 +149,36 @@ fun MessageEntity.toDomain(): Message =
             isStreaming = streaming,
         )
     }
+
+// ----- outbound -----
+
+fun Submission.toEntity(lastError: String? = null) = OutboundEntity(
+    id = id,
+    gatewayId = gatewayId,
+    profileId = profileId,
+    sessionId = sessionId,
+    text = text,
+    idempotencyKey = idempotencyKey,
+    createdAt = createdAt,
+    attempts = attempts,
+    state = state.name,
+    runId = runId,
+    expiresAt = expiresAt,
+    attachmentBytes = attachmentBytes,
+    lastError = lastError,
+)
+
+fun OutboundEntity.toDomain() = Submission(
+    id = id,
+    gatewayId = gatewayId,
+    profileId = profileId,
+    sessionId = sessionId,
+    text = text,
+    idempotencyKey = idempotencyKey,
+    createdAt = createdAt,
+    attempts = attempts,
+    state = runCatching { SubmissionState.valueOf(state) }.getOrDefault(SubmissionState.Queued),
+    runId = runId,
+    expiresAt = expiresAt,
+    attachmentBytes = attachmentBytes,
+)

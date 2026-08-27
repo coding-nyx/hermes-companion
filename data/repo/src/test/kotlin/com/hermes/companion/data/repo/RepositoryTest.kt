@@ -3,6 +3,8 @@ package com.hermes.companion.data.repo
 import com.hermes.companion.backend.HermesBackend
 import com.hermes.companion.backend.MockHermesBackend
 import com.hermes.companion.data.db.RunEntity
+import com.hermes.companion.domain.SubmissionState
+import com.hermes.companion.data.db.OutboundEntity
 import com.hermes.companion.data.db.toEntity
 import com.hermes.companion.domain.AgentProfile
 import com.hermes.companion.domain.ApprovalOption
@@ -43,7 +45,7 @@ class RepositoryTest {
         override suspend fun listSessionsForProfile(gatewayId: String, profileId: String) = boom()
         override suspend fun createSession(route: ConversationRoute, title: String): com.hermes.companion.domain.Session = boom()
         override suspend fun listMessages(route: ConversationRoute) = boom()
-        override suspend fun submit(route: ConversationRoute, text: String): String = boom()
+        override suspend fun submit(route: ConversationRoute, text: String, idempotencyKey: String): String = boom()
         override fun runEvents(route: ConversationRoute, runId: String): Flow<RunEvent> = emptyFlow()
         override suspend fun stopRun(route: ConversationRoute, runId: String) = boom()
         override suspend fun decideApproval(
@@ -282,37 +284,80 @@ class RepositoryTest {
     }
 
     @Test
-    fun `outbox repository observes items and drops them`() = runTest {
+    fun `outbox surfaces the unacknowledged submission and drops it`() = runTest {
         val fakes = Fakes()
         val backend = mock("gw-test", listOf("ash"))
         val registry = seed(fakes, backend)
         val tracker = RunTracker(CoroutineScope(UnconfinedTestDispatcher(testScheduler)), registry, fakes.store)
-        val convRepo = DefaultConversationRepository(fakes.store, registry, tracker)
-        val outboxRepo = DefaultOutboxRepository(fakes.store, convRepo)
+        val outboxRepo = DefaultOutboxRepository(fakes.store, registry, tracker)
 
-        // Seed a pending message
-        fakes.messages.upsert(
-            com.hermes.companion.data.db.MessageEntity(
-                id = "pending-1",
+        fakes.outbound.upsert(
+            OutboundEntity(
+                id = "sub-1",
                 gatewayId = "gw-test",
                 profileId = "ash",
                 sessionId = "sess-1",
-                role = "user",
                 text = "unsent command",
-                toolRunsJson = "",
+                idempotencyKey = "key-1",
                 createdAt = System.currentTimeMillis(),
+                attempts = 1,
+                state = SubmissionState.Unacknowledged.name,
                 runId = null,
-                streaming = false,
-                pending = true,
-            )
+                expiresAt = null,
+                attachmentBytes = 0,
+                lastError = "Connection refused",
+            ),
         )
 
         val state = outboxRepo.observeOutbox().first()
-        assertTrue(state.items.any { it.id == "pending-1" })
+        val item = state.items.single { it.id == "sub-1" }
+        assertEquals("no answer", item.state)
+        assertTrue(item.needsDecision)
 
-        outboxRepo.dropSubmission("pending-1").getOrThrow()
-        val updatedState = outboxRepo.observeOutbox().first()
-        assertFalse(updatedState.items.any { it.id == "pending-1" })
+        outboxRepo.dropSubmission("sub-1").getOrThrow()
+        assertFalse(outboxRepo.observeOutbox().first().items.any { it.id == "sub-1" })
     }
+
+    @Test
+    fun `outbox retry replays under the same idempotency key and clears`() = runTest {
+        val fakes = Fakes()
+        val backend = mock("gw-test", listOf("ash"))
+        val registry = seed(fakes, backend)
+        val tracker = RunTracker(CoroutineScope(UnconfinedTestDispatcher(testScheduler)), registry, fakes.store)
+        val outboxRepo = DefaultOutboxRepository(fakes.store, registry, tracker)
+
+        // A real session must exist for the mock backend to accept the submit.
+        val session = backend.createSession(ConversationRoute("gw-test", "ash", "new"), "T")
+        fakes.outbound.upsert(
+            OutboundEntity(
+                id = "sub-2",
+                gatewayId = "gw-test",
+                profileId = "ash",
+                sessionId = session.sessionId,
+                text = "hello",
+                idempotencyKey = "key-2",
+                createdAt = System.currentTimeMillis(),
+                attempts = 1,
+                state = SubmissionState.Unacknowledged.name,
+                runId = null,
+                expiresAt = null,
+                attachmentBytes = 0,
+                lastError = null,
+            ),
+        )
+
+        outboxRepo.retrySubmission("sub-2").getOrThrow()
+
+        // Acknowledged rows are filtered out of the outbox view.
+        assertFalse(outboxRepo.observeOutbox().first().items.any { it.id == "sub-2" })
+        val row = fakes.outbound.find("sub-2")!!
+        assertEquals(SubmissionState.Acknowledged.name, row.state)
+        assertTrue(row.runId != null)
+
+        // Replaying the same key must NOT create a second run on the backend.
+        val again = backend.submit(ConversationRoute("gw-test", "ash", session.sessionId), "hello", "key-2")
+        assertEquals(row.runId, again)
+    }
+
 }
 

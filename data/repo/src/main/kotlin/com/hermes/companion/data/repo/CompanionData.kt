@@ -27,7 +27,7 @@ class CompanionData(
     val conversations: ConversationRepository = DefaultConversationRepository(store, registry, tracker)
     val activity: ActivityRepository = DefaultActivityRepository(store)
     val node: NodeRepository = DefaultNodeRepository()
-    val outbox: OutboxRepository = DefaultOutboxRepository(store, conversations)
+    val outbox: OutboxRepository = DefaultOutboxRepository(store, registry, tracker)
 
     /** Driven by the foreground service; see plan/10-architecture/runtime.md. */
     val supervisor: ConnectionSupervisor = ConnectionSupervisor(store, registry, tracker)
