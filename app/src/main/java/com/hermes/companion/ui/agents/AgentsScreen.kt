@@ -114,6 +114,14 @@ private fun GatewayGroup(
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
+            if (view.tier == com.hermes.companion.domain.TransportTier.Limited) {
+                Box(Modifier.size(6.dp))
+                Text(
+                    "limited",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = com.hermes.companion.ui.theme.StatusWarn,
+                )
+            }
         }
         // Reachability is data on the row, not an exception that emptied the
         // screen. Cached profiles stay visible while a gateway is down.
