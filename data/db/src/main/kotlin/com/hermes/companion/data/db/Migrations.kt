@@ -149,6 +149,13 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
         )
     }
 }
+
+
+/**
+ * v7 -> v8 added `url` + `nodeId` to `active_gateway` (destructive, no MIGRATION_7_8).
+ * Devices on v7 wipe to v8 on first launch of this build. Acceptable per
+ * the user's "wrecking ball" precedent (see T3A in CHANGELOG.md).
+ */
 val ALL_MIGRATIONS: Array<Migration> = arrayOf(
     MIGRATION_1_2,
     MIGRATION_2_3,

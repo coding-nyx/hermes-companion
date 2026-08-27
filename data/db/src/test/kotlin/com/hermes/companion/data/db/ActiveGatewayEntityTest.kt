@@ -17,11 +17,15 @@ class ActiveGatewayEntityTest {
         val entity = ActiveGatewayEntity(
             id = 1,
             gatewayId = "gw-1",
+            url = "http://10.0.0.1:9120",
+            nodeId = "node-1",
             updatedAt = 1_700_000_000L,
         )
         assertEquals(1, entity.id)
         assertEquals("gw-1", entity.gatewayId)
         assertEquals(1_700_000_000L, entity.updatedAt)
+        assertEquals("http://10.0.0.1:9120", entity.url)
+        assertEquals("node-1", entity.nodeId)
     }
 }
 

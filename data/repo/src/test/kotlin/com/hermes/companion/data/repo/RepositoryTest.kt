@@ -362,7 +362,7 @@ class RepositoryTest {
         val fakes = Fakes()
         val registry = seed(fakes, mock("gw-test", listOf("ash")))
         val repo = DefaultFleetRepository(fakes.store, registry)
-        repo.setActive("gw-test")
+        repo.setActive("gw-test", url = "http://mock://gw-test", nodeId = "node-test")
         val active = repo.observeActive().first()
         assertEquals("gw-test", active)
     }
@@ -372,8 +372,8 @@ class RepositoryTest {
         val fakes = Fakes()
         val registry = seed(fakes, mock("gw-test", listOf("ash")), mock("gw-other", listOf("ash")))
         val repo = DefaultFleetRepository(fakes.store, registry)
-        repo.setActive("gw-test")
-        repo.setActive("gw-other")
+        repo.setActive("gw-test", url = "http://mock://gw-test", nodeId = "node-test")
+        repo.setActive("gw-other", url = "http://mock://gw-other", nodeId = "node-other")
         assertEquals("gw-other", repo.observeActive().first())
     }
 

@@ -119,13 +119,23 @@ internal class DefaultFleetRepository(
         return if (segment.startsWith("gw-")) segment else "gw-adhoc-" + Integer.toHexString(url.hashCode())
     }
 
-    override fun observeActive(): Flow<String?> =
+    override fun observeActive(): Flow<String?> = observeActiveId()
+
+    override fun observeActiveFull(): Flow<com.hermes.companion.data.db.ActiveGatewayEntity?> =
+        store.activeGateway.observe()
+
+    override fun observeActiveId(): Flow<String?> =
         store.activeGateway.observe().map { it?.gatewayId }
 
-    override suspend fun setActive(gatewayId: String): Result<Unit> = runCatching {
+    override suspend fun observeActiveNodeId(gatewayId: String): String? =
+        store.nodeIdentity.find(gatewayId)?.nodeId
+
+    override suspend fun setActive(gatewayId: String, url: String, nodeId: String): Result<Unit> = runCatching {
         store.activeGateway.set(
             com.hermes.companion.data.db.ActiveGatewayEntity(
                 gatewayId = gatewayId,
+                url = url,
+                nodeId = nodeId,
                 updatedAt = System.currentTimeMillis(),
             )
         )
@@ -540,4 +550,5 @@ internal fun GatewayEntity.connectivity(): Connectivity {
         health == GatewayHealth.Healthy.name -> Connectivity.Live
         else -> Connectivity.Unknown
     }
+
 }

@@ -175,5 +175,19 @@ data class StreamRuleEntity(
 data class ActiveGatewayEntity(
     @PrimaryKey val id: Int = 1,
     val gatewayId: String,
+    /**
+     * Snapshot of the gateway URL at the moment it was made active; lets
+     * background services like the NotificationListenerService POST to the
+     * gateway without joining through [gateways]. Kept inline so a corrupted
+     * gateways row can't silently fail inbound notification forwarding.
+     */
+    val url: String,
+    /**
+     * The node_id this device registered as when pairing. The gateway's
+     * /v1/notifications endpoints accept a `nodeId` field; the NLS uses this
+     * so the gateway can forward events to the correct WS connection without
+     * re-deriving it on every notification.
+     */
+    val nodeId: String,
     val updatedAt: Long,
 )

@@ -17,8 +17,28 @@ interface FleetRepository {
     suspend fun forget(gatewayId: String): Result<Unit>
     /** Observes the active gatewayId, or null if none is set. */
     fun observeActive(): Flow<String?>
-    /** Marks [gatewayId] as the active gateway. Replaces any prior selection. */
-    suspend fun setActive(gatewayId: String): Result<Unit>
+    /**
+     * Looks up the node_id this device registered as when paired to the
+     * gateway identified by [gatewayId]. Returns null if the gateway isn't
+     * paired (no node_identity row). The NLS uses this to POST notifications
+     * to the gateway's /v1/notifications/incoming endpoint without doing a
+     * DB join through `gateways`.
+     */
+    suspend fun observeActiveNodeId(gatewayId: String): String?
+
+    /**
+     * Full active-gateway view as a single snapshot: id, baseUrl, nodeId, whenSet.
+     * Use [observeActiveId] when you only need the gatewayId (most callers).
+     */
+    fun observeActiveFull(): Flow<com.hermes.companion.data.db.ActiveGatewayEntity?>
+    /** Just the gatewayId - convenience over [observeActiveFull]. */
+    fun observeActiveId(): Flow<String?>
+    /**
+     * Marks [gatewayId] as the active gateway. Replaces any prior selection.
+     * url+nodeId are stored alongside so background services (NLS) can POST to
+     * the gateway without doing a `gateways` join.
+     */
+    suspend fun setActive(gatewayId: String, url: String, nodeId: String): Result<Unit>
 }
 
 interface ConversationRepository {

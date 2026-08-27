@@ -4,11 +4,19 @@ import android.content.Context
 import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import com.hermes.companion.common.ActiveGatewayConfig
+import com.hermes.companion.domain.NotificationAction
+import com.hermes.companion.node.routing.Decision
+import com.hermes.companion.node.routing.NotificationRouter
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 /**
  * The source of truth for notifications (`plan/03-android/notification-correctness.md`).
@@ -22,6 +30,7 @@ class HermesNotificationListenerService : NotificationListenerService() {
     override fun onListenerConnected() {
         instance = this
         connected.set(true)
+        refreshForwarder()
         reconcile()
     }
 
@@ -44,7 +53,34 @@ class HermesNotificationListenerService : NotificationListenerService() {
         return runCatching { action.actionIntent?.send(this, 0, intent); true }.getOrDefault(false)
     }
 
-    override fun onNotificationPosted(sbn: StatusBarNotification?) = reconcile()
+    override fun onNotificationPosted(sbn: StatusBarNotification?) {
+        val pkg = sbn?.packageName ?: run { reconcile(); return }
+        val title = sbn?.notification?.extras?.getCharSequence("android.title")?.toString().orEmpty()
+        val text  = sbn?.notification?.extras?.getCharSequence("android.text")?.toString().orEmpty()
+        val postedAt = sbn?.postTime ?: System.currentTimeMillis()
+
+        // Reconcile first - keeps the existing UI surface coherent even if the
+        // forward path fails.
+        reconcile()
+
+        // T7 default action: ImportantOnly with the built-in allowlist. Per-package
+        // overrides and reply-rules come from [InMemoryNotificationRuleRepository]
+        // in the app process; we can't read those from the OS-instantiated NLS,
+        // so v0.2 ships the default action only and lets the gateway/agent
+        // decide per-package routing via webhooks. Future T7.x: have the NLS
+        // read the rules via a SharedPreferences export path written by :app.
+        val decision = router.decide(
+            defaultAction = NotificationAction.ImportantOnly,
+            perPackageOverride = null,
+            packageName = pkg,
+            title = title,
+            text = text,
+            rules = emptyList(),
+        )
+        if (decision == Decision.Post) {
+            scope.launch { forwarder.postIncoming(pkg, title, text, postedAt) }
+        }
+    }
     override fun onNotificationRemoved(sbn: StatusBarNotification?) = reconcile()
 
     private fun reconcile() {
@@ -74,6 +110,36 @@ class HermesNotificationListenerService : NotificationListenerService() {
     )
 
     companion object {
+        // T7: a static forwarder + router held at companion-object scope; the
+        // NLS is OS-instantiated and can't take constructor args. SettingsViewModel
+        // populates [ActiveGatewayConfig] on every active change; we mirror it
+        // here on listener connect.
+        private val router = NotificationRouter()
+        // The forwarder's URL/nodeId are sourced from the file written by
+        // :app's SettingsViewModel.setActive (see companion-gateway-routing.md).
+        // Read once at construction; refreshForwarder() below re-reads on reconnect.
+        @Volatile private var forwarder: NotificationForwarder =
+            NotificationForwarder(activeUrl = null, nodeId = null)
+        // Background scope for the HTTP POST so the NLS thread is never blocked.
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+        /**
+         * Re-read the active gateway URL + nodeId from the file written by
+         * :app's SettingsViewModel.setActive. Called on listener connect and
+         * could be called again on reconnect (rare; OS may unbind the service).
+         */
+        private fun refreshForwarder() {
+            // NLS extends Service extends ContextWrapper so `filesDir` is
+            // available on the instance; we may be called before [instance]
+            // is set during cold boot.
+            val dir = instance?.filesDir ?: return
+            val (url, node) = ActiveGatewayConfig.readSync(dir)
+            forwarder = NotificationForwarder(
+                activeUrl = url,
+                nodeId = node,
+            )
+        }
+
         private val connected = AtomicBoolean(false)
         private val active = AtomicReference<List<ActiveNotification>>(emptyList())
         @Volatile private var instance: HermesNotificationListenerService? = null

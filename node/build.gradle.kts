@@ -18,8 +18,11 @@ dependencies {
     // Adapters see the domain and the Android SDK, and nothing else — no
     // transport, no Room, no DI. That constraint is what makes them testable.
     api(project(":core:domain"))
+    implementation(project(":core:common"))
     implementation(libs.kotlinx.coroutines.core)
     implementation("androidx.annotation:annotation:1.8.0")
+    // T7: outbound POSTs to the active gateway from HermesNotificationListenerService.
+    implementation(libs.okhttp)
 
     // Elevated tier (Shizuku / root)
     implementation(libs.shizuku.api)
