@@ -145,7 +145,7 @@ internal class HttpHermesBackend(
         }
 
     override fun runEvents(route: ConversationRoute, runId: String): Flow<RunEvent> =
-        sse(requests.get("/v1/runs/$runId/events")).mapNotNull { toRunEvent(it) }
+        sse(requests.getEventStream("/v1/runs/$runId/events")).mapNotNull { toRunEvent(it) }
 
     private data class Frame(val event: String, val data: String)
 

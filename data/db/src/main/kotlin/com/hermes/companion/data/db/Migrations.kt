@@ -93,8 +93,32 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
     }
 }
 
+/** v5: seal the node token at rest (plaintext token -> sealedToken). Forces re-pair. */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Plaintext tokens must not persist post-hardening and cannot be sealed
+        // on the migration thread (no Keystore). Recreate the table; re-pair once.
+        db.execSQL("DROP TABLE IF EXISTS `node_identity`")
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `node_identity` (
+                `gatewayId` TEXT NOT NULL,
+                `nodeId` TEXT NOT NULL,
+                `brokerUrl` TEXT NOT NULL,
+                `sealedToken` TEXT NOT NULL,
+                `expiresAt` INTEGER NOT NULL,
+                `grantedCapsCsv` TEXT NOT NULL,
+                `pairedAt` INTEGER NOT NULL,
+                PRIMARY KEY(`gatewayId`)
+            )
+            """.trimIndent(),
+        )
+    }
+}
+
 val ALL_MIGRATIONS: Array<Migration> = arrayOf(
     MIGRATION_1_2,
     MIGRATION_2_3,
     MIGRATION_3_4,
+    MIGRATION_4_5,
 )

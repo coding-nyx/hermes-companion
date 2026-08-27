@@ -89,6 +89,23 @@ class MigrationTest {
         db.close()
     }
 
+
+    @Test
+    fun migrate4To5_sealsNodeToken() {
+        helper.createDatabase(dbName, 1).close()
+        val db = helper.runMigrationsAndValidate(
+            dbName, 5, true, MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
+        )
+        db.execSQL(
+            "INSERT INTO node_identity (gatewayId,nodeId,brokerUrl,sealedToken,expiresAt,grantedCapsCsv,pairedAt) " +
+                "VALUES ('gw','nd_x','ws://x/ws/node','AAAA-sealed',1,'device.status',1)",
+        )
+        db.query("SELECT sealedToken FROM node_identity WHERE gatewayId='gw'").use { c ->
+            c.moveToFirst(); assertEquals("AAAA-sealed", c.getString(0))
+        }
+        db.close()
+    }
+
     @Suppress("unused")
     private fun ctx() = ApplicationProvider.getApplicationContext<android.content.Context>()
 }

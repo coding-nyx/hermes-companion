@@ -11,6 +11,9 @@ import com.hermes.companion.data.db.CompanionStore
 import com.hermes.companion.data.db.GrantEntity
 import com.hermes.companion.discovery.evaluateTier
 import com.hermes.companion.domain.TransportTier
+import com.hermes.companion.transport.auth.BrokerTokens
+import com.hermes.companion.transport.auth.NodeIdentityKey
+import com.hermes.companion.transport.auth.Tokens
 import com.hermes.companion.data.db.NodeIdentityEntity
 import com.hermes.companion.domain.GrantMode
 import com.hermes.companion.domain.NodeEventFrame
@@ -159,7 +162,8 @@ class NodeConnectionManager internal constructor(
     private fun connect(scope: CoroutineScope, row: NodeIdentityEntity) {
         // A gateway that dropped to a limited tier loses its node session.
         if (evaluateTier(row.brokerUrl) == TransportTier.Limited) return
-        val broker = brokerFactory(row.brokerUrl, row.token) { helloFor(row.nodeId) }
+        val token = runCatching { BrokerTokens.reveal(row.gatewayId, row.sealedToken) }.getOrDefault(row.sealedToken)
+        val broker = brokerFactory(row.brokerUrl, token) { helloFor(row.nodeId) }
         broker.start(scope)
         val jobs = listOf(
             NodeDispatcher(row.gatewayId, row.nodeId, registry, broker, grantChecker, leaseManager).run(scope),
@@ -201,10 +205,15 @@ class NodeConnectionManager internal constructor(
             )
         }
         val requested = registry.all().map { it.capability.family }
+        // Real node identity: Ed25519 (API 33+) / P-256 keypair generated in the
+        // Keystore, never exported. Falls back to a random tag only if key gen is
+        // unavailable (e.g. a bare emulator).
+        val publicKey = runCatching { NodeIdentityKey.ensure().tagged }
+            .getOrDefault("poc-" + UUID.randomUUID().toString().take(16))
         return pairingClient.pair(
             baseUrl = baseUrl,
             setupCode = setupCode,
-            publicKey = "poc-" + UUID.randomUUID().toString().take(16), // Ed25519 in Phase 10
+            publicKey = publicKey,
             nodeName = android.os.Build.MODEL ?: "Android node",
             nodeModel = android.os.Build.MODEL ?: "",
             requestedCaps = requested,
@@ -216,7 +225,7 @@ class NodeConnectionManager internal constructor(
                     gatewayId = gatewayId,
                     nodeId = r.nodeId,
                     brokerUrl = r.brokerUrl,
-                    token = r.token,
+                    sealedToken = runCatching { Tokens.seal(gatewayId, r.token) }.getOrDefault(r.token),
                     expiresAt = r.expiresAt,
                     grantedCapsCsv = r.grantedCaps.joinToString(","),
                     pairedAt = now,
@@ -238,5 +247,6 @@ class NodeConnectionManager internal constructor(
         store.nodeIdentity.deleteForGateway(gatewayId)
         store.grants.deleteForGateway(gatewayId)
         store.leases.deleteForGateway(gatewayId)
+        runCatching { Tokens.wipe(gatewayId) }
     }
 }

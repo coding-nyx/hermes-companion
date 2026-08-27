@@ -19,5 +19,6 @@ android {
 dependencies {
     api(project(":core:domain"))
     api("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("androidx.annotation:annotation:1.8.0")
     testImplementation("junit:junit:4.13.2")
 }

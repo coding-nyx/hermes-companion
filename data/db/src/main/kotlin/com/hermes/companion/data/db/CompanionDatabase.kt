@@ -17,7 +17,7 @@ import androidx.room.RoomDatabase
         GrantEntity::class,
         LeaseEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 internal abstract class CompanionDatabase : RoomDatabase() {

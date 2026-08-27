@@ -117,7 +117,7 @@ data class NodeIdentityEntity(
     @PrimaryKey val gatewayId: String,
     val nodeId: String,
     val brokerUrl: String,
-    val token: String,
+    val sealedToken: String,
     val expiresAt: Long,
     val grantedCapsCsv: String,
     val pairedAt: Long,
