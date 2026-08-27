@@ -9,6 +9,8 @@ import com.hermes.companion.broker.webSocketNodeBroker
 import com.hermes.companion.broker.WireCap
 import com.hermes.companion.data.db.CompanionStore
 import com.hermes.companion.data.db.GrantEntity
+import com.hermes.companion.discovery.evaluateTier
+import com.hermes.companion.domain.TransportTier
 import com.hermes.companion.data.db.NodeIdentityEntity
 import com.hermes.companion.domain.GrantMode
 import com.hermes.companion.domain.NodeEventFrame
@@ -155,6 +157,8 @@ class NodeConnectionManager internal constructor(
     }
 
     private fun connect(scope: CoroutineScope, row: NodeIdentityEntity) {
+        // A gateway that dropped to a limited tier loses its node session.
+        if (evaluateTier(row.brokerUrl) == TransportTier.Limited) return
         val broker = brokerFactory(row.brokerUrl, row.token) { helloFor(row.nodeId) }
         broker.start(scope)
         val jobs = listOf(
@@ -190,6 +194,12 @@ class NodeConnectionManager internal constructor(
     )
 
     suspend fun pair(baseUrl: String, setupCode: String): Result<Unit> {
+        // Transport tier caps a node session: no pairing over untrusted cleartext.
+        if (evaluateTier(baseUrl) == TransportTier.Limited) {
+            return Result.failure(
+                IllegalStateException("Node pairing needs TLS, LAN/.local, an emulator, or a Tailscale address — this URL is limited tier."),
+            )
+        }
         val requested = registry.all().map { it.capability.family }
         return pairingClient.pair(
             baseUrl = baseUrl,

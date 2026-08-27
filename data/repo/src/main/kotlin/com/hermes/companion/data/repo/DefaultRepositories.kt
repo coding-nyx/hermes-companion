@@ -41,6 +41,7 @@ internal class DefaultFleetRepository(
                 GatewayView(
                     gateway = row.toDomain(),
                     connectivity = row.connectivity(),
+                    tier = com.hermes.companion.discovery.evaluateTier(row.url),
                     profiles = disambiguated
                         .filter { it.gatewayId == row.id }
                         .map { profile ->

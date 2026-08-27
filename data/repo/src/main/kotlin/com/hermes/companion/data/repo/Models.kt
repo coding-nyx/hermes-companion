@@ -34,6 +34,23 @@ data class GatewayView(
     val gateway: GatewayConnection,
     val connectivity: Connectivity,
     val profiles: List<ProfileView>,
+    val tier: com.hermes.companion.domain.TransportTier = com.hermes.companion.domain.TransportTier.Full,
+)
+
+/** A gateway found by discovery, shaped for the Discover screen. */
+data class DiscoveredGatewayItem(
+    val label: String,
+    val host: String,
+    val port: Int,
+    val baseUrl: String,
+    val tier: com.hermes.companion.domain.TransportTier,
+    val source: String,
+)
+
+data class DiscoveryUiState(
+    val tailnetActive: Boolean = false,
+    val tailnetAddress: String? = null,
+    val gateways: List<DiscoveredGatewayItem> = emptyList(),
 )
 
 data class Fleet(

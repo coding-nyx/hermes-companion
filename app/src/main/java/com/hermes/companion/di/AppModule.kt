@@ -5,6 +5,7 @@ import com.hermes.companion.data.repo.ActivityRepository
 import com.hermes.companion.data.repo.CompanionData
 import com.hermes.companion.data.repo.ConnectionSupervisor
 import com.hermes.companion.data.repo.ConversationRepository
+import com.hermes.companion.data.repo.DiscoveryRepository
 import com.hermes.companion.data.repo.FleetRepository
 import com.hermes.companion.data.repo.NodeConnectionManager
 import com.hermes.companion.data.repo.NodeRepository
@@ -58,6 +59,9 @@ object AppModule {
 
     @Provides
     fun provideNodeRepository(data: CompanionData): NodeRepository = data.node
+
+    @Provides
+    fun provideDiscoveryRepository(data: CompanionData): DiscoveryRepository = data.discovery
 
     @Provides
     fun provideOutboxRepository(data: CompanionData): OutboxRepository = data.outbox
