@@ -24,6 +24,8 @@ import com.hermes.companion.data.db.SessionEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import com.hermes.companion.data.db.ActiveGatewayDao
+import com.hermes.companion.data.db.ActiveGatewayEntity
 
 /**
  * In-memory doubles for the five DAOs, so repository behaviour can be tested
@@ -150,7 +152,8 @@ internal class Fakes {
     val grants = FakeGrantDao()
     val leases = FakeLeaseDao()
     val streamRules = FakeStreamRuleDao()
-    val store = CompanionStore(gateways, profiles, sessions, messages, runs, outbound, nodeIdentity, grants, leases, streamRules)
+    val activeGateway = FakeActiveGatewayDao()
+    val store = CompanionStore(gateways, profiles, sessions, messages, runs, outbound, nodeIdentity, grants, leases, streamRules, activeGateway)
 }
 
 internal class FakeOutboundDao : OutboundDao {
@@ -211,4 +214,12 @@ internal class FakeStreamRuleDao : StreamRuleDao {
     override fun observeAll() = rows
     override suspend fun find(source: String) = rows.value.firstOrNull { it.source == source }
     override suspend fun upsert(rule: StreamRuleEntity) { rows.value = rows.value.filterNot { it.source == rule.source } + rule }
+}
+
+internal class FakeActiveGatewayDao : ActiveGatewayDao {
+    private var row: ActiveGatewayEntity? = null
+    override fun observe(): kotlinx.coroutines.flow.Flow<ActiveGatewayEntity?> = kotlinx.coroutines.flow.flowOf(row)
+    override suspend fun get(): ActiveGatewayEntity? = row
+    override suspend fun set(entity: ActiveGatewayEntity) { row = entity }
+    override suspend fun clear() { row = null }
 }

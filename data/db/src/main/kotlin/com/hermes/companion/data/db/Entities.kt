@@ -158,3 +158,22 @@ data class StreamRuleEntity(
     val mode: String,
     val updatedAt: Long,
 )
+
+/**
+ * T3A: Active-gateway selection (singleton).
+ *
+ * Exactly one row, PK = 1. The row holds the currently-active gatewayId and
+ * the timestamp of the last set. No row means no active selection; callers
+ * fall back to "first gateway" or "ask the user".
+ *
+ * Why a singleton table and not a column on `gateways`: a column forces every
+ * gateway row to track "am I the active one?" separately, and updates must
+ * clear all other rows' flags in a transaction. The singleton form keeps the
+ * selection logic in one place and the gateway table stays pure identity.
+ */
+@Entity(tableName = "active_gateway")
+data class ActiveGatewayEntity(
+    @PrimaryKey val id: Int = 1,
+    val gatewayId: String,
+    val updatedAt: Long,
+)
