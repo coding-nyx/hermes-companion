@@ -24,6 +24,9 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
@@ -64,6 +67,13 @@ fun Shell(size: WindowSizeClass) {
     val current = backStack?.destination?.route
     val onTab = tabs.any { it.route.path == current } || current == null
 
+    var switcherOpen by remember { mutableStateOf(false) }
+    var lastRoute by remember { mutableStateOf<ConversationRoute?>(null) }
+    val onOpenChat: (ConversationRoute) -> Unit = { r ->
+        lastRoute = r
+        nav.navigate("chat/${r.gatewayId}/${r.profileId}/${r.sessionId}")
+    }
+
     if (expanded) {
         Row(Modifier.fillMaxSize()) {
             NavigationRail {
@@ -81,12 +91,14 @@ fun Shell(size: WindowSizeClass) {
                     )
                 }
             }
-            Box(Modifier.weight(1f)) {
-                NavGraph(nav, padding = PaddingValues(0.dp))
+            Column(Modifier.weight(1f)) {
+                if (onTab) RouteCapsule(lastRoute) { switcherOpen = true }
+                NavGraph(nav, padding = PaddingValues(0.dp), onOpenChat = onOpenChat)
             }
         }
     } else {
         Scaffold(
+            topBar = { if (onTab) RouteCapsule(lastRoute) { switcherOpen = true } },
             bottomBar = {
                 if (onTab) {
                     NavigationBar {
@@ -107,22 +119,31 @@ fun Shell(size: WindowSizeClass) {
                 }
             },
         ) { padding ->
-            NavGraph(nav, padding)
+            NavGraph(nav, padding, onOpenChat = onOpenChat)
         }
+    }
+
+    if (switcherOpen) {
+        FleetSwitcher(
+            onDismiss = { switcherOpen = false },
+            onOpenChat = { r -> onOpenChat(r); switcherOpen = false },
+        )
     }
 }
 
 @Composable
-private fun NavGraph(nav: androidx.navigation.NavHostController, padding: PaddingValues) {
+private fun NavGraph(
+    nav: androidx.navigation.NavHostController,
+    padding: PaddingValues,
+    onOpenChat: (ConversationRoute) -> Unit,
+) {
     NavHost(
         navController = nav,
         startDestination = Route.Agents.path,
         modifier = Modifier.padding(padding),
     ) {
         composable(Route.Agents.path) {
-            AgentsScreen(onOpenChat = { route ->
-                nav.navigate("chat/${route.gatewayId}/${route.profileId}/${route.sessionId}")
-            })
+            AgentsScreen(onOpenChat = onOpenChat)
         }
         composable(Route.Activity.path) {
             ActivityScreen()
