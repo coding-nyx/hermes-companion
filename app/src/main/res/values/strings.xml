@@ -6,4 +6,10 @@
     <string name="title_activity">Activity</string>
     <string name="title_node">Node</string>
     <string name="title_settings">Settings</string>
+    <string name="channel_connection">Gateway connections</string>
+    <string name="status_no_gateways">No gateways added</string>
+    <string name="status_connected">Connected to %1$d gateways</string>
+    <string name="status_partial">Connected to %1$d of %2$d gateways</string>
+    <string name="status_all_unreachable">%1$d gateways unreachable</string>
+    <string name="status_detail">%1$d profiles · %2$d runs open</string>
 </resources>

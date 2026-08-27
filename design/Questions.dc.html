@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 14px 10px; display: flex; align-items: center; gap: 11px; flex-shrink: 0; border-bottom: 1px solid rgba(232,232,236,0.08)">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+    <div style="display: flex; flex-direction: column; flex-grow: 1">
+      <div style="font-size: 16px; line-height: 22px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace">@ash · Deploy check</div>
+      <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.55); font-family: 'Roboto Mono', ui-monospace, monospace">Home · gw-home · run-91ab</div>
+    </div>
+  </div>
+
+  <div style="padding: 12px; display: flex; flex-direction: column; gap: 11px; flex-grow: 1; overflow: hidden">
+    <div style="flex-grow: 1"></div>
+
+    <div style="align-self: flex-start; max-width: 320px; background: #1C1C22; border: 1px solid rgba(232,232,236,0.10); border-radius: 12px; padding: 12px; font-size: 15px; line-height: 21px">Two of the three staging checks passed. The migration step is ambiguous — I need you to decide before I go further.</div>
+
+    <div style="background: #1C1C22; border: 1px solid {{cardBorder}}; border-radius: 14px; padding: 13px; display: flex; flex-direction: column; gap: 11px">
+
+      <div style="display: flex; align-items: flex-start; gap: 9px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px"><circle cx="12" cy="12" r="9"></circle><path d="M9.6 9.2a2.5 2.5 0 014.8.8c0 1.7-2.4 2-2.4 3.5"></path><path d="M12 17h.01"></path></svg>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+          <div style="font-size: 15px; line-height: 21px; font-weight: 600">{{title}}</div>
+          <div style="font-size: 11px; line-height: 15px; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{expiryColor}}">{{expiry}}</div>
+        </div>
+      </div>
+
+      <sc-if value="{{open}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <sc-for list="{{options}}" as="o" hint-placeholder-count="3">
+            <div onClick="{{ o.pick }}" style="background: #23232B; border: 1px solid rgba(232,232,236,0.10); border-radius: 10px; padding: 10px 11px; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; min-height: 48px">
+              <div style="width: 17px; height: 17px; border-radius: 999px; border: 1.6px solid rgba(232,232,236,0.35); flex-shrink: 0; margin-top: 2px"></div>
+              <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+                <div style="font-size: 14px; line-height: 19px; font-weight: 500">{{o.label}}</div>
+                <div style="font-size: 11px; line-height: 16px; color: rgba(232,232,236,0.50)">{{o.body}}</div>
+              </div>
+            </div>
+          </sc-for>
+          <div onClick="{{ pickOther }}" style="background: #23232B; border: 1px dashed rgba(232,232,236,0.22); border-radius: 10px; padding: 10px 11px; display: flex; align-items: center; gap: 10px; cursor: pointer; min-height: 44px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.45)" stroke-width="2" stroke-linecap="round" style="flex-shrink: 0"><path d="M12 5v14M5 12h14"></path></svg>
+            <div style="font-size: 13px; line-height: 18px; color: rgba(232,232,236,0.62)">Something else — type an answer</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{answered}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 9px">
+          <div style="background: rgba(128,203,196,0.08); border: 1px solid rgba(128,203,196,0.30); border-radius: 10px; padding: 11px; display: flex; gap: 10px; align-items: flex-start">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#80CBC4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px"><path d="M5 13l4.5 4.5L19 7"></path></svg>
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <div style="font-size: 14px; line-height: 19px; font-weight: 600; color: #80CBC4">{{answerLabel}}</div>
+              <div style="font-size: 11px; line-height: 16px; color: rgba(232,232,236,0.55)">{{answerNote}}</div>
+            </div>
+          </div>
+          <div onClick="{{ reset }}" style="min-height: 40px; border-radius: 999px; border: 1px solid rgba(232,232,236,0.16); color: rgba(232,232,236,0.55); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; cursor: pointer">Ask me again</div>
+        </div>
+      </sc-if>
+
+      <div style="font-size: 11px; line-height: 16px; color: rgba(232,232,236,0.35)">{{footer}}</div>
+    </div>
+
+    <div style="background: #1C1C22; border: 1px solid rgba(232,232,236,0.08); border-radius: 12px; padding: 11px 12px; display: flex; gap: 10px; align-items: flex-start; opacity: 0.72">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.40)" stroke-width="1.9" stroke-linecap="round" style="flex-shrink: 0; margin-top: 2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5V12l3 2"></path></svg>
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <div style="font-size: 13px; line-height: 18px; font-weight: 500; color: rgba(232,232,236,0.62)">Which region first?</div>
+        <div style="font-size: 11px; line-height: 16px; color: rgba(232,232,236,0.40)">Expired unanswered after 5m · the run picked its stated default, ap-south-1</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex-shrink: 0; border-top: 1px solid rgba(232,232,236,0.08); padding: 10px 12px 20px">
+    <div style="min-height: 48px; background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 24px; display: flex; align-items: center; padding: 0 16px; font-size: 15px; color: rgba(232,232,236,0.40)">Answer above, or say it here</div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { answer: null };
+  }
+  renderVals() {
+    const a = this.state.answer;
+    const defs = [
+      { id: 'rollback', label: 'Roll back and stop', body: 'Undo the partial migration, leave staging as it was, report and wait.' },
+      { id: 'forward', label: 'Finish the migration', body: 'Apply the remaining steps. Irreversible on this dataset.' },
+      { id: 'skip', label: 'Skip the migration, deploy anyway', body: 'The new build tolerates the old schema for one release.' },
+    ];
+    const notes = {
+      rollback: 'Sent at 06:44. First answer wins — the card is locked for every other device.',
+      forward: 'Sent at 06:44. Irreversible; the run recorded who chose it and when.',
+      skip: 'Sent at 06:44. The run will flag the schema mismatch in its summary.',
+      other: 'Free-text answers go up verbatim and are quoted back in the run.',
+    };
+    const labels = {
+      rollback: 'Roll back and stop',
+      forward: 'Finish the migration',
+      skip: 'Skip the migration, deploy anyway',
+      other: 'Your own answer',
+    };
+
+    const options = defs.map((d) => ({
+      label: d.label,
+      body: d.body,
+      pick: () => this.setState({ answer: d.id }),
+    }));
+
+    return {
+      open: !a,
+      answered: !!a,
+      options,
+      title: 'The migration step is ambiguous. How should I proceed?',
+      accent: a ? '#80CBC4' : '#B3B6F2',
+      cardBorder: a ? 'rgba(128,203,196,0.35)' : 'rgba(179,182,242,0.45)',
+      expiry: a ? 'answered · locked' : 'expires in 4m 22s',
+      expiryColor: a ? '#80CBC4' : '#FFCC80',
+      answerLabel: labels[a] || '',
+      answerNote: notes[a] || '',
+      footer: a
+        ? 'A question is not an approval. Nothing was granted here — you chose a branch.'
+        : 'Asked by the run, not by this app. If it expires the run takes its stated default.',
+      pickOther: () => this.setState({ answer: 'other' }),
+      reset: () => this.setState({ answer: null }),
+    };
+  }
+}
+</script>
+</body>
+</html>

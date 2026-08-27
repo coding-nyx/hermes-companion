@@ -1,0 +1,162 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden; position: relative">
+
+  <div style="opacity: 0.45; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden">
+    <div style="height: 44px; flex-shrink: 0"></div>
+    <div style="padding: 4px 14px 8px; display: flex; align-items: center; gap: 11px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+      <div style="font-size: 16px; line-height: 22px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace">@ash · Morning triage</div>
+    </div>
+    <div style="padding: 0 14px 10px; border-bottom: 1px solid rgba(232,232,236,0.08)">
+      <div style="display: flex; align-items: center; gap: 6px; background: #1C1C22; border: 1px solid rgba(179,182,242,0.45); border-radius: 999px; padding: 8px 12px; font-size: 12px; font-family: 'Roboto Mono', ui-monospace, monospace">
+        <div style="width: 7px; height: 7px; border-radius: 999px; background: #80CBC4"></div>
+        <span style="color: rgba(232,232,236,0.62)">gw-home</span>
+        <span style="color: rgba(232,232,236,0.30)">›</span>
+        <span style="color: #B3B6F2">@ash</span>
+        <span style="color: rgba(232,232,236,0.30)">›</span>
+        <span style="color: rgba(232,232,236,0.62)">Morning triage</span>
+      </div>
+    </div>
+    <div style="padding: 12px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1">
+      <div style="flex-grow: 1"></div>
+      <div style="align-self: flex-start; max-width: 300px; background: #1C1C22; border-radius: 12px; padding: 12px; font-size: 15px">Priya R. on WhatsApp — "are we still on for 7?"</div>
+      <div style="align-self: flex-end; max-width: 290px; background: #B3B6F2; color: #15151A; border-radius: 12px; padding: 10px 12px; font-size: 15px">reply that I'll be 15 late</div>
+      <div style="align-self: flex-start; max-width: 300px; background: #1C1C22; border-radius: 12px; padding: 12px; font-size: 15px">Telling her you are running about fifteen minutes behind</div>
+      <div style="min-height: 48px; background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 24px; display: flex; align-items: center; padding: 0 16px; font-size: 15px; color: rgba(232,232,236,0.40)">Steer this run…</div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 100px 14px 0">
+    <div style="background: #1C1C22; border: 1px solid rgba(232,232,236,0.16); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 18px 40px rgba(0,0,0,0.55)">
+
+      <div style="display: flex; align-items: center; gap: 9px">
+        <div style="font-size: 17px; line-height: 23px; font-weight: 600">Switch route</div>
+        <div style="flex-grow: 1"></div>
+        <div style="font-size: 11px; line-height: 14px; color: rgba(232,232,236,0.35)">long-press the capsule</div>
+      </div>
+
+      <sc-for list="{{gateways}}" as="g" hint-placeholder-count="2">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+
+          <div onClick="{{ g.pick }}" style="display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 0 10px; border-radius: 10px; background: {{g.headBg}}; cursor: pointer">
+            <div style="width: 8px; height: 8px; border-radius: 999px; background: {{g.dot}}; flex-shrink: 0"></div>
+            <div style="font-size: 15px; line-height: 20px; font-weight: 600">{{g.label}}</div>
+            <div style="font-size: 11px; line-height: 14px; font-weight: 500; color: {{g.dot}}; background: {{g.healthBg}}; border-radius: 999px; padding: 3px 7px">{{g.health}}</div>
+            <div style="flex-grow: 1"></div>
+            <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.40)">{{g.meta}}</div>
+          </div>
+
+          <sc-if value="{{g.open}}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; gap: 5px; padding-left: 8px">
+              <sc-for list="{{g.profiles}}" as="p" hint-placeholder-count="2">
+                <div onClick="{{ p.pick }}" style="background: {{p.bg}}; border: 1px solid {{p.border}}; border-radius: 10px; padding: 9px 11px; display: flex; align-items: center; gap: 9px; cursor: pointer; min-height: 46px">
+                  <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+                    <div style="display: flex; align-items: center; gap: 7px">
+                      <div style="font-size: 14px; line-height: 19px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{p.handleColor}}">@{{p.handle}}</div>
+                      <div style="font-size: 10px; line-height: 13px; font-weight: 500; color: {{p.stateColor}}; background: {{p.stateBg}}; border-radius: 999px; padding: 2px 7px">{{p.state}}</div>
+                    </div>
+                    <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.45); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">returns to {{p.lastThread}}</div>
+                  </div>
+                  <sc-if value="{{p.hasUnread}}" hint-placeholder-val="{{ true }}">
+                    <div style="min-width: 19px; height: 19px; border-radius: 999px; background: #B3B6F2; color: #15151A; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0">{{p.unread}}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+        </div>
+      </sc-for>
+
+      <div style="border-top: 1px solid rgba(232,232,236,0.10); padding-top: 11px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.62)">{{note}}</div>
+        <div style="font-size: 11px; line-height: 15px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.35)">{{noteRoute}}</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: 'gw-home', sel: 'ash' };
+  }
+  renderVals() {
+    const st = this.state;
+    const defs = [
+      {
+        id: 'gw-home', label: 'Home', dot: '#80CBC4', health: 'Healthy', meta: '11 ms',
+        healthBg: 'rgba(128,203,196,0.14)',
+        profiles: [
+          { handle: 'ash', state: 'Streaming', sc: '#B3B6F2', sb: 'rgba(179,182,242,0.14)', last: 'Morning triage', unread: 2 },
+          { handle: 'misty', state: 'Idle', sc: 'rgba(232,232,236,0.40)', sb: 'rgba(232,232,236,0.07)', last: 'Reading list', unread: 0 },
+        ],
+      },
+      {
+        id: 'gw-cloud', label: 'Cloud', dot: '#FFCC80', health: 'Degraded', meta: 'stale 4m',
+        healthBg: 'rgba(255,204,128,0.14)',
+        profiles: [
+          { handle: 'ash-cloud', state: 'Approval', sc: '#FFCC80', sb: 'rgba(255,204,128,0.14)', last: 'Deploy check', unread: 1 },
+          { handle: 'work', state: 'Idle', sc: 'rgba(232,232,236,0.40)', sb: 'rgba(232,232,236,0.07)', last: 'Standup notes', unread: 0 },
+        ],
+      },
+    ];
+
+    const gateways = defs.map((g) => ({
+      label: g.label,
+      dot: g.dot,
+      health: g.health,
+      healthBg: g.healthBg,
+      meta: g.meta,
+      open: st.open === g.id,
+      headBg: st.open === g.id ? 'rgba(232,232,236,0.05)' : 'transparent',
+      pick: () => this.setState({ open: g.id }),
+      profiles: g.profiles.map((p) => {
+        const active = st.sel === p.handle;
+        return {
+          handle: p.handle,
+          state: p.state,
+          stateColor: p.sc,
+          stateBg: p.sb,
+          lastThread: p.last,
+          unread: String(p.unread),
+          hasUnread: p.unread > 0,
+          handleColor: active ? '#B3B6F2' : '#E8E8EC',
+          bg: active ? 'rgba(179,182,242,0.10)' : '#23232B',
+          border: active ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.10)',
+          pick: () => this.setState({ sel: p.handle, open: g.id }),
+        };
+      }),
+    }));
+
+    const all = defs.reduce((acc, g) => acc.concat(g.profiles.map((p) => ({ g, p }))), []);
+    const hit = all.filter((x) => x.p.handle === st.sel)[0];
+
+    return {
+      gateways,
+      note: 'Each gateway keeps its own place. Coming back to ' + hit.g.label + ' reopens where you left it, not the last thread you touched anywhere.',
+      noteRoute: hit.g.id + ' › @' + hit.p.handle + ' › ' + hit.p.last,
+    };
+  }
+}
+</script>
+</body>
+</html>

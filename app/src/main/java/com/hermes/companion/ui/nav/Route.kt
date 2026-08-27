@@ -11,6 +11,7 @@ sealed class Route(val path: String) {
     data object Activity : Route("activity")
     data object Node : Route("node")
     data object Settings : Route("settings")
+    data object Outbox : Route("outbox")
 
     data class Chat(val conversation: ConversationRoute) : Route("chat/${conversation.gatewayId}/${conversation.profileId}/${conversation.sessionId}") {
         companion object {
@@ -18,3 +19,4 @@ sealed class Route(val path: String) {
         }
     }
 }
+

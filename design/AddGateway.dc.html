@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 16px 12px; display: flex; align-items: center; gap: 12px; flex-shrink: 0">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M11 6l-6 6 6 6"></path>
+    </svg>
+    <div style="font-size: 22px; line-height: 28px; font-weight: 600">Add gateway</div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 14px; flex-grow: 1; overflow: hidden">
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">How do you reach it</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px">
+        <sc-for list="{{kinds}}" as="k" hint-placeholder-count="4">
+          <div onClick="{{ k.pick }}" style="min-height: 44px; display: flex; align-items: center; padding: 0 14px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 500; background: {{k.bg}}; color: {{k.fg}}; border: 1px solid {{k.bd}}">{{k.label}}</div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+      <sc-for list="{{fields}}" as="f" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <div style="font-size: 12px; line-height: 16px; font-weight: 500; color: rgba(232,232,236,0.62)">{{f.label}}</div>
+          <div style="background: #23232B; border: 1px solid rgba(232,232,236,0.12); border-radius: 8px; min-height: 44px; display: flex; align-items: center; padding: 0 12px; font-family: 'Roboto Mono', ui-monospace, monospace; font-size: 13px; color: {{f.color}}">{{f.value}}</div>
+        </div>
+      </sc-for>
+      <div style="display: flex; gap: 8px; align-items: flex-start; padding-top: 2px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{noteColor}}" stroke-width="1.8" stroke-linecap="round" style="flex-shrink: 0; margin-top: 2px">
+          <path d="M12 22s7-3.6 7-9.4V5.4L12 2.6 5 5.4v7.2C5 18.4 12 22 12 22z"></path><path d="M9.4 12.2l1.9 1.9 3.4-3.6"></path>
+        </svg>
+        <div style="font-size: 12px; line-height: 16px; color: {{noteColor}}">{{note}}</div>
+      </div>
+    </div>
+
+    <div onClick="{{ runTest }}" style="min-height: 48px; border-radius: 999px; border: 1px solid rgba(179,182,242,0.55); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: #B3B6F2; font-size: 15px; font-weight: 600">{{testLabel}}</div>
+
+    <sc-if value="{{tested}}" hint-placeholder-val="{{ true }}">
+      <div style="background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+        <sc-for list="{{checks}}" as="c" hint-placeholder-count="4">
+          <div style="display: flex; gap: 10px; align-items: flex-start">
+            <div style="width: 16px; height: 16px; border-radius: 999px; border: 1.5px solid {{c.color}}; background: {{c.fill}}; flex-shrink: 0; margin-top: 3px"></div>
+            <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
+              <div style="font-size: 14px; line-height: 20px; font-weight: 500; color: {{c.color}}">{{c.label}}</div>
+              <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40); font-family: 'Roboto Mono', ui-monospace, monospace">{{c.detail}}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <div style="flex-grow: 1"></div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px">
+      <div style="min-height: 48px; border-radius: 999px; background: {{saveBg}}; color: {{saveFg}}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; cursor: pointer">{{saveLabel}}</div>
+      <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40); text-align: center">Credentials are held by the connection service, never by the screen you are looking at.</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { kind: 'tailscale', tested: true };
+  }
+  renderVals() {
+    const kind = this.state.kind;
+    const kinds = [
+      { id: 'local', label: 'Local' },
+      { id: 'tailscale', label: 'Tailscale' },
+      { id: 'ssh', label: 'SSH tunnel' },
+      { id: 'cloud', label: 'Cloud' },
+    ].map((k) => ({
+      label: k.label,
+      bg: kind === k.id ? 'rgba(179,182,242,0.16)' : '#1C1C22',
+      fg: kind === k.id ? '#B3B6F2' : 'rgba(232,232,236,0.62)',
+      bd: kind === k.id ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.12)',
+      pick: () => this.setState({ kind: k.id, tested: k.id === 'tailscale' }),
+    }));
+
+    const sets = {
+      local: {
+        fields: [
+          { label: 'Label', value: 'Workshop', color: '#E8E8EC' },
+          { label: 'Host and port', value: '192.168.1.24:7800', color: '#E8E8EC' },
+        ],
+        note: 'Cleartext ws:// off the loopback gets limited access only — enough to chat, never enough to hold device capabilities. Use wss:// for a node.',
+        noteColor: '#FFCC80',
+      },
+      tailscale: {
+        fields: [
+          { label: 'Label', value: 'Home', color: '#E8E8EC' },
+          { label: 'Tailnet host and port', value: 'mac-studio.tail9f2c.ts.net:7800', color: '#E8E8EC' },
+        ],
+        note: 'WireGuard carries it, TLS still proves who answered. Pinning is offered after the first successful test.',
+        noteColor: '#80CBC4',
+      },
+      ssh: {
+        fields: [
+          { label: 'Label', value: 'Studio via bastion', color: '#E8E8EC' },
+          { label: 'SSH target', value: 'nyx@bastion.internal:22', color: '#E8E8EC' },
+          { label: 'Forward', value: 'localhost:7801 → 127.0.0.1:7800', color: '#E8E8EC' },
+        ],
+        note: 'The tunnel must be up before the node broker can reconnect. Expect gaps after a phone reboot.',
+        noteColor: '#FFCC80',
+      },
+      cloud: {
+        fields: [
+          { label: 'Label', value: 'Cloud', color: '#E8E8EC' },
+          { label: 'Account', value: 'sign in to continue', color: 'rgba(232,232,236,0.40)' },
+        ],
+        note: 'OAuth in a system browser. The token envelope is sealed into the Keystore, not stored in this app process.',
+        noteColor: 'rgba(232,232,236,0.62)',
+      },
+    };
+    const set = sets[kind];
+    const tested = this.state.tested;
+
+    const ok = (label, detail) => ({ label, detail, color: '#80CBC4', fill: 'rgba(128,203,196,0.35)' });
+    const checks = [
+      ok('Reachable', 'GET /health · 200 in 11 ms'),
+      ok('TLS identity matches fingerprint', 'sha256:4f1c…a903'),
+      ok('Capabilities advertised', 'chat.stream · runs.events · approval.required · node.broker'),
+      kind === 'ssh'
+        ? { label: 'No profiles.list on this gateway', detail: 'pin names to probe /p/<name>/v1/capabilities', color: '#FFCC80', fill: 'transparent' }
+        : ok('2 profiles found', '@ash · @misty'),
+    ];
+
+    return {
+      kinds,
+      fields: set.fields,
+      note: set.note,
+      noteColor: set.noteColor,
+      tested,
+      checks,
+      testLabel: tested ? 'Test again' : 'Test connection',
+      saveLabel: tested ? 'Save gateway' : 'Test before saving',
+      saveBg: tested ? '#B3B6F2' : '#23232B',
+      saveFg: tested ? '#15151A' : 'rgba(232,232,236,0.40)',
+      runTest: () => this.setState({ tested: !this.state.tested }),
+    };
+  }
+}
+</script>
+</body>
+</html>

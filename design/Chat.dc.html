@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+    @keyframes blink { 50% { opacity: 0.15; } }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 14px 10px; display: flex; align-items: center; gap: 11px; flex-shrink: 0; border-bottom: 1px solid rgba(232,232,236,0.08)">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+    <div style="display: flex; flex-direction: column; flex-grow: 1">
+      <div style="font-size: 16px; line-height: 22px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace">@ash · Morning triage</div>
+      <div style="display: flex; align-items: center; gap: 5px">
+        <div style="width: 6px; height: 6px; border-radius: 999px; background: #80CBC4"></div>
+        <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.62); font-family: 'Roboto Mono', ui-monospace, monospace">Home · gw-home</div>
+      </div>
+    </div>
+    <div style="font-size: 11px; line-height: 14px; font-weight: 500; color: {{stateColor}}; background: {{stateBg}}; border-radius: 999px; padding: 4px 9px">{{stateLabel}}</div>
+  </div>
+
+  <div style="padding: 12px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow: hidden">
+
+    <div style="flex-grow: 1"></div>
+
+    <div style="background: #1C1C22; border: 1px solid rgba(128,203,196,0.30); border-radius: 12px; padding: 11px 12px; display: flex; flex-direction: column; gap: 7px">
+      <div style="display: flex; align-items: center; gap: 7px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#80CBC4" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="2.5" width="12" height="19" rx="2.4"></rect><path d="M10.5 18.6h3"></path></svg>
+        <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: #80CBC4">From this phone</div>
+        <div style="flex-grow: 1"></div>
+        <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.40)">seq 8841 · 07:12</div>
+      </div>
+      <div style="font-size: 14px; line-height: 20px"><span style="font-weight: 600">Priya</span> <span style="color: rgba(232,232,236,0.62)">on WhatsApp</span></div>
+      <div style="font-size: 14px; line-height: 20px; color: rgba(232,232,236,0.85)">"are we still on for 7?"</div>
+      <div style="display: flex; align-items: center; gap: 6px; padding-top: 1px">
+        <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.40)">notifications.read</div>
+        <div style="color: rgba(232,232,236,0.30); font-size: 11px">→</div>
+        <div style="font-size: 11px; line-height: 14px; color: #80CBC4">judged · worth a ping</div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end">
+      <div style="max-width: 300px; background: #B3B6F2; color: #15151A; border-radius: 12px; padding: 10px 12px; font-size: 16px; line-height: 22px">reply that I'll be 15 late</div>
+    </div>
+
+    <div style="display: flex; justify-content: flex-start">
+      <div style="max-width: 320px; background: #1C1C22; border: 1px solid rgba(232,232,236,0.10); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 9px">
+
+        <div style="background: rgba(128,203,196,0.10); border: 1px solid rgba(128,203,196,0.25); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; align-items: center; gap: 7px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#80CBC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4.5 4.5L19 7"></path></svg>
+            <div style="font-size: 14px; line-height: 20px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace">contacts.lookup</div>
+            <div style="flex-grow: 1"></div>
+            <div style="font-size: 11px; line-height: 14px; color: rgba(232,232,236,0.55)">140 ms</div>
+          </div>
+          <div style="font-size: 12px; line-height: 17px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.62)">+91 98··· → Priya R.</div>
+        </div>
+
+        <div style="background: {{toolBg}}; border: 1px solid {{toolBorder}}; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px">
+          <div style="display: flex; align-items: center; gap: 7px">
+            <div style="width: 15px; height: 15px; border-radius: 999px; border: 2px solid {{toolColor}}; border-top-color: transparent; flex-shrink: 0"></div>
+            <div style="font-size: 14px; line-height: 20px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace">notifications.reply</div>
+            <div style="flex-grow: 1"></div>
+            <div style="font-size: 11px; line-height: 14px; font-weight: 500; color: {{toolColor}}; white-space: nowrap; flex-shrink: 0">{{toolStatus}}</div>
+          </div>
+          <div style="font-size: 12px; line-height: 17px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.62)">{{toolDetail}}</div>
+        </div>
+
+        <div style="font-size: 16px; line-height: 22px">{{reply}}<span style="color: #B3B6F2; animation: {{caret}}">{{caretChar}}</span></div>
+      </div>
+    </div>
+
+    <sc-if value="{{stopped}}" hint-placeholder-val="{{ true }}">
+      <div style="background: #1C1C22; border-left: 2px solid #FFCC80; border-radius: 4px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 13px; line-height: 18px; font-weight: 500; color: #FFCC80">Stopped after 1 of 2 tools</div>
+        <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.62)">The reply was never sent. The run stays open at <span style="font-family: 'Roboto Mono', ui-monospace, monospace">run-4c1e…</span> — resume it or steer it somewhere else.</div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="flex-shrink: 0; border-top: 1px solid rgba(232,232,236,0.08); padding: 10px 12px 20px; display: flex; flex-direction: column; gap: 9px">
+    <sc-if value="{{streaming}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; gap: 7px">
+        <div style="font-size: 11px; line-height: 14px; color: rgba(232,232,236,0.40); background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 999px; padding: 6px 10px">keep it shorter</div>
+        <div style="font-size: 11px; line-height: 14px; color: rgba(232,232,236,0.40); background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 999px; padding: 6px 10px">ask before sending</div>
+      </div>
+    </sc-if>
+    <div style="display: flex; align-items: center; gap: 9px">
+      <div style="flex-grow: 1; min-height: 48px; background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 24px; display: flex; align-items: center; padding: 0 16px; font-size: 15px; color: rgba(232,232,236,0.40)">{{placeholder}}</div>
+      <div onClick="{{ toggle }}" style="width: 48px; height: 48px; border-radius: 999px; background: {{btnBg}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer">
+        <sc-if value="{{streaming}}" hint-placeholder-val="{{ true }}">
+          <div style="width: 13px; height: 13px; border-radius: 2px; background: #15151A"></div>
+        </sc-if>
+        <sc-if value="{{stopped}}" hint-placeholder-val="{{ true }}">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15151A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { streaming: true };
+  }
+  renderVals() {
+    const s = this.state.streaming;
+    return {
+      streaming: s,
+      stopped: !s,
+      stateLabel: s ? 'Streaming' : 'Stopped',
+      stateColor: s ? '#B3B6F2' : '#FFCC80',
+      stateBg: s ? 'rgba(179,182,242,0.14)' : 'rgba(255,204,128,0.14)',
+      toolStatus: s ? 'awaiting approval' : 'cancelled',
+      toolColor: s ? '#FFCC80' : 'rgba(232,232,236,0.40)',
+      toolBg: s ? 'rgba(255,204,128,0.10)' : 'rgba(232,232,236,0.04)',
+      toolBorder: s ? 'rgba(255,204,128,0.30)' : 'rgba(232,232,236,0.12)',
+      toolDetail: s ? 'com.whatsapp · thread "Priya R." · grant gr_7f3a' : 'no frame was sent to the node',
+      reply: s ? 'Telling her you are running about fifteen minutes behind' : 'Telling her you are running',
+      caret: s ? 'blink 1s step-end infinite' : 'none',
+      caretChar: s ? '▌' : '',
+      placeholder: s ? 'Steer this run…' : 'Send to @ash',
+      btnBg: s ? '#FFCC80' : '#B3B6F2',
+      toggle: () => this.setState({ streaming: !this.state.streaming }),
+    };
+  }
+}
+</script>
+</body>
+</html>

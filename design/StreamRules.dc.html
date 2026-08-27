@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 16px 10px; display: flex; align-items: center; gap: 11px; flex-shrink: 0">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+    <div style="display: flex; flex-direction: column">
+      <div style="font-size: 22px; line-height: 28px; font-weight: 600">What streams</div>
+      <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40); font-family: 'Roboto Mono', ui-monospace, monospace">node_s22 → gw-home</div>
+    </div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow: hidden">
+
+    <div onClick="{{ cycleRedaction }}" style="background: #1C1C22; border: 1px solid {{redBorder}}; border-radius: 12px; padding: 13px; display: flex; flex-direction: column; gap: 9px; cursor: pointer">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{{redColor}}" stroke-width="1.8" stroke-linecap="round"><path d="M2 12s3.8-6.5 10-6.5S22 12 22 12s-3.8 6.5-10 6.5S2 12 2 12z"></path><circle cx="12" cy="12" r="2.6"></circle></svg>
+        <div style="font-size: 14px; line-height: 20px; font-weight: 600">Before it leaves this phone</div>
+        <div style="flex-grow: 1"></div>
+        <div style="font-size: 11px; line-height: 14px; font-weight: 600; color: {{redColor}}; background: {{redBg}}; border-radius: 999px; padding: 4px 9px">{{redLabel}}</div>
+      </div>
+      <div style="background: #23232B; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 4px">
+        <div style="font-size: 10px; line-height: 13px; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase; color: rgba(232,232,236,0.35)">What Hermes would receive</div>
+        <div style="font-size: 12px; line-height: 17px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.80)">{{redSample}}</div>
+      </div>
+      <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.55)">{{redNote}}</div>
+    </div>
+
+    <sc-for list="{{groups}}" as="grp" hint-placeholder-count="2">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">{{grp.title}}</div>
+          <div style="height: 1px; flex-grow: 1; background: rgba(232,232,236,0.10)"></div>
+        </div>
+        <sc-for list="{{grp.items}}" as="s" hint-placeholder-count="3">
+          <div onClick="{{ s.cycle }}" style="background: #1C1C22; border: 1px solid {{s.border}}; border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; min-height: 48px">
+            <div style="display: flex; align-items: center; gap: 8px">
+              <div style="font-size: 14px; line-height: 20px; font-weight: 500; flex-grow: 1">{{s.name}}</div>
+              <div style="font-size: 11px; line-height: 14px; font-weight: 600; color: {{s.modeColor}}; background: {{s.modeBg}}; border-radius: 999px; padding: 4px 9px; white-space: nowrap; flex-shrink: 0">{{s.mode}}</div>
+            </div>
+            <div style="font-size: 11px; line-height: 15px; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{s.targetColor}}">{{s.target}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+
+    <div style="background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 9px">
+      <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">Guardrails</div>
+      <sc-for list="{{guardrails}}" as="g" hint-placeholder-count="4">
+        <div style="display: flex; align-items: flex-start; gap: 9px">
+          <div style="width: 5px; height: 5px; border-radius: 999px; background: {{g.color}}; flex-shrink: 0; margin-top: 7px"></div>
+          <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0">
+            <div style="font-size: 12px; line-height: 16px; font-weight: 500">{{g.title}}</div>
+            <div style="font-size: 11px; line-height: 14px; color: rgba(232,232,236,0.42)">{{g.body}}</div>
+          </div>
+          <div style="font-size: 11px; line-height: 14px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{g.color}}; flex-shrink: 0; white-space: nowrap">{{g.value}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="flex-grow: 1"></div>
+
+    <div style="border-left: 2px solid #80CBC4; padding-left: 10px; margin-bottom: 20px">
+      <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.62)">{{ignoredLabel}}</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      redaction: 1,
+      modes: { whatsapp: 0, cliq: 1, calls: 0, device: 2 },
+    };
+    this.MODES = [
+      { label: 'Stream full', color: '#80CBC4', bg: 'rgba(128,203,196,0.14)', border: 'rgba(128,203,196,0.28)' },
+      { label: 'Summarise', color: '#B3B6F2', bg: 'rgba(179,182,242,0.14)', border: 'rgba(179,182,242,0.28)' },
+      { label: 'Count only', color: '#FFCC80', bg: 'rgba(255,204,128,0.14)', border: 'rgba(255,204,128,0.28)' },
+      { label: 'Ignore', color: 'rgba(232,232,236,0.40)', bg: 'rgba(232,232,236,0.07)', border: 'rgba(232,232,236,0.10)' },
+    ];
+    this.RED = [
+      {
+        label: 'Full text',
+        color: '#FFCC80',
+        bg: 'rgba(255,204,128,0.14)',
+        border: 'rgba(255,204,128,0.35)',
+        sample: '"still on for 7?" · +91 98765 44710',
+        note: 'Verbatim. Only on a gateway you own outright.',
+      },
+      {
+        label: 'Redacted',
+        color: '#80CBC4',
+        bg: 'rgba(128,203,196,0.14)',
+        border: 'rgba(128,203,196,0.30)',
+        sample: '"still on for 7?" · [redacted]',
+        note: 'Numbers and addresses stripped on-device; the message still reads.',
+      },
+      {
+        label: 'Metadata only',
+        color: '#B3B6F2',
+        bg: 'rgba(179,182,242,0.14)',
+        border: 'rgba(179,182,242,0.30)',
+        sample: 'com.whatsapp · known · 24 chars',
+        note: 'Enough to judge whether to interrupt you, not to read.',
+      },
+    ];
+  }
+  renderVals() {
+    const M = this.MODES;
+    const modes = this.state.modes;
+
+    const build = (id, name, target) => {
+      const idx = modes[id];
+      const m = M[idx];
+      const ignored = idx === 3;
+      return {
+        name,
+        mode: m.label,
+        modeColor: m.color,
+        modeBg: m.bg,
+        border: m.border,
+        target: ignored ? 'stays on this phone' : target,
+        targetColor: ignored ? 'rgba(232,232,236,0.30)' : 'rgba(232,232,236,0.50)',
+        cycle: () => {
+          const next = Object.assign({}, this.state.modes);
+          next[id] = (idx + 1) % M.length;
+          this.setState({ modes: next });
+        },
+      };
+    };
+
+    const groups = [
+      {
+        title: 'Apps',
+        items: [
+          build('whatsapp', 'WhatsApp', '→ @ash · notifications.read'),
+          build('cliq', 'Cliq', '→ @ash · notifications.read'),
+        ],
+      },
+      {
+        title: 'Device signals',
+        items: [
+          build('calls', 'Calls', '→ @ash · calls.observe'),
+          build('device', 'Battery and network', '→ @misty · device.status'),
+        ],
+      },
+    ];
+
+    const ignoredCount = Object.keys(modes).filter((k) => modes[k] === 3).length;
+    const r = this.RED[this.state.redaction];
+
+    return {
+      groups,
+      guardrails: [
+        { title: 'Quiet hours', body: 'Captured and judged, never pinged', value: '21:00–09:00', color: '#FFCC80' },
+        { title: 'Rate ceiling', body: 'A chatty app cannot flood the gateway', value: '20 / min', color: '#B3B6F2' },
+        { title: 'Sensitive categories', body: 'OTP, banking, health', value: 'metadata only', color: '#80CBC4' },
+        { title: 'Never forwarded', body: 'Hermes reaches you there already', value: 'Telegram · self', color: 'rgba(232,232,236,0.55)' },
+      ],
+      redLabel: r.label,
+      redColor: r.color,
+      redBg: r.bg,
+      redBorder: r.border,
+      redSample: r.sample,
+      redNote: r.note,
+      ignoredLabel: ignoredCount === 0 ? 'Nothing is ignored — every source above leaves this phone.' : ignoredCount + ' of 4 ignored: never leaves, not even a count.',
+      cycleRedaction: () => this.setState({ redaction: (this.state.redaction + 1) % this.RED.length }),
+    };
+  }
+}
+</script>
+</body>
+</html>

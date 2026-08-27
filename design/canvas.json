@@ -1,0 +1,329 @@
+{
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Setup and pairing"
+    },
+    {
+      "id": "page-2",
+      "name": "Control room"
+    },
+    {
+      "id": "page-3",
+      "name": "Wide layout"
+    },
+    {
+      "id": "page-4",
+      "name": "Threads and switching"
+    },
+    {
+      "id": "page-5",
+      "name": "What streams"
+    },
+    {
+      "id": "page-6",
+      "name": "Input and workspace"
+    },
+    {
+      "id": "page-7",
+      "name": "Reliability and trust"
+    }
+  ],
+  "artboards": [
+    {
+      "file": "Welcome.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-1",
+      "title": "1 \u00b7 First run"
+    },
+    {
+      "file": "AddGateway.dc.html",
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-1",
+      "title": "3 \u00b7 Add and verify"
+    },
+    {
+      "file": "PairNode.dc.html",
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-1",
+      "title": "4 \u00b7 Pair this phone"
+    },
+    {
+      "file": "NodeSetup.dc.html",
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-1",
+      "title": "5 \u00b7 Full Node Mode"
+    },
+    {
+      "file": "Grants.dc.html",
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-1",
+      "title": "6 \u00b7 Grant capabilities"
+    },
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-2",
+      "title": "Agents \u2014 the fleet"
+    },
+    {
+      "file": "Chat.dc.html",
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-2",
+      "title": "Chat \u2014 a live run"
+    },
+    {
+      "file": "Approval.dc.html",
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-2",
+      "title": "Approval \u2014 request-bound"
+    },
+    {
+      "file": "Activity.dc.html",
+      "x": 0,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "page-2",
+      "title": "Activity \u2014 every event"
+    },
+    {
+      "file": "NodeLive.dc.html",
+      "x": 470,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "page-2",
+      "title": "Node \u2014 honest coverage"
+    },
+    {
+      "file": "Diagnostics.dc.html",
+      "x": 940,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "page-2",
+      "title": "Diagnostics \u2014 per route"
+    },
+    {
+      "file": "Wide.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1280,
+      "h": 840,
+      "page": "page-3",
+      "title": "Tablet and desktop"
+    },
+    {
+      "file": "Threads.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-4",
+      "title": "Threads under a profile"
+    },
+    {
+      "file": "NewThread.dc.html",
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-4",
+      "title": "New thread \u2014 born into a route"
+    },
+    {
+      "file": "Switcher.dc.html",
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-4",
+      "title": "Fleet switcher"
+    },
+    {
+      "file": "StreamRules.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-5",
+      "title": "What this phone tells Hermes"
+    },
+    {
+      "file": "StreamMonitor.dc.html",
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-5",
+      "title": "Live stream"
+    },
+    {
+      "file": "Delivery.dc.html",
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-5",
+      "title": "How it reaches you"
+    },
+    {
+      "file": "Discover.dc.html",
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-1",
+      "title": "2 \u00b7 Find your gateway"
+    },
+    {
+      "file": "Composer.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-6",
+      "title": "Composer \u2014 four ways in"
+    },
+    {
+      "file": "Files.dc.html",
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-6",
+      "title": "Workspace \u2014 read only"
+    },
+    {
+      "file": "Questions.dc.html",
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-6",
+      "title": "The agent asks you"
+    },
+    {
+      "file": "Outbox.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-7",
+      "title": "Outbox \u2014 including the ambiguous case"
+    },
+    {
+      "file": "GatewaySettings.dc.html",
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-7",
+      "title": "Settings \u2014 gateways and gates"
+    },
+    {
+      "file": "Jobs.dc.html",
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "page-7",
+      "title": "Jobs \u2014 one route each"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "setup-ladder",
+      "x": 0,
+      "y": -230,
+      "w": 640,
+      "page": "page-1",
+      "text": "Setup is a trust ladder, not a wizard to rush.\nEach rung adds exactly one power, and the app refuses to claim a capability it cannot actually serve. Nothing streams off this phone until rung 5 grants something to a named profile."
+    },
+    {
+      "id": "route-everywhere",
+      "x": 0,
+      "y": -230,
+      "w": 640,
+      "page": "page-2",
+      "text": "Every screen carries (gateway, profile, session).\nThe capsule at the top is never hidden, because the same profile name can exist on two gateways \u2014 @ash on Home and @ash-cloud on Cloud are different agents with different grants. Switching gateways restores that gateway's own last profile and session."
+    },
+    {
+      "id": "activity-contract",
+      "x": 1410,
+      "y": 964,
+      "w": 380,
+      "page": "page-2",
+      "text": "Activity is the lane that does not exist in the code yet, and it is the one that makes the rest debuggable.\n\nEvery phone event walks captured \u2192 uploaded \u2192 acked \u2192 judged \u2192 notified | suppressed | failed. Suppressed is a decision on the record, openable to see why. Failed stays pending and retries; it is never quietly marked handled.\n\nA gateway outage never merges routes: each keeps its own queue depth, its own stale clock, its own ack watermark."
+    },
+    {
+      "id": "wide-shape",
+      "x": 0,
+      "y": -230,
+      "w": 640,
+      "page": "page-3",
+      "text": "The rail and two panes are what Shell.kt already switches to above the compact width. The third column \u2014 run, node, queue \u2014 is a proposal, not something the code implies: at this width a control room can show what it is doing without you leaving the conversation."
+    },
+    {
+      "id": "thread-identity",
+      "x": 0,
+      "y": -250,
+      "w": 640,
+      "page": "page-4",
+      "text": "A thread is not a chat window \u2014 it is a route with a transcript.\nIt is created into an exact (gateway, profile, session) and can never drift out of it, which is why the new-thread sheet makes you pick the gateway before you can name the thread. Model lock is per thread: a long-running thread keeps its model even when the profile default moves under it.\n\nThe switcher is the fast path between agents. Each gateway remembers its own last profile and thread, so coming back to Cloud does not drop you wherever you were on Home."
+    },
+    {
+      "id": "stream-consent",
+      "x": 0,
+      "y": -290,
+      "w": 640,
+      "page": "page-5",
+      "text": "These two screens are the halves of one question: what does this phone tell Hermes, and what is Hermes allowed to do about it.\n\nEvery source has four settings, not a checkbox \u2014 stream full, summarise, count only, ignore \u2014 because \"the agent should know something happened\" and \"the agent should read my messages\" are different consents. Redaction runs on-device before upload, so the level you pick changes the payload the gateway ever sees; the sample updates as you cycle it.\n\nIgnore means the event never leaves, not even as a count. Pause means it queues locally and goes in order later \u2014 nothing is dropped to make a graph look calm."
+    },
+    {
+      "id": "input-parity",
+      "x": 0,
+      "y": -270,
+      "w": 640,
+      "page": "page-6",
+      "text": "Three surfaces OpenClaw's shipped node app has and this concept did not.\n\nThe composer has four mutually exclusive paths, not one: typing, on-device dictation, a voice note that travels as audio, and realtime Talk that holds the microphone through the foreground service. Tap the mic to cycle the first three; the waveform enters Talk. Listen (TTS) sits on the assistant message, not in the composer.\n\nThe workspace is read-only on purpose: the agent writes there, the phone looks.\n\nAnd a question is not an approval. An approval grants a capability; a question picks a branch. First answer wins and locks it for every other device; an expired question lets the run take its stated default."
+    },
+    {
+      "id": "reliability-parity",
+      "x": 0,
+      "y": -290,
+      "w": 640,
+      "page": "page-7",
+      "text": "The outbox already existed for events coming off the phone. This is the other direction \u2014 what you send.\n\nThe state worth designing is not queued or sent, it is \"no answer\": written, transmitted, never acknowledged. It may have landed. Retrying replays the same idempotency key so a duplicate cannot be created, and dropping it is an explicit choice with a stated consequence. Silent auto-retry would be the wrong answer here.\n\nSettings is where the per-capability lease decision surfaces: gateways stay connected simultaneously and keep their own grants, but exclusive hardware is held by one of them at a time, with the holder named. Older gateways hide the features they cannot serve instead of failing when tapped."
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "page-6"
+  }
+}

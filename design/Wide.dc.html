@@ -1,0 +1,230 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 1280px; height: 840px; background: #15151A; display: flex; overflow: hidden">
+
+  <div style="width: 88px; flex-shrink: 0; background: #1A1A20; border-right: 1px solid rgba(232,232,236,0.08); display: flex; flex-direction: column; align-items: center; padding: 18px 0; gap: 6px">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#B3B6F2" stroke-width="1.6" stroke-linecap="round" style="margin-bottom: 16px"><circle cx="12" cy="12" r="3.2"></circle><circle cx="12" cy="3.6" r="2"></circle><circle cx="19.3" cy="17" r="2"></circle><circle cx="4.7" cy="17" r="2"></circle><path d="M12 8.8V5.6M14.7 13.8l2.9 1.9M9.3 13.8l-2.9 1.9"></path></svg>
+    <div style="width: 72px; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 0; cursor: pointer">
+      <div style="background: rgba(179,182,242,0.18); border-radius: 999px; padding: 4px 16px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B3B6F2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="4" r="1.8"></circle><circle cx="19" cy="17" r="1.8"></circle><circle cx="5" cy="17" r="1.8"></circle><path d="M12 9V5.8M14.5 13.6l2.7 1.8M9.5 13.6l-2.7 1.8"></path></svg>
+      </div>
+      <div style="font-size: 11px; font-weight: 600; color: #B3B6F2">Agents</div>
+    </div>
+    <div style="width: 72px; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 0; cursor: pointer">
+      <div style="background: transparent; border-radius: 999px; padding: 4px 16px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.55)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 10-12 0c0 5-2 6-2 6h16s-2-1-2-6"></path><path d="M10.5 20a2 2 0 003 0"></path></svg>
+      </div>
+      <div style="font-size: 11px; font-weight: 500; color: rgba(232,232,236,0.55)">Activity</div>
+    </div>
+    <div style="width: 72px; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 0; cursor: pointer">
+      <div style="background: transparent; border-radius: 999px; padding: 4px 16px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.55)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.4"></rect><path d="M10.5 18.6h3"></path></svg>
+      </div>
+      <div style="font-size: 11px; font-weight: 500; color: rgba(232,232,236,0.55)">Node</div>
+    </div>
+    <div style="width: 72px; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 0; cursor: pointer">
+      <div style="background: transparent; border-radius: 999px; padding: 4px 16px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.55)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-2.9 1.2V21a2 2 0 11-4 0v-.1A1.7 1.7 0 007.7 19l-.1.1a2 2 0 11-2.8-2.8l.1-.1A1.7 1.7 0 003 13.4H3a2 2 0 110-4h.1A1.7 1.7 0 004.9 7.7l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 002.9-1.2V3a2 2 0 114 0v.1A1.7 1.7 0 0016.3 5l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 001.2 2.9H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"></path></svg>
+      </div>
+      <div style="font-size: 11px; font-weight: 500; color: rgba(232,232,236,0.55)">Settings</div>
+    </div>
+  </div>
+
+  <div style="width: 360px; flex-shrink: 0; border-right: 1px solid rgba(232,232,236,0.08); display: flex; flex-direction: column; overflow: hidden">
+    <div style="padding: 18px 18px 12px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid rgba(232,232,236,0.08)">
+      <div style="font-size: 20px; line-height: 26px; font-weight: 600">Fleet</div>
+      <div style="display: flex; align-items: center; gap: 6px; background: #1C1C22; border: 1px solid rgba(179,182,242,0.35); border-radius: 999px; padding: 8px 12px; font-size: 12px; font-family: 'Roboto Mono', ui-monospace, monospace">
+        <div style="width: 7px; height: 7px; border-radius: 999px; background: #80CBC4"></div>
+        <span style="color: rgba(232,232,236,0.62)">gw-home</span>
+        <span style="color: rgba(232,232,236,0.30)">›</span>
+        <span style="color: #B3B6F2">@{{sel}}</span>
+        <span style="color: rgba(232,232,236,0.30)">›</span>
+        <span style="color: rgba(232,232,236,0.62)">Morning triage</span>
+      </div>
+    </div>
+    <div style="padding: 14px 18px; display: flex; flex-direction: column; gap: 14px; overflow: hidden">
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+        <div style="display: flex; flex-direction: column; gap: 7px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div style="width: 8px; height: 8px; border-radius: 999px; background: {{g.dot}}"></div>
+            <div style="font-size: 14px; line-height: 20px; font-weight: 600">{{g.label}}</div>
+            <div style="flex-grow: 1"></div>
+            <div style="font-size: 11px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.40)">{{g.meta}}</div>
+          </div>
+          <sc-for list="{{g.profiles}}" as="p" hint-placeholder-count="2">
+            <div onClick="{{ p.pick }}" style="background: #1C1C22; border: 1px solid {{p.border}}; border-radius: 10px; padding: 10px 11px; display: flex; align-items: center; gap: 9px; cursor: pointer; min-height: 46px">
+              <div style="font-size: 14px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{p.color}}">@{{p.handle}}</div>
+              <div style="font-size: 10px; font-weight: 500; color: {{p.stateColor}}; background: {{p.stateBg}}; border-radius: 999px; padding: 3px 7px">{{p.state}}</div>
+              <div style="flex-grow: 1"></div>
+              <div style="font-size: 11px; color: rgba(232,232,236,0.35)">{{p.sessions}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0">
+    <div style="padding: 18px 22px 14px; border-bottom: 1px solid rgba(232,232,236,0.08); display: flex; align-items: center; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1">
+        <div style="font-size: 17px; line-height: 22px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace">@{{sel}} · Morning triage</div>
+        <div style="font-size: 12px; color: rgba(232,232,236,0.55); font-family: 'Roboto Mono', ui-monospace, monospace">Home · gw-home · run-4c1e</div>
+      </div>
+      <div style="font-size: 11px; font-weight: 600; color: #B3B6F2; background: rgba(179,182,242,0.14); border-radius: 999px; padding: 5px 11px">Streaming</div>
+      <div style="min-height: 40px; display: flex; align-items: center; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,204,128,0.45); color: #FFCC80; font-size: 13px; font-weight: 600; cursor: pointer">Stop</div>
+    </div>
+
+    <div style="padding: 18px 22px; display: flex; flex-direction: column; gap: 12px; flex-grow: 1; overflow: hidden">
+      <div style="flex-grow: 1"></div>
+      <div style="align-self: flex-start; max-width: 440px; background: #1C1C22; border: 1px solid rgba(128,203,196,0.30); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: #80CBC4">From node_s22 · seq 8841</div>
+        <div style="font-size: 14px; line-height: 20px"><span style="font-weight: 600">Priya R.</span> on WhatsApp — "are we still on for 7?"</div>
+      </div>
+      <div style="align-self: flex-end; max-width: 420px; background: #B3B6F2; color: #15151A; border-radius: 12px; padding: 11px 13px; font-size: 15px; line-height: 21px">reply that I'll be 15 late</div>
+      <div style="align-self: flex-start; max-width: 460px; background: #1C1C22; border: 1px solid rgba(232,232,236,0.10); border-radius: 12px; padding: 13px; display: flex; flex-direction: column; gap: 9px">
+        <div style="background: rgba(255,204,128,0.10); border: 1px solid rgba(255,204,128,0.30); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 8px">
+          <div style="width: 14px; height: 14px; border-radius: 999px; border: 2px solid #FFCC80; border-top-color: transparent"></div>
+          <div style="font-size: 13px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace">notifications.reply</div>
+          <div style="flex-grow: 1"></div>
+          <div style="font-size: 11px; font-weight: 500; color: #FFCC80">awaiting approval</div>
+        </div>
+        <div style="font-size: 15px; line-height: 21px">Telling her you are running about fifteen minutes behind<span style="color: #B3B6F2">▌</span></div>
+      </div>
+      <div style="min-height: 46px; background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 23px; display: flex; align-items: center; padding: 0 18px; font-size: 14px; color: rgba(232,232,236,0.40)">Steer this run…</div>
+    </div>
+  </div>
+
+  <div style="width: 300px; flex-shrink: 0; border-left: 1px solid rgba(232,232,236,0.08); background: #17171C; display: flex; flex-direction: column; overflow: hidden">
+    <div style="display: flex; padding: 14px 14px 0; gap: 4px">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+        <div onClick="{{ t.pick }}" style="flex-grow: 1; min-height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; background: {{t.bg}}; color: {{t.fg}}">{{t.label}}</div>
+      </sc-for>
+    </div>
+    <div style="padding: 14px; display: flex; flex-direction: column; gap: 9px; overflow: hidden">
+      <div style="font-size: 10px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">{{paneTitle}}</div>
+      <sc-for list="{{pane}}" as="i" hint-placeholder-count="5">
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 9px 10px; background: #1C1C22; border-radius: 8px">
+          <div style="display: flex; align-items: center; gap: 7px">
+            <div style="width: 6px; height: 6px; border-radius: 999px; background: {{i.color}}; flex-shrink: 0"></div>
+            <div style="font-size: 12px; line-height: 17px; font-weight: 500; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{i.k}}</div>
+            <div style="font-size: 11px; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{i.color}}; flex-shrink: 0">{{i.v}}</div>
+          </div>
+          <div style="font-size: 11px; line-height: 15px; color: rgba(232,232,236,0.40)">{{i.note}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":1280,"height":840}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'run', sel: 'ash' };
+    this.TEAL = '#80CBC4';
+    this.SAND = '#FFCC80';
+    this.RED = '#FFB4AB';
+    this.INDIGO = '#B3B6F2';
+  }
+  renderVals() {
+    const tab = this.state.tab;
+    const sel = this.state.sel;
+    const T = this.TEAL, S = this.SAND, R = this.RED, I = this.INDIGO;
+
+    const mkProfile = (handle, state, stateColor, stateBg, sessions) => ({
+      handle,
+      state,
+      stateColor,
+      stateBg,
+      sessions,
+      color: sel === handle ? I : '#E8E8EC',
+      border: sel === handle ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.10)',
+      pick: () => this.setState({ sel: handle }),
+    });
+
+    const groups = [
+      {
+        label: 'Home', dot: T, meta: '11 ms',
+        profiles: [
+          mkProfile('ash', 'Streaming', I, 'rgba(179,182,242,0.14)', '3 sessions'),
+          mkProfile('misty', 'Idle', 'rgba(232,232,236,0.40)', 'rgba(232,232,236,0.07)', '1 session'),
+        ],
+      },
+      {
+        label: 'Cloud', dot: S, meta: 'stale 4m',
+        profiles: [
+          mkProfile('ash-cloud', 'Approval', S, 'rgba(255,204,128,0.14)', '2 sessions'),
+          mkProfile('work', 'Idle', 'rgba(232,232,236,0.40)', 'rgba(232,232,236,0.07)', '1 session'),
+        ],
+      },
+    ];
+
+    const tabs = [
+      { id: 'run', label: 'Run' },
+      { id: 'node', label: 'Node' },
+      { id: 'queue', label: 'Queue' },
+    ].map((t) => ({
+      label: t.label,
+      bg: tab === t.id ? 'rgba(179,182,242,0.16)' : 'transparent',
+      fg: tab === t.id ? I : 'rgba(232,232,236,0.55)',
+      pick: () => this.setState({ tab: t.id }),
+    }));
+
+    const panes = {
+      run: {
+        title: 'This run, step by step',
+        items: [
+          { k: 'run.created', v: '07:12:04', color: T, note: 'run-4c1e · model pinned at execution' },
+          { k: 'contacts.lookup', v: '140 ms', color: T, note: 'number resolved to a saved contact' },
+          { k: 'notifications.reply', v: 'waiting', color: S, note: 'needs your approval · expires 4m' },
+          { k: 'assistant.delta', v: '38 tok', color: I, note: 'streaming into the transcript' },
+        ],
+      },
+      node: {
+        title: 'This device right now',
+        items: [
+          { k: 'Broker', v: 'connected', color: T, note: 'wss over tailnet · seq 8841' },
+          { k: 'Listener', v: 'alive', color: T, note: 'reconciled 12 active notifications on start' },
+          { k: 'Battery', v: 'unrestricted', color: T, note: 'Samsung autostart allowed' },
+          { k: 'calls.answer', v: 'no role', color: S, note: 'dialer role never granted' },
+        ],
+      },
+      queue: {
+        title: 'Outbox and watermarks',
+        items: [
+          { k: 'gw-home', v: '0 queued', color: T, note: 'acked to seq 8841' },
+          { k: 'gw-cloud', v: '3 queued', color: S, note: 'acked to seq 8838 · retry in 42s' },
+          { k: 'Oldest pending', v: '4m 12s', color: S, note: 'missed call, stuck at model judgment' },
+          { k: 'Dropped', v: 'none', color: T, note: 'nothing is discarded without an ack' },
+        ],
+      },
+    };
+
+    return {
+      groups,
+      tabs,
+      sel,
+      paneTitle: panes[tab].title,
+      pane: panes[tab].items,
+    };
+  }
+}
+</script>
+</body>
+</html>

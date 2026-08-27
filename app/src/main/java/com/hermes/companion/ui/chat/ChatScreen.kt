@@ -15,12 +15,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -65,9 +68,25 @@ fun ChatScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    if (state.streaming) {
+                        FilledTonalButton(
+                            onClick = vm::stop,
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            ),
+                            modifier = Modifier.padding(end = 8.dp),
+                        ) {
+                            Icon(Icons.Filled.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Box(Modifier.size(4.dp))
+                            Text("Stop")
+                        }
+                    }
+                }
             )
         },
     ) { padding ->
@@ -82,13 +101,8 @@ fun ChatScreen(
                 items(state.messages, key = { it.id }) { msg ->
                     MessageBubble(msg)
                 }
-                if (state.streaming && state.streamingText.isNotEmpty()) {
-                    item("streaming") {
-                        StreamingBubble(state.streamingText)
-                    }
-                }
-                if (state.streaming && state.streamingText.isEmpty()) {
-                    item("placeholder") {
+                if (state.streaming) {
+                    item("running") {
                         Text(
                             "running…",
                             style = MaterialTheme.typography.bodyMedium,
@@ -98,9 +112,24 @@ fun ChatScreen(
                     }
                 }
             }
-            LaunchedEffect(state.messages.size, state.streamingText) {
+            LaunchedEffect(state.messages.size, state.streaming) {
                 val total = state.messages.size + if (state.streaming) 1 else 0
                 if (total > 0) listState.animateScrollToItem(total - 1)
+            }
+            state.error?.let { message ->
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
             Composer(
                 draft = state.draft,
@@ -156,23 +185,6 @@ private fun MessageBubble(msg: Message) {
 }
 
 @Composable
-private fun StreamingBubble(text: String) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-        Card(
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-            modifier = Modifier.widthIn(max = 320.dp),
-        ) {
-            Text(
-                text,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(12.dp),
-            )
-        }
-    }
-}
-
-@Composable
 private fun Composer(
     draft: String,
     targetLabel: String,
@@ -193,7 +205,7 @@ private fun Composer(
         )
         Box(Modifier.size(8.dp))
         FilledIconButton(onClick = onSend) {
-            Icon(Icons.Filled.Send, contentDescription = "Send")
+            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send")
         }
     }
 }

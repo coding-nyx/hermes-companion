@@ -22,3 +22,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "hermes-companion"
 include(":app")
+include(":core:domain")
+include(":core:common")
+include(":transport:auth")
+include(":transport:hermes")
+include(":data:db")
+include(":data:repo")

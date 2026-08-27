@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 16px 10px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <div style="font-size: 22px; line-height: 28px; font-weight: 600">Agents</div>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.62)" stroke-width="1.7" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; background: #1C1C22; border: 1px solid rgba(179,182,242,0.35); border-radius: 999px; padding: 9px 12px; font-size: 12px; font-family: 'Roboto Mono', ui-monospace, monospace">
+      <div style="width: 7px; height: 7px; border-radius: 999px; background: {{capsuleDot}}; flex-shrink: 0"></div>
+      <span style="color: rgba(232,232,236,0.62)">{{capsuleGw}}</span>
+      <span style="color: rgba(232,232,236,0.30)">›</span>
+      <span style="color: #B3B6F2">@{{capsuleProfile}}</span>
+      <span style="color: rgba(232,232,236,0.30)">›</span>
+      <span style="color: rgba(232,232,236,0.62); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{capsuleSession}}</span>
+    </div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 14px; flex-grow: 1; overflow: hidden">
+    <sc-for list="{{gateways}}" as="gw" hint-placeholder-count="2">
+      <div style="display: flex; flex-direction: column; gap: 7px">
+
+        <div onClick="{{ gw.toggle }}" style="display: flex; align-items: center; gap: 9px; min-height: 44px; cursor: pointer">
+          <div style="width: 9px; height: 9px; border-radius: 999px; background: {{gw.dot}}; flex-shrink: 0"></div>
+          <div style="font-size: 16px; line-height: 22px; font-weight: 600">{{gw.label}}</div>
+          <div style="font-size: 11px; line-height: 14px; font-weight: 500; color: {{gw.dot}}; background: {{gw.healthBg}}; border-radius: 999px; padding: 3px 8px">{{gw.health}}</div>
+          <div style="flex-grow: 1"></div>
+          <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.40)">{{gw.meta}}</div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.40)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: {{gw.caret}}">
+            <path d="M6 9l6 6 6-6"></path>
+          </svg>
+        </div>
+
+        <sc-if value="{{gw.open}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <sc-for list="{{gw.profiles}}" as="p" hint-placeholder-count="2">
+              <div onClick="{{ p.pick }}" style="background: #1C1C22; border: 1px solid {{p.border}}; border-radius: 12px; padding: 11px 12px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; min-height: 48px">
+                <div style="display: flex; align-items: center; gap: 8px">
+                  <div style="font-size: 15px; line-height: 20px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{p.handleColor}}">@{{p.handle}}</div>
+                  <div style="font-size: 11px; line-height: 14px; font-weight: 500; color: {{p.stateColor}}; background: {{p.stateBg}}; border-radius: 999px; padding: 3px 8px">{{p.state}}</div>
+                  <div style="flex-grow: 1"></div>
+                  <sc-if value="{{p.hasUnread}}" hint-placeholder-val="{{ true }}">
+                    <div style="min-width: 20px; height: 20px; border-radius: 999px; background: #B3B6F2; color: #15151A; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 6px">{{p.unread}}</div>
+                  </sc-if>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+                </div>
+                <div style="display: flex; align-items: center; gap: 7px">
+                  <div style="font-size: 13px; line-height: 18px; color: rgba(232,232,236,0.62); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1">{{p.lastSession}}</div>
+                  <div style="font-size: 11px; line-height: 14px; color: rgba(232,232,236,0.30); flex-shrink: 0">{{p.sessions}}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{gw.stale}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; gap: 8px; align-items: flex-start; background: #1C1C22; border-left: 2px solid #FFCC80; border-radius: 4px; padding: 9px 11px">
+            <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.62)">{{gw.staleNote}}</div>
+          </div>
+        </sc-if>
+
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="height: 80px; flex-shrink: 0; border-top: 1px solid rgba(232,232,236,0.10); background: #1A1A20; display: flex; align-items: stretch">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <div style="background: rgba(179,182,242,0.18); border-radius: 999px; padding: 4px 18px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B3B6F2" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="4" r="1.8"></circle><circle cx="19" cy="17" r="1.8"></circle><circle cx="5" cy="17" r="1.8"></circle><path d="M12 9V5.8M14.5 13.6l2.7 1.8M9.5 13.6l-2.7 1.8"></path></svg>
+      </div>
+      <div style="font-size: 12px; font-weight: 500; color: #B3B6F2">Agents</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; position: relative">
+      <div style="padding: 4px 18px; position: relative">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.62)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 10-12 0c0 5-2 6-2 6h16s-2-1-2-6"></path><path d="M10.5 20a2 2 0 003 0"></path></svg>
+        <div style="position: absolute; top: 2px; right: 14px; width: 8px; height: 8px; border-radius: 999px; background: #FFCC80"></div>
+      </div>
+      <div style="font-size: 12px; color: rgba(232,232,236,0.62)">Activity</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <div style="padding: 4px 18px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.62)" stroke-width="1.7" stroke-linecap="round"><rect x="6" y="2.5" width="12" height="19" rx="2.4"></rect><path d="M10.5 18.6h3"></path></svg>
+      </div>
+      <div style="font-size: 12px; color: rgba(232,232,236,0.62)">Node</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <div style="padding: 4px 18px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.62)" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-2.9 1.2V21a2 2 0 11-4 0v-.1A1.7 1.7 0 007.7 19l-.1.1a2 2 0 11-2.8-2.8l.1-.1A1.7 1.7 0 003 13.4H3a2 2 0 110-4h.1A1.7 1.7 0 004.9 7.7l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 002.9-1.2V3a2 2 0 114 0v.1A1.7 1.7 0 0016.3 5l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 001.2 2.9H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"></path></svg>
+      </div>
+      <div style="font-size: 12px; color: rgba(232,232,236,0.62)">Settings</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      open: { 'gw-home': true, 'gw-cloud': true },
+      sel: { gw: 'gw-home', profile: 'ash', session: 'Morning triage' },
+    };
+  }
+  renderVals() {
+    const st = this.state;
+    const defs = [
+      {
+        id: 'gw-home', label: 'Home', health: 'Healthy', dot: '#80CBC4',
+        healthBg: 'rgba(128,203,196,0.14)', meta: 'tailnet · 11 ms', stale: false, staleNote: '',
+        profiles: [
+          { id: 'ash', handle: 'ash', state: 'Streaming', stateColor: '#B3B6F2', stateBg: 'rgba(179,182,242,0.14)', unread: '2', lastSession: 'Morning triage — running echo', sessions: '3 sessions' },
+          { id: 'misty', handle: 'misty', state: 'Idle', stateColor: 'rgba(232,232,236,0.40)', stateBg: 'rgba(232,232,236,0.07)', unread: '0', lastSession: 'Reading list', sessions: '1 session' },
+        ],
+      },
+      {
+        id: 'gw-cloud', label: 'Cloud', health: 'Degraded', dot: '#FFCC80',
+        healthBg: 'rgba(255,204,128,0.14)', meta: 'stale 4m', stale: true,
+        staleNote: 'Its own queue, its own clock: 3 events waiting, acked to seq 8838. Routes are never merged across a gateway outage.',
+        profiles: [
+          { id: 'ash-cloud', handle: 'ash-cloud', state: 'Awaiting approval', stateColor: '#FFCC80', stateBg: 'rgba(255,204,128,0.14)', unread: '1', lastSession: 'Deploy check — approval pending', sessions: '2 sessions' },
+          { id: 'work', handle: 'work', state: 'Idle', stateColor: 'rgba(232,232,236,0.40)', stateBg: 'rgba(232,232,236,0.07)', unread: '0', lastSession: 'Standup notes', sessions: '1 session' },
+        ],
+      },
+    ];
+
+    const gateways = defs.map((g) => ({
+      label: g.label,
+      health: g.health,
+      dot: g.dot,
+      healthBg: g.healthBg,
+      meta: g.meta,
+      stale: g.stale && !!st.open[g.id],
+      staleNote: g.staleNote,
+      open: !!st.open[g.id],
+      caret: st.open[g.id] ? 'rotate(0deg)' : 'rotate(-90deg)',
+      toggle: () => {
+        const next = Object.assign({}, this.state.open);
+        next[g.id] = !next[g.id];
+        this.setState({ open: next });
+      },
+      profiles: g.profiles.map((p) => {
+        const active = st.sel.gw === g.id && st.sel.profile === p.handle;
+        return {
+          handle: p.handle,
+          state: p.state,
+          stateColor: p.stateColor,
+          stateBg: p.stateBg,
+          unread: p.unread,
+          hasUnread: p.unread !== '0',
+          lastSession: p.lastSession,
+          sessions: p.sessions,
+          border: active ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.12)',
+          handleColor: active ? '#B3B6F2' : '#E8E8EC',
+          pick: () => this.setState({ sel: { gw: g.id, profile: p.handle, session: p.lastSession.split(' — ')[0] } }),
+        };
+      }),
+    }));
+
+    const selGw = defs.filter((g) => g.id === st.sel.gw)[0];
+    return {
+      gateways,
+      capsuleGw: st.sel.gw,
+      capsuleProfile: st.sel.profile,
+      capsuleSession: st.sel.session,
+      capsuleDot: selGw ? selGw.dot : '#80CBC4',
+    };
+  }
+}
+</script>
+</body>
+</html>

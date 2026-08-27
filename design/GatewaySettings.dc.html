@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 16px 10px; flex-shrink: 0">
+    <div style="font-size: 22px; line-height: 28px; font-weight: 600">Settings</div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 11px; flex-grow: 1; overflow: hidden">
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">Gateways</div>
+        <div style="height: 1px; flex-grow: 1; background: rgba(232,232,236,0.10)"></div>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.55)" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+      </div>
+
+      <sc-for list="{{gateways}}" as="g" hint-placeholder-count="2">
+        <div style="background: #1C1C22; border: 1px solid {{g.border}}; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 9px">
+          <div style="display: flex; align-items: center; gap: 9px">
+            <div style="width: 8px; height: 8px; border-radius: 999px; background: {{g.dot}}; flex-shrink: 0"></div>
+            <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0">
+              <div style="font-size: 15px; line-height: 20px; font-weight: 600">{{g.label}}</div>
+              <div style="font-size: 11px; line-height: 15px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.45); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{g.url}}</div>
+            </div>
+            <div onClick="{{ g.toggle }}" style="width: 40px; height: 22px; border-radius: 999px; background: {{g.trackBg}}; flex-shrink: 0; display: flex; align-items: center; justify-content: {{g.justify}}; padding: 2px; cursor: pointer">
+              <div style="width: 18px; height: 18px; border-radius: 999px; background: {{g.knob}}"></div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
+            <div style="font-size: 10px; line-height: 13px; font-weight: 600; color: {{g.leaseColor}}; background: {{g.leaseBg}}; border-radius: 999px; padding: 3px 8px">{{g.lease}}</div>
+            <div style="font-size: 10px; line-height: 13px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.40)">{{g.version}}</div>
+          </div>
+
+          <sc-if value="{{g.degraded}}" hint-placeholder-val="{{ true }}">
+            <div style="border-left: 2px solid #FFCC80; padding-left: 9px">
+              <div style="font-size: 11px; line-height: 16px; color: rgba(232,232,236,0.62)">{{g.degradedNote}}</div>
+            </div>
+          </sc-if>
+
+          <div style="display: flex; gap: 6px">
+            <div style="min-height: 40px; display: flex; align-items: center; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(232,232,236,0.14); color: rgba(232,232,236,0.62); font-size: 11px; font-weight: 500; cursor: pointer">Revoke node here</div>
+            <div style="min-height: 40px; display: flex; align-items: center; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,180,171,0.35); color: #FFB4AB; font-size: 11px; font-weight: 500; cursor: pointer">Forget</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 9px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#80CBC4" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+        <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">Ask for my face or fingerprint</div>
+      </div>
+      <sc-for list="{{gates}}" as="x" hint-placeholder-count="4">
+        <div onClick="{{ x.toggle }}" style="display: flex; align-items: center; gap: 10px; cursor: pointer; min-height: 40px">
+          <div style="font-size: 13px; line-height: 18px; color: {{x.labelColor}}; flex-grow: 1">{{x.label}}</div>
+          <div style="width: 36px; height: 20px; border-radius: 999px; background: {{x.trackBg}}; flex-shrink: 0; display: flex; align-items: center; justify-content: {{x.justify}}; padding: 2px">
+            <div style="width: 16px; height: 16px; border-radius: 999px; background: {{x.knob}}"></div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; gap: 6px">
+      <sc-for list="{{links}}" as="l" hint-placeholder-count="3">
+        <div style="flex-grow: 1; min-height: 48px; background: #1C1C22; border: 1px solid rgba(232,232,236,0.10); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; padding: 0 6px">
+          <div style="font-size: 12px; line-height: 16px; font-weight: 500; text-align: center">{{l.title}}</div>
+          <div style="font-size: 10px; line-height: 13px; color: rgba(232,232,236,0.35)">{{l.hint}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="flex-grow: 1"></div>
+  </div>
+
+  <div style="height: 80px; flex-shrink: 0; border-top: 1px solid rgba(232,232,236,0.10); background: #1A1A20; display: flex; align-items: stretch">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <div style="padding: 4px 18px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.62)" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="4" r="1.8"></circle><circle cx="19" cy="17" r="1.8"></circle><circle cx="5" cy="17" r="1.8"></circle><path d="M12 9V5.8M14.5 13.6l2.7 1.8M9.5 13.6l-2.7 1.8"></path></svg></div>
+      <div style="font-size: 12px; color: rgba(232,232,236,0.62)">Agents</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <div style="padding: 4px 18px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.62)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 10-12 0c0 5-2 6-2 6h16s-2-1-2-6"></path><path d="M10.5 20a2 2 0 003 0"></path></svg></div>
+      <div style="font-size: 12px; color: rgba(232,232,236,0.62)">Activity</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <div style="padding: 4px 18px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.62)" stroke-width="1.7" stroke-linecap="round"><rect x="6" y="2.5" width="12" height="19" rx="2.4"></rect><path d="M10.5 18.6h3"></path></svg></div>
+      <div style="font-size: 12px; color: rgba(232,232,236,0.62)">Node</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <div style="background: rgba(179,182,242,0.18); border-radius: 999px; padding: 4px 18px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B3B6F2" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-2.9 1.2V21a2 2 0 11-4 0v-.1A1.7 1.7 0 007.7 19l-.1.1a2 2 0 11-2.8-2.8l.1-.1A1.7 1.7 0 003 13.4H3a2 2 0 110-4h.1A1.7 1.7 0 004.9 7.7l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 002.9-1.2V3a2 2 0 114 0v.1A1.7 1.7 0 0016.3 5l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 001.2 2.9H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"></path></svg></div>
+      <div style="font-size: 12px; font-weight: 500; color: #B3B6F2">Settings</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      on: { 'gw-home': true, 'gw-cloud': true },
+      gates: { launch: false, approvals: true, node: true, secrets: true },
+    };
+  }
+  renderVals() {
+    const on = this.state.on;
+    const defs = [
+      {
+        id: 'gw-home', label: 'Home', url: 'mac-studio.tail9f2c.ts.net:7800', dot: '#80CBC4',
+        version: 'hermes 1.4', lease: 'holds camera.snap', leaseColor: '#B3B6F2', leaseBg: 'rgba(179,182,242,0.14)',
+        degraded: false, degradedNote: '',
+      },
+      {
+        id: 'gw-cloud', label: 'Cloud', url: 'hermes.cloud/acct/nyx', dot: '#FFCC80',
+        version: 'hermes 0.9', lease: 'no leases', leaseColor: 'rgba(232,232,236,0.40)', leaseBg: 'rgba(232,232,236,0.07)',
+        degraded: true,
+        degradedNote: 'Older than the features you use. Steer and jobs stay hidden here rather than failing when tapped.',
+      },
+    ];
+
+    const gateways = defs.map((g) => {
+      const isOn = !!on[g.id];
+      return {
+        label: g.label,
+        url: g.url,
+        dot: isOn ? g.dot : 'rgba(232,232,236,0.25)',
+        version: g.version,
+        lease: isOn ? g.lease : 'disconnected',
+        leaseColor: isOn ? g.leaseColor : 'rgba(232,232,236,0.35)',
+        leaseBg: isOn ? g.leaseBg : 'rgba(232,232,236,0.06)',
+        degraded: g.degraded && isOn,
+        degradedNote: g.degradedNote,
+        border: isOn ? 'rgba(232,232,236,0.12)' : 'rgba(232,232,236,0.06)',
+        trackBg: isOn ? 'rgba(128,203,196,0.55)' : 'rgba(232,232,236,0.14)',
+        knob: isOn ? '#80CBC4' : 'rgba(232,232,236,0.45)',
+        justify: isOn ? 'flex-end' : 'flex-start',
+        toggle: () => {
+          const next = Object.assign({}, this.state.on);
+          next[g.id] = !next[g.id];
+          this.setState({ on: next });
+        },
+      };
+    });
+
+    const gateDefs = [
+      { id: 'launch', label: 'Opening the app' },
+      { id: 'approvals', label: 'Deciding an approval' },
+      { id: 'node', label: 'Changing node capabilities' },
+      { id: 'secrets', label: 'Viewing anything secret-bearing' },
+    ];
+    const gates = gateDefs.map((d) => {
+      const isOn = !!this.state.gates[d.id];
+      return {
+        label: d.label,
+        labelColor: isOn ? '#E8E8EC' : 'rgba(232,232,236,0.50)',
+        trackBg: isOn ? 'rgba(128,203,196,0.55)' : 'rgba(232,232,236,0.14)',
+        knob: isOn ? '#80CBC4' : 'rgba(232,232,236,0.45)',
+        justify: isOn ? 'flex-end' : 'flex-start',
+        toggle: () => {
+          const next = Object.assign({}, this.state.gates);
+          next[d.id] = !next[d.id];
+          this.setState({ gates: next });
+        },
+      };
+    });
+
+    return {
+      gateways,
+      gates,
+      links: [
+        { title: 'What streams', hint: '4 sources' },
+        { title: 'Delivery', hint: '2 can interrupt' },
+        { title: 'Diagnostics', hint: '2 of 3 healthy' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

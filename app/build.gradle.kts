@@ -15,6 +15,10 @@ android {
         versionCode = 1
         versionName = "0.1.0-poc"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Default Hermes mock-server reachability for the live PoC.
+        // Override per install in Settings → Add gateway.
+        buildConfigField("String", "DEFAULT_HERMES_HOST", "\"100.83.141.111\"")
+        buildConfigField("int", "DEFAULT_HERMES_PORT", "7800")
     }
 
     buildTypes {
@@ -80,10 +84,10 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
-    // SSE-friendly HTTP (kept thin; the PoC uses an in-process backend)
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(project(":core:domain"))
+    implementation(project(":core:common"))
+    implementation(project(":data:repo"))
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

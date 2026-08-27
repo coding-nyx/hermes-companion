@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 8px 20px 0; display: flex; flex-direction: column; gap: 20px; flex-grow: 1">
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#B3B6F2" stroke-width="1.6" stroke-linecap="round">
+        <circle cx="12" cy="12" r="3.2"></circle>
+        <circle cx="12" cy="3.6" r="2"></circle>
+        <circle cx="19.3" cy="17" r="2"></circle>
+        <circle cx="4.7" cy="17" r="2"></circle>
+        <path d="M12 8.8V5.6M14.7 13.8l2.9 1.9M9.3 13.8l-2.9 1.9"></path>
+      </svg>
+      <div style="font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -0.2px">Hermes Companion</div>
+      <div style="font-size: 16px; line-height: 22px; color: rgba(232,232,236,0.62)">Your fleet's control room — and, when you allow it, its eyes and hands on this phone.</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+
+      <div style="background: #1C1C22; border: 1px solid rgba(179,182,242,0.55); border-radius: 12px; padding: 14px; display: flex; gap: 12px; align-items: flex-start">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B3B6F2" stroke-width="1.6" stroke-linecap="round" style="flex-shrink: 0; margin-top: 2px">
+          <circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="4" r="1.8"></circle><circle cx="19" cy="17" r="1.8"></circle><circle cx="5" cy="17" r="1.8"></circle>
+          <path d="M12 9V5.8M14.5 13.6l2.7 1.8M9.5 13.6l-2.7 1.8"></path>
+        </svg>
+        <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div style="font-size: 16px; line-height: 22px; font-weight: 600">Control room</div>
+            <div style="font-size: 11px; line-height: 14px; font-weight: 500; color: #B3B6F2; background: rgba(179,182,242,0.14); border-radius: 999px; padding: 3px 8px">Always on</div>
+          </div>
+          <div style="font-size: 14px; line-height: 20px; color: rgba(232,232,236,0.62)">Watch and steer every gateway, profile and session. Approve what agents ask for.</div>
+        </div>
+      </div>
+
+      <div onClick="{{ toggleNode }}" style="background: {{nodeBg}}; border: 1px solid {{nodeBorder}}; border-radius: 12px; padding: 14px; display: flex; gap: 12px; align-items: flex-start; cursor: pointer; min-height: 44px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{nodeIcon}}" stroke-width="1.6" stroke-linecap="round" style="flex-shrink: 0; margin-top: 2px">
+          <rect x="6" y="2.5" width="12" height="19" rx="2.4"></rect><path d="M10.5 18.6h3"></path>
+        </svg>
+        <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div style="font-size: 16px; line-height: 22px; font-weight: 600">Android node</div>
+            <div style="font-size: 11px; line-height: 14px; font-weight: 500; color: {{nodeIcon}}; background: {{nodeBadgeBg}}; border-radius: 999px; padding: 3px 8px">{{nodeBadge}}</div>
+          </div>
+          <div style="font-size: 14px; line-height: 20px; color: rgba(232,232,236,0.62)">Stream this phone's notifications, calls and status to the profiles you pick. Let them act — only where you grant it.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1">
+      <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">Setup path · {{stepCount}}</div>
+      <sc-for list="{{steps}}" as="step" hint-placeholder-count="5">
+        <div style="display: flex; gap: 12px; align-items: flex-start; padding: 2px 0">
+          <div style="width: 22px; height: 22px; border-radius: 999px; background: #23232B; color: rgba(232,232,236,0.62); font-size: 12px; line-height: 22px; font-weight: 600; text-align: center; flex-shrink: 0">{{step.n}}</div>
+          <div style="display: flex; flex-direction: column; gap: 1px">
+            <div style="font-size: 14px; line-height: 20px; font-weight: 500">{{step.t}}</div>
+            <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40)">{{step.s}}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 24px">
+      <div style="background: #B3B6F2; color: #15151A; border-radius: 999px; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; cursor: pointer">Add your first gateway</div>
+      <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40); text-align: center">Nothing leaves this phone until you add a gateway and grant a capability.</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { withNode: true };
+  }
+  renderVals() {
+    const on = this.state.withNode;
+    const base = [
+      { n: '1', t: 'Add a gateway', s: 'Local, Tailscale, SSH tunnel or Hermes Cloud' },
+      { n: '2', t: 'Verify it answers', s: 'TLS identity, capabilities, profile roster' },
+    ];
+    const nodeSteps = [
+      { n: '3', t: 'Pair this phone as a node', s: 'Keystore keypair, matching phrase' },
+      { n: '4', t: 'Turn on Full Node Mode', s: 'The permissions Android actually requires' },
+      { n: '5', t: 'Grant capabilities per profile', s: 'Scoped to gateway, profile, node, capability' },
+    ];
+    const steps = on ? base.concat(nodeSteps) : base;
+    return {
+      steps,
+      stepCount: steps.length + ' steps',
+      nodeBg: on ? '#1C1C22' : '#18181D',
+      nodeBorder: on ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.12)',
+      nodeIcon: on ? '#B3B6F2' : 'rgba(232,232,236,0.40)',
+      nodeBadge: on ? 'Included' : 'Skipped for now',
+      nodeBadgeBg: on ? 'rgba(179,182,242,0.14)' : 'rgba(232,232,236,0.07)',
+      toggleNode: () => this.setState({ withNode: !this.state.withNode }),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -4,159 +4,84 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.hermes.companion.CompanionApp
-import com.hermes.companion.backend.HermesBackend
-import com.hermes.companion.backend.MockHermesBackend
+import com.hermes.companion.data.repo.ConversationRepository
+import com.hermes.companion.data.repo.ConversationState
 import com.hermes.companion.domain.ApprovalOption
-import com.hermes.companion.domain.ApprovalRequest
 import com.hermes.companion.domain.ConversationRoute
-import com.hermes.companion.domain.Message
-import com.hermes.companion.domain.RunEvent
-import com.hermes.companion.domain.RunState
-import com.hermes.companion.domain.ToolRun
-import com.hermes.companion.domain.ToolStatus
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 data class ChatUiState(
-    val route: ConversationRoute? = null,
-    val messages: List<Message> = emptyList(),
-    val streaming: Boolean = false,
-    val streamingText: String = "",
-    val pendingApproval: ApprovalRequest? = null,
+    val conversation: ConversationState = ConversationState(),
     val draft: String = "",
-    val backendLabel: String = "",
-)
+) {
+    val messages get() = conversation.messages
+    val streaming get() = conversation.streaming
+    val pendingApproval get() = conversation.pendingApproval
+    val backendLabel get() = conversation.gatewayLabel
+    /** A rendered condition, not a thrown one. */
+    val error: String? get() = conversation.activeRun?.error ?: conversation.connectivity.reasonOrNull
+}
 
+/**
+ * Thin by design: it maps one repository flow to one UI state and forwards
+ * intents. It owns no job that outlives the screen — the run is collected by
+ * the data layer, so leaving Chat no longer cancels it.
+ */
+@OptIn(ExperimentalCoroutinesApi::class)
 class ChatViewModel(
-    private val registry: com.hermes.companion.backend.BackendRegistry,
+    private val conversations: ConversationRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ChatUiState())
-    val state: StateFlow<ChatUiState> = _state.asStateFlow()
+    private val route = MutableStateFlow<ConversationRoute?>(null)
+    private val draft = MutableStateFlow("")
 
-    private var streamJob: Job? = null
+    val state: StateFlow<ChatUiState> =
+        combine(
+            route.flatMapLatest { r ->
+                r?.let { conversations.conversation(it) } ?: flowOf(ConversationState())
+            },
+            draft,
+        ) { conversation, text -> ChatUiState(conversation, text) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ChatUiState())
 
     fun bind(route: ConversationRoute) {
-        if (_state.value.route == route) return
-        streamJob?.cancel()
-        _state.update { it.copy(route = route, streamingText = "", pendingApproval = null) }
-        registry.selectRoute(route)
-        val backend = registry.backendFor(route.gatewayId) ?: return
-        require(backend is MockHermesBackend)
-        viewModelScope.launch {
-            val msgs = backend.listMessages(route)
-            _state.update {
-                it.copy(
-                    messages = msgs,
-                    backendLabel = backend.gateway.label,
-                )
-            }
-        }
+        if (this.route.value == route) return
+        this.route.value = route
+        viewModelScope.launch { conversations.refresh(route) }
     }
 
     fun updateDraft(text: String) {
-        _state.update { it.copy(draft = text) }
+        draft.value = text
     }
 
     fun send() {
-        val route = _state.value.route ?: return
-        val text = _state.value.draft.trim()
+        val route = route.value ?: return
+        val text = draft.value.trim()
         if (text.isEmpty()) return
-        _state.update { it.copy(draft = "", streaming = true, streamingText = "") }
-        streamJob = viewModelScope.launch {
-            val backend = registry.backendFor(route.gatewayId) ?: return@launch
-            require(backend is MockHermesBackend)
-            val collectedTools = mutableListOf<ToolRun>()
-            backend.sendAndStream(route, text).collect { event ->
-                handleEvent(route, event, collectedTools)
-            }
-            _state.update { it.copy(streaming = false) }
-        }
-    }
-
-    private fun handleEvent(route: ConversationRoute, event: RunEvent, tools: MutableList<ToolRun>) {
-        when (event) {
-            is RunEvent.AssistantDelta -> {
-                _state.update { it.copy(streamingText = it.streamingText + event.delta) }
-            }
-            is RunEvent.ToolStarted -> {
-                tools += event.toolRun
-                _state.update {
-                    it.copy(
-                        messages = it.messages + Message.Assistant(
-                            id = UUID.randomUUID().toString(),
-                            sessionId = route.sessionId,
-                            profileId = route.profileId,
-                            gatewayId = route.gatewayId,
-                            createdAt = System.currentTimeMillis(),
-                            text = "",
-                            toolRuns = tools.toList(),
-                            isStreaming = true,
-                        )
-                    )
-                }
-            }
-            is RunEvent.ToolCompleted -> {
-                val updated = tools.map { tr ->
-                    if (tr.id == event.toolRun.id) event.toolRun else tr
-                }
-                tools.clear(); tools.addAll(updated)
-                replaceLastAssistant(route, tools)
-            }
-            is RunEvent.ApprovalRequired -> {
-                _state.update { it.copy(pendingApproval = event.request, streaming = false) }
-            }
-            is RunEvent.RunCompleted -> {
-                _state.update {
-                    it.copy(
-                        messages = it.messages + Message.Assistant(
-                            id = UUID.randomUUID().toString(),
-                            sessionId = route.sessionId,
-                            profileId = route.profileId,
-                            gatewayId = route.gatewayId,
-                            createdAt = System.currentTimeMillis(),
-                            text = event.finalText,
-                            toolRuns = tools.toList(),
-                        ),
-                        streamingText = "",
-                    )
-                }
-            }
-            is RunEvent.RunFailed -> {
-                _state.update { it.copy(streaming = false, streamingText = "") }
-            }
-        }
-    }
-
-    private fun replaceLastAssistant(route: ConversationRoute, tools: List<ToolRun>) {
-        _state.update { st ->
-            val last = st.messages.lastOrNull() as? Message.Assistant
-            if (last == null) st else {
-                val updated = last.copy(toolRuns = tools.toList())
-                st.copy(messages = st.messages.dropLast(1) + updated)
-            }
-        }
+        draft.value = ""
+        viewModelScope.launch { conversations.submit(route, text) }
     }
 
     fun decide(option: ApprovalOption) {
-        val route = _state.value.route ?: return
-        val pending = _state.value.pendingApproval ?: return
-        _state.update { it.copy(pendingApproval = null) }
-        val backend = registry.backendFor(route.gatewayId) ?: return
-        require(backend is MockHermesBackend)
+        val route = route.value ?: return
+        val pending = state.value.pendingApproval ?: return
         viewModelScope.launch {
-            backend.decideApproval(route, pending.requestId, option)
+            conversations.decide(route, pending.runId, pending.requestId, option)
         }
     }
 
-    override fun onCleared() {
-        streamJob?.cancel()
-        super.onCleared()
+    fun stop() {
+        val route = route.value ?: return
+        val runId = state.value.conversation.activeRun?.runId ?: return
+        viewModelScope.launch { conversations.stop(route, runId) }
     }
 
     companion object {
@@ -164,7 +89,7 @@ class ChatViewModel(
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    ChatViewModel(CompanionApp.get().registry) as T
+                    ChatViewModel(CompanionApp.get().data.conversations) as T
             }
     }
 }

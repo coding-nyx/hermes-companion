@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden; position: relative">
+
+  <div style="opacity: 0.30; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden">
+    <div style="height: 44px; flex-shrink: 0"></div>
+    <div style="padding: 4px 16px 10px; display: flex; align-items: center; gap: 11px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+      <div style="font-size: 22px; line-height: 28px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace">@ash</div>
+    </div>
+    <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 6px">
+      <div style="background: #1C1C22; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600">Morning triage</div>
+      <div style="background: #1C1C22; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600">Deploy check</div>
+      <div style="background: #1C1C22; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600">Trip planning</div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #1C1C22; border-top: 1px solid rgba(179,182,242,0.40); border-radius: 20px 20px 0 0; padding: 10px 20px 26px; display: flex; flex-direction: column; gap: 15px">
+
+    <div style="width: 34px; height: 4px; border-radius: 999px; background: rgba(232,232,236,0.20); align-self: center"></div>
+
+    <div style="font-size: 22px; line-height: 28px; font-weight: 600">New thread</div>
+
+    <div style="display: flex; flex-direction: column; gap: 7px">
+      <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">Gateway</div>
+      <div style="display: flex; gap: 6px">
+        <sc-for list="{{gateways}}" as="g" hint-placeholder-count="2">
+          <div onClick="{{ g.pick }}" style="min-height: 44px; flex-grow: 1; display: flex; align-items: center; justify-content: center; gap: 7px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 500; background: {{g.bg}}; color: {{g.fg}}; border: 1px solid {{g.bd}}">
+            <div style="width: 7px; height: 7px; border-radius: 999px; background: {{g.dot}}"></div>
+            {{g.label}}
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 7px">
+      <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">Profile on {{gwName}}</div>
+      <div style="display: flex; gap: 6px">
+        <sc-for list="{{profiles}}" as="p" hint-placeholder-count="2">
+          <div onClick="{{ p.pick }}" style="min-height: 44px; flex-grow: 1; display: flex; align-items: center; justify-content: center; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'Roboto Mono', ui-monospace, monospace; background: {{p.bg}}; color: {{p.fg}}; border: 1px solid {{p.bd}}">{{p.label}}</div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">Name</div>
+      <div style="background: #23232B; border: 1px solid rgba(232,232,236,0.12); border-radius: 8px; min-height: 44px; display: flex; align-items: center; padding: 0 12px; font-size: 15px">Evening handoff</div>
+    </div>
+
+    <div onClick="{{ toggleLock }}" style="background: {{lockBg}}; border: 1px solid {{lockBorder}}; border-radius: 10px; padding: 12px; display: flex; gap: 11px; align-items: flex-start; cursor: pointer; min-height: 48px">
+      <div style="width: 18px; height: 18px; border-radius: 5px; border: 1.6px solid {{lockColor}}; background: {{lockFill}}; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="{{lockTick}}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4.5 4.5L19 7"></path></svg>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1">
+        <div style="font-size: 14px; line-height: 20px; font-weight: 600">{{lockTitle}}</div>
+        <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.62)">{{lockBody}}</div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 9px">
+      <div style="background: #23232B; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-family: 'Roboto Mono', ui-monospace, monospace">
+        <span style="color: rgba(232,232,236,0.40)">creates</span>
+        <span style="color: rgba(232,232,236,0.62)">{{routeGw}}</span>
+        <span style="color: rgba(232,232,236,0.30)">›</span>
+        <span style="color: #B3B6F2">@{{routeProfile}}</span>
+        <span style="color: rgba(232,232,236,0.30)">›</span>
+        <span style="color: rgba(232,232,236,0.62)">new</span>
+      </div>
+      <div style="min-height: 48px; border-radius: 999px; background: #B3B6F2; color: #15151A; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; cursor: pointer">Create thread</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { gw: 'gw-home', profile: 'ash', lock: true };
+  }
+  renderVals() {
+    const st = this.state;
+    const roster = {
+      'gw-home': { name: 'Home', dot: '#80CBC4', profiles: ['ash', 'misty'] },
+      'gw-cloud': { name: 'Cloud', dot: '#FFCC80', profiles: ['ash-cloud', 'work'] },
+    };
+
+    const gateways = ['gw-home', 'gw-cloud'].map((id) => ({
+      label: roster[id].name,
+      dot: roster[id].dot,
+      bg: st.gw === id ? 'rgba(179,182,242,0.16)' : '#23232B',
+      fg: st.gw === id ? '#B3B6F2' : 'rgba(232,232,236,0.62)',
+      bd: st.gw === id ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.12)',
+      pick: () => this.setState({ gw: id, profile: roster[id].profiles[0] }),
+    }));
+
+    const list = roster[st.gw].profiles;
+    const profiles = list.map((p) => ({
+      label: '@' + p,
+      bg: st.profile === p ? 'rgba(179,182,242,0.16)' : '#23232B',
+      fg: st.profile === p ? '#B3B6F2' : 'rgba(232,232,236,0.62)',
+      bd: st.profile === p ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.12)',
+      pick: () => this.setState({ profile: p }),
+    }));
+
+    const lock = st.lock;
+    return {
+      gateways,
+      profiles,
+      gwName: roster[st.gw].name,
+      routeGw: st.gw,
+      routeProfile: st.profile,
+      lockTitle: lock ? 'Locked to opus-4.6' : 'Follows the profile default',
+      lockBody: lock
+        ? 'This thread keeps the same model across every run, even if the profile default moves under it.'
+        : 'Runs use whatever the profile resolves at execution time. Fine for chat, risky for a long thread you compare over weeks.',
+      lockBg: lock ? 'rgba(128,203,196,0.08)' : '#23232B',
+      lockBorder: lock ? 'rgba(128,203,196,0.35)' : 'rgba(232,232,236,0.12)',
+      lockColor: lock ? '#80CBC4' : 'rgba(232,232,236,0.35)',
+      lockFill: lock ? 'rgba(128,203,196,0.35)' : 'transparent',
+      lockTick: lock ? '#15151A' : 'transparent',
+      toggleLock: () => this.setState({ lock: !this.state.lock }),
+    };
+  }
+}
+</script>
+</body>
+</html>

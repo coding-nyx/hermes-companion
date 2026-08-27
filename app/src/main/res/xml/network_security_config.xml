@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  PoC scope: permit cleartext HTTP only to local-dev and Tailscale CGNAT
+  ranges. Real Hermes gateways will be HTTPS; tighten or remove this
+  config before any non-PoC build ships.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">100.88.4.63</domain>
+        <domain includeSubdomains="true">100.83.141.111</domain>
+    </domain-config>
+</network-security-config>

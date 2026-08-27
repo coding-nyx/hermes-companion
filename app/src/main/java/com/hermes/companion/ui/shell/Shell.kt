@@ -33,10 +33,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.hermes.companion.domain.ConversationRoute
+import com.hermes.companion.ui.activity.ActivityScreen
 import com.hermes.companion.ui.agents.AgentsScreen
 import com.hermes.companion.ui.chat.ChatScreen
 import com.hermes.companion.ui.nav.Route
 import com.hermes.companion.ui.node.NodeScreen
+import com.hermes.companion.ui.outbox.OutboxScreen
 import com.hermes.companion.ui.settings.SettingsScreen
 
 private data class TabItem(val route: Route, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
@@ -117,13 +119,16 @@ private fun NavGraph(nav: androidx.navigation.NavHostController, padding: Paddin
             })
         }
         composable(Route.Activity.path) {
-            Placeholder("Activity lane — runs/events/jobs land here.")
+            ActivityScreen()
         }
         composable(Route.Node.path) {
             NodeScreen()
         }
         composable(Route.Settings.path) {
-            SettingsScreen()
+            SettingsScreen(onOpenOutbox = { nav.navigate(Route.Outbox.path) })
+        }
+        composable(Route.Outbox.path) {
+            OutboxScreen(onBack = { nav.popBackStack() })
         }
         composable(
             Route.Chat.Companion.pattern,

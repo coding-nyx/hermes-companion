@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 16px 12px; display: flex; align-items: center; gap: 12px; flex-shrink: 0">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M11 6l-6 6 6 6"></path>
+    </svg>
+    <div style="display: flex; flex-direction: column">
+      <div style="font-size: 22px; line-height: 28px; font-weight: 600">Pair this phone</div>
+      <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40)">as a node on gw-home</div>
+    </div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 12px; flex-grow: 1; overflow: hidden">
+
+    <div style="background: #1C1C22; border: 1px solid rgba(128,203,196,0.35); border-radius: 12px; padding: 14px; display: flex; gap: 12px; align-items: flex-start">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#80CBC4" stroke-width="1.7" stroke-linecap="round" style="flex-shrink: 0; margin-top: 1px">
+        <circle cx="8.5" cy="14.5" r="4"></circle><path d="M11.4 11.6L19 4M16.2 6.8l2.1 2.1M18.4 4.6l2 2"></path>
+      </svg>
+      <div style="display: flex; flex-direction: column; gap: 3px">
+        <div style="font-size: 14px; line-height: 20px; font-weight: 600">Device key created</div>
+        <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.62)">Ed25519 keypair, generated inside Android Keystore. The private half never leaves the secure element.</div>
+        <div style="font-size: 12px; line-height: 18px; font-family: 'Roboto Mono', ui-monospace, monospace; color: #80CBC4">node_s22 · key 7f3a…c418</div>
+      </div>
+    </div>
+
+    <div style="background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px; align-items: center">
+      <div style="font-size: 14px; line-height: 20px; font-weight: 600; align-self: flex-start">Scan the gateway's code</div>
+      <div style="width: 148px; height: 148px; background: #E8E8EC; border-radius: 8px; padding: 10px">
+        <svg width="128" height="128" viewBox="0 0 29 29" fill="#15151A" shape-rendering="crispEdges">
+          <path d="M0 0h7v7H0zM2 2h3v3H2zM22 0h7v7h-7zM24 2h3v3h-3zM0 22h7v7H0zM2 24h3v3H2z"></path>
+          <path d="M9 0h1v1H9zM11 0h2v1h-2zM9 2h1v2H9zM12 2h1v3h-1zM10 4h2v1h-2zM9 6h4v1H9zM8 9h1v1H8zM10 9h1v2h-1zM12 9h2v1h-2zM8 11h2v1H8zM11 12h1v1h-1zM13 11h1v2h-1zM8 13h2v1H8zM16 9h1v2h-1zM18 9h2v1h-2zM20 10h1v2h-1zM16 12h2v1h-2zM19 12h1v1h-1zM22 9h1v1h-1zM24 9h2v1h-2zM22 11h1v2h-1zM25 11h1v1h-1zM27 10h1v2h-1zM23 13h3v1h-3zM0 9h1v1H0zM2 9h2v1H2zM5 9h1v2H5zM0 11h2v1H0zM3 11h1v2H3zM0 13h1v1H0zM5 13h2v1H5zM9 16h1v1H9zM11 16h2v1h-2zM9 18h1v2H9zM12 18h1v1h-1zM10 20h1v1h-1zM13 19h1v2h-1zM16 16h2v1h-2zM19 16h1v2h-1zM16 18h1v2h-1zM18 19h2v1h-2zM21 16h1v2h-1zM23 16h2v1h-2zM22 18h3v1h-3zM26 17h1v2h-1zM9 22h1v2H9zM11 22h1v1h-1zM13 22h1v3h-1zM10 24h2v1h-2zM9 26h4v1H9zM16 22h1v1h-1zM18 22h2v1h-2zM16 24h3v1h-3zM20 23h1v2h-1zM17 26h2v1h-2zM21 26h1v1h-1zM23 22h1v2h-1zM25 22h1v1h-1zM27 22h1v3h-1zM24 25h2v1h-2zM22 26h1v1h-1zM25 27h2v1h-2z"></path>
+        </svg>
+      </div>
+      <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40); text-align: center">Short-lived nonce, broker URL and server fingerprint. No bearer token ever travels in a QR code.</div>
+    </div>
+
+    <div style="background: {{phraseBg}}; border: 1px solid {{phraseBorder}}; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="font-size: 14px; line-height: 20px; font-weight: 600">{{phraseTitle}}</div>
+      <div style="font-family: 'Roboto Mono', ui-monospace, monospace; font-size: 19px; line-height: 26px; font-weight: 500; color: {{phraseColor}}; letter-spacing: 0.5px">amber-lattice-9042</div>
+      <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.62)">{{phraseBody}}</div>
+      <sc-if value="{{undecided}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; gap: 8px">
+          <div onClick="{{ accept }}" style="flex-grow: 1; min-height: 44px; border-radius: 999px; background: #B3B6F2; color: #15151A; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; cursor: pointer">It matches</div>
+          <div onClick="{{ reject }}" style="flex-grow: 1; min-height: 44px; border-radius: 999px; border: 1px solid rgba(255,180,171,0.5); color: #FFB4AB; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; cursor: pointer">It doesn't</div>
+        </div>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{paired}}" hint-placeholder-val="{{ true }}">
+      <div style="background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 7px">
+        <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">Certificate bound to this key</div>
+        <sc-for list="{{bound}}" as="b" hint-placeholder-count="3">
+          <div style="display: flex; justify-content: space-between; gap: 12px">
+            <div style="font-size: 13px; line-height: 18px; color: rgba(232,232,236,0.62)">{{b.k}}</div>
+            <div style="font-size: 13px; line-height: 18px; font-family: 'Roboto Mono', ui-monospace, monospace; text-align: right">{{b.v}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <div style="flex-grow: 1"></div>
+
+    <div style="padding-bottom: 20px">
+      <div style="min-height: 48px; border-radius: 999px; background: {{ctaBg}}; color: {{ctaFg}}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; cursor: pointer">{{ctaLabel}}</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { decision: 'none' };
+  }
+  renderVals() {
+    const d = this.state.decision;
+    const paired = d === 'accepted';
+    const rejected = d === 'rejected';
+    return {
+      undecided: d === 'none',
+      paired,
+      phraseTitle: rejected ? 'Pairing stopped' : 'Same phrase on both screens?',
+      phraseBody: rejected
+        ? 'Nothing was bound. Something answered that is not your gateway — check the address before trying again.'
+        : 'The gateway is showing this too. If the two differ, something is answering in the middle.',
+      phraseBg: rejected ? '#241A1A' : '#1C1C22',
+      phraseBorder: rejected ? 'rgba(255,180,171,0.5)' : 'rgba(255,204,128,0.45)',
+      phraseColor: rejected ? '#FFB4AB' : '#FFCC80',
+      bound: [
+        { k: 'Gateway', v: 'gw-home' },
+        { k: 'Broker', v: 'wss://…ts.net/node' },
+        { k: 'Expires', v: '90 days' },
+      ],
+      ctaLabel: paired ? 'Continue to Full Node Mode' : rejected ? 'Back to gateway settings' : 'Confirm the phrase first',
+      ctaBg: paired ? '#B3B6F2' : rejected ? '#23232B' : '#23232B',
+      ctaFg: paired ? '#15151A' : 'rgba(232,232,236,0.62)',
+      accept: () => this.setState({ decision: 'accepted' }),
+      reject: () => this.setState({ decision: 'rejected' }),
+    };
+  }
+}
+</script>
+</body>
+</html>

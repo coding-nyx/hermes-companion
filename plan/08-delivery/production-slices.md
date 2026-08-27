@@ -8,7 +8,11 @@ Source: `../../Hermes-Companion-Plan.md` §13
 - profile discovery/multiplex routing
 - sessions + chat/stream
 - run cards, stop/steer, approvals
-- images/files/voice
+- images/files/voice — four input paths (type, dictate, voice note, realtime Talk) and playback of an assistant message
+- agent questions as structured cards, distinct from approvals
+- read-only workspace browsing with previews and export
+- outbound outbox with the unacknowledged state surfaced
+- gateway discovery (mDNS, wide-area DNS-SD, manual) and transport privilege tiers
 
 ## Slice B — delivery channel (1–2 weeks)
 
@@ -24,6 +28,8 @@ Source: `../../Hermes-Companion-Plan.md` §13
 - `NotificationListenerService` + active-notification restart reconciliation
 - calls, contacts, call-log outcomes, and device status
 - per-profile/per-gateway grants and audit log
+- exclusive-capability leases with a visible holder
+- forwarding rate ceiling and the never-forwarded list
 - action receipts and model/provider failure queue
 - deterministic end-to-end notification canary
 
@@ -37,3 +43,4 @@ Source: `../../Hermes-Companion-Plan.md` §13
 
 - [08-delivery/poc-scope.md](./poc-scope.md)
 - [08-delivery/acceptance-criteria.md](./acceptance-criteria.md)
+- [09-parity/openclaw-node-app.md](../09-parity/openclaw-node-app.md)

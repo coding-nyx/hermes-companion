@@ -20,6 +20,14 @@ For each notification the Node records, before any model decision:
 
 Importance judgment happens **after** the event is durably stored and acknowledged by the gateway. "Not important" may suppress a user ping; it must never erase evidence that the event arrived.
 
+## Forwarding limits
+
+Ingestion is unconditional; forwarding is not. Both limits are local policy applied after the event is durably recorded, so a suppressed or throttled event is still evidence.
+
+- **Rate ceiling.** A per-device events-per-minute cap bounds what any one package can push at a gateway. Events over the ceiling stay recorded and are marked throttled, never dropped without a trace.
+- **Never forwarded.** Companion's own package, plus any app Hermes already reaches the operator through — Telegram today, per §1. Forwarding a channel Hermes already owns creates a second copy of the same conversation and invites a delivery loop.
+- The never-forwarded list is exactly the set Hermes serves natively. It must not grow to cover WhatsApp or Cliq: §6.2 requires both, and they are the reason this contract exists.
+
 ## Self-loop prevention
 
 Self-notification loops are prevented structurally: events originating from the Companion's own package/delivery ID carry an origin marker and are excluded before routing. Do not hard-code a profile display name such as "Ash" as the loop guard.
@@ -29,3 +37,4 @@ Self-notification loops are prevented structurally: events originating from the 
 - [02-contracts/edge-contract.md](../02-contracts/edge-contract.md)
 - [03-android/full-node-mode.md](./full-node-mode.md)
 - [05-reliability/offline-behavior.md](../05-reliability/offline-behavior.md)
+- [09-parity/openclaw-node-app.md](../09-parity/openclaw-node-app.md)

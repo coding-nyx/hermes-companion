@@ -22,6 +22,8 @@ See [SCOPE.md](./SCOPE.md) for the full in-scope / out-of-scope list.
 | [06-ux/](./06-ux/) | Mobile information architecture |
 | [07-privacy/](./07-privacy/) | Privacy model |
 | [08-delivery/](./08-delivery/) | Proposed PoC scope, production slices, acceptance criteria |
+| [09-parity/](./09-parity/) | What comparable shipped apps already do, and what we decided in response |
+| [10-architecture/](./10-architecture/) | Module graph, runtime, data layer, transport contracts, security, migration |
 
 ## Source of truth
 

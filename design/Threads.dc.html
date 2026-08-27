@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 16px 10px; display: flex; align-items: center; gap: 11px; flex-shrink: 0">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+    <div style="display: flex; flex-direction: column; flex-grow: 1">
+      <div style="font-size: 22px; line-height: 28px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace">@ash</div>
+      <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40); font-family: 'Roboto Mono', ui-monospace, monospace">Home · gw-home · {{countLabel}}</div>
+    </div>
+  </div>
+
+  <div style="padding: 0 16px 10px; flex-shrink: 0; display: flex; flex-direction: column; gap: 9px">
+    <div style="min-height: 44px; background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 22px; display: flex; align-items: center; gap: 9px; padding: 0 14px">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.40)" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4.5 4.5"></path></svg>
+      <div style="font-size: 14px; color: rgba(232,232,236,0.40)">Search this profile's threads</div>
+    </div>
+    <div style="display: flex; gap: 6px">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+        <div onClick="{{ t.pick }}" style="min-height: 44px; flex-grow: 1; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 500; background: {{t.bg}}; color: {{t.fg}}; border: 1px solid {{t.bd}}">
+          <span>{{t.label}}</span>
+          <span style="font-size: 11px; color: {{t.countColor}}">{{t.count}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; overflow: hidden">
+    <sc-for list="{{threads}}" as="t" hint-placeholder-count="4">
+      <div onClick="{{ t.pick }}" style="background: #1C1C22; border: 1px solid {{t.border}}; border-radius: 12px; padding: 11px 12px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; min-height: 48px">
+        <div style="display: flex; align-items: center; gap: 7px">
+          <sc-if value="{{t.pinned}}" hint-placeholder-val="{{ true }}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFCC80" stroke-width="2" stroke-linecap="round" style="flex-shrink: 0"><path d="M9 4h6l-1 6 4 3H6l4-3z"></path><path d="M12 13v7"></path></svg>
+          </sc-if>
+          <div style="font-size: 15px; line-height: 20px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{t.title}}</div>
+          <div style="flex-grow: 1"></div>
+          <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.35); flex-shrink: 0">{{t.time}}</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <div style="font-size: 13px; line-height: 18px; color: rgba(232,232,236,0.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1">{{t.last}}</div>
+          <sc-if value="{{t.hasUnread}}" hint-placeholder-val="{{ true }}">
+            <div style="min-width: 20px; height: 20px; border-radius: 999px; background: #B3B6F2; color: #15151A; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 6px; flex-shrink: 0">{{t.unread}}</div>
+          </sc-if>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
+          <div style="font-size: 11px; line-height: 14px; font-weight: 500; color: {{t.stateColor}}; background: {{t.stateBg}}; border-radius: 999px; padding: 3px 8px">{{t.state}}</div>
+          <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{t.modelColor}}; background: {{t.modelBg}}; border-radius: 999px; padding: 3px 8px">{{t.model}}</div>
+        </div>
+      </div>
+    </sc-for>
+
+    <sc-if value="{{empty}}" hint-placeholder-val="{{ true }}">
+      <div style="padding: 26px 12px; display: flex; flex-direction: column; gap: 6px; align-items: center">
+        <div style="font-size: 14px; line-height: 20px; color: rgba(232,232,236,0.55)">{{emptyTitle}}</div>
+        <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.35); text-align: center">{{emptyBody}}</div>
+      </div>
+    </sc-if>
+
+    <div style="flex-grow: 1"></div>
+
+    <div style="padding-bottom: 20px; display: flex; flex-direction: column; gap: 8px">
+      <div style="min-height: 48px; border-radius: 999px; background: #B3B6F2; color: #15151A; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; font-weight: 600; cursor: pointer">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#15151A" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        New thread
+      </div>
+      <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.35); text-align: center">Swipe a thread to pin or archive. Archiving keeps its transcript and its route.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'active', sel: 'triage' };
+  }
+  renderVals() {
+    const tab = this.state.tab;
+    const sel = this.state.sel;
+
+    const defs = [
+      { id: 'triage', title: 'Morning triage', last: 'Telling her you are running about fifteen…', time: '07:12', unread: 2, pinned: true, archived: false, state: 'Streaming', model: 'model locked' },
+      { id: 'deploy', title: 'Deploy check', last: 'notifications.reply is waiting on you', time: '06:41', unread: 1, pinned: false, archived: false, state: 'Awaiting approval', model: 'profile default' },
+      { id: 'trip', title: 'Trip planning', last: 'Held the 7:15 slot on Thursday', time: 'Yesterday', unread: 0, pinned: true, archived: false, state: 'Idle', model: 'model locked' },
+      { id: 'reading', title: 'Reading list', last: 'Added three papers from Cliq', time: 'Tue', unread: 0, pinned: false, archived: false, state: 'Idle', model: 'profile default' },
+      { id: 'groceries', title: 'Groceries', last: 'Closed out the weekly list', time: '12 Aug', unread: 0, pinned: false, archived: true, state: 'Idle', model: 'profile default' },
+    ];
+
+    const counts = {
+      active: defs.filter((d) => !d.archived).length,
+      pinned: defs.filter((d) => d.pinned && !d.archived).length,
+      archived: defs.filter((d) => d.archived).length,
+    };
+
+    const tabs = [
+      { id: 'active', label: 'Active' },
+      { id: 'pinned', label: 'Pinned' },
+      { id: 'archived', label: 'Archived' },
+    ].map((x) => ({
+      label: x.label,
+      count: String(counts[x.id]),
+      countColor: tab === x.id ? 'rgba(179,182,242,0.75)' : 'rgba(232,232,236,0.35)',
+      bg: tab === x.id ? 'rgba(179,182,242,0.16)' : '#1C1C22',
+      fg: tab === x.id ? '#B3B6F2' : 'rgba(232,232,236,0.62)',
+      bd: tab === x.id ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.12)',
+      pick: () => this.setState({ tab: x.id }),
+    }));
+
+    const stateStyle = {
+      Streaming: { c: '#B3B6F2', b: 'rgba(179,182,242,0.14)' },
+      'Awaiting approval': { c: '#FFCC80', b: 'rgba(255,204,128,0.14)' },
+      Idle: { c: 'rgba(232,232,236,0.40)', b: 'rgba(232,232,236,0.07)' },
+    };
+
+    const shown = defs.filter((d) => {
+      if (tab === 'active') return !d.archived;
+      if (tab === 'pinned') return d.pinned && !d.archived;
+      return d.archived;
+    });
+
+    const threads = shown.map((d) => {
+      const ss = stateStyle[d.state];
+      const locked = d.model === 'model locked';
+      return {
+        title: d.title,
+        last: d.last,
+        time: d.time,
+        unread: String(d.unread),
+        hasUnread: d.unread > 0,
+        pinned: d.pinned,
+        state: d.state,
+        stateColor: ss.c,
+        stateBg: ss.b,
+        model: locked ? 'opus-4.6 locked' : 'profile default',
+        modelColor: locked ? '#80CBC4' : 'rgba(232,232,236,0.40)',
+        modelBg: locked ? 'rgba(128,203,196,0.12)' : 'rgba(232,232,236,0.06)',
+        border: sel === d.id ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.10)',
+        pick: () => this.setState({ sel: d.id }),
+      };
+    });
+
+    return {
+      tabs,
+      threads,
+      countLabel: counts.active + ' active threads',
+      empty: shown.length === 0,
+      emptyTitle: 'Nothing pinned here yet',
+      emptyBody: 'Pinned threads stay at the top of this profile and survive an archive sweep.',
+    };
+  }
+}
+</script>
+</body>
+</html>

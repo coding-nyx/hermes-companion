@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 16px 10px; display: flex; align-items: center; gap: 12px; flex-shrink: 0">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M11 6l-6 6 6 6"></path>
+    </svg>
+    <div style="font-size: 22px; line-height: 28px; font-weight: 600">Full Node Mode</div>
+  </div>
+
+  <div style="padding: 0 16px 10px; flex-shrink: 0">
+    <div style="background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; gap: 8px">
+        <div style="font-size: 22px; line-height: 26px; font-weight: 600; color: {{barColor}}">{{doneCount}}</div>
+        <div style="font-size: 13px; line-height: 18px; color: rgba(232,232,236,0.62)">of {{totalCount}} required steps done</div>
+      </div>
+      <div style="height: 6px; border-radius: 999px; background: #2C2C36; overflow: hidden">
+        <div style="height: 6px; width: {{barWidth}}; background: {{barColor}}; border-radius: 999px"></div>
+      </div>
+      <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.62)">{{summary}}</div>
+    </div>
+  </div>
+
+  <div style="padding: 0 16px 10px; flex-shrink: 0; display: flex; flex-direction: column; gap: 7px">
+    <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">Trust tier</div>
+    <div style="display: flex; gap: 6px">
+      <sc-for list="{{tiers}}" as="t" hint-placeholder-count="3">
+        <div onClick="{{ t.pick }}" style="min-height: 44px; flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 0 8px; border-radius: 999px; cursor: pointer; font-size: 12px; font-weight: 500; text-align: center; background: {{t.bg}}; color: {{t.fg}}; border: 1px solid {{t.bd}}">{{t.label}}</div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; overflow: hidden">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+      <div onClick="{{ r.toggle }}" style="background: #1C1C22; border: 1px solid {{r.border}}; border-radius: 12px; padding: 11px 12px; display: flex; gap: 11px; align-items: center; cursor: pointer; min-height: 48px">
+        <div style="width: 20px; height: 20px; border-radius: 999px; border: 1.6px solid {{r.color}}; background: {{r.fill}}; flex-shrink: 0; display: flex; align-items: center; justify-content: center">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{r.tick}}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4.5 4.5L19 7"></path></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
+          <div style="font-size: 14px; line-height: 20px; font-weight: 500">{{r.label}}</div>
+          <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40)">{{r.detail}}</div>
+        </div>
+        <div style="font-size: 11px; line-height: 14px; font-weight: 500; color: {{r.color}}; background: {{r.pillBg}}; border-radius: 999px; padding: 3px 8px; flex-shrink: 0">{{r.state}}</div>
+      </div>
+    </sc-for>
+    <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40); padding: 6px 2px 20px">Full means everything Android grants an ordinary installed app once you allow it. It does not mean the sandbox is gone.</div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tier: 'standard',
+      granted: { notif: true, battery: true, contacts: true, screening: false, dialer: false, sms: false, a11y: false, net: true, grants: false },
+    };
+  }
+  renderVals() {
+    const g = this.state.granted;
+    const tier = this.state.tier;
+    const tiers = [
+      { id: 'standard', label: 'Standard' },
+      { id: 'a11y', label: 'Accessibility' },
+      { id: 'shizuku', label: 'Shizuku / ADB' },
+    ].map((t) => ({
+      label: t.label,
+      bg: tier === t.id ? 'rgba(179,182,242,0.16)' : '#1C1C22',
+      fg: tier === t.id ? '#B3B6F2' : 'rgba(232,232,236,0.62)',
+      bd: tier === t.id ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.12)',
+      pick: () => this.setState({ tier: t.id }),
+    }));
+
+    const defs = [
+      { id: 'notif', label: 'Notification access', detail: 'NotificationListenerService — the source of truth', req: true },
+      { id: 'battery', label: 'Battery unrestricted', detail: 'Plus Samsung autostart, or the broker dies overnight', req: true },
+      { id: 'net', label: 'Network and TLS verified', detail: 'Tailnet reachable, fingerprint pinned', req: true },
+      { id: 'contacts', label: 'Contacts and call log', detail: 'Needed to name a caller instead of a number', req: true },
+      { id: 'grants', label: 'Capabilities granted to a profile', detail: 'Nothing streams until at least one grant exists', req: true },
+      { id: 'screening', label: 'Call screening role', detail: 'Observe and reject; dialer role for answering', req: false },
+      { id: 'sms', label: 'SMS role', detail: 'Only if you want SMS read or send', req: false },
+      { id: 'a11y', label: 'Accessibility service', detail: 'Screen inspection and input — separate tier', req: false, tier: 'a11y' },
+    ];
+
+    const rows = defs
+      .filter((d) => !d.tier || d.tier === tier || tier === 'shizuku')
+      .map((d) => {
+        const on = !!g[d.id];
+        const color = on ? '#80CBC4' : d.req ? '#FFCC80' : 'rgba(232,232,236,0.40)';
+        return {
+          label: d.label,
+          detail: d.detail,
+          state: on ? 'Granted' : d.req ? 'Required' : 'Optional',
+          color,
+          fill: on ? 'rgba(128,203,196,0.35)' : 'transparent',
+          tick: on ? '#15151A' : 'transparent',
+          border: on ? 'rgba(232,232,236,0.12)' : d.req ? 'rgba(255,204,128,0.35)' : 'rgba(232,232,236,0.12)',
+          pillBg: on ? 'rgba(128,203,196,0.14)' : d.req ? 'rgba(255,204,128,0.14)' : 'rgba(232,232,236,0.07)',
+          toggle: () => {
+            const next = Object.assign({}, this.state.granted);
+            next[d.id] = !next[d.id];
+            this.setState({ granted: next });
+          },
+        };
+      });
+
+    const req = defs.filter((d) => d.req);
+    const done = req.filter((d) => g[d.id]).length;
+    const pct = Math.round((done / req.length) * 100);
+    const complete = done === req.length;
+
+    return {
+      tiers,
+      rows,
+      doneCount: String(done),
+      totalCount: String(req.length),
+      barWidth: pct + '%',
+      barColor: complete ? '#80CBC4' : '#FFCC80',
+      summary: complete
+        ? 'This phone can serve every standard capability you grant.'
+        : 'Until these are done the node reports partial coverage — it never claims a capability it cannot serve.',
+    };
+  }
+}
+</script>
+</body>
+</html>

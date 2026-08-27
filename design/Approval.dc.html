@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden; position: relative">
+
+  <div style="opacity: 0.32; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden">
+    <div style="height: 44px; flex-shrink: 0"></div>
+    <div style="padding: 4px 14px 10px; display: flex; align-items: center; gap: 11px; border-bottom: 1px solid rgba(232,232,236,0.08)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+      <div style="display: flex; flex-direction: column">
+        <div style="font-size: 16px; line-height: 22px; font-weight: 600; font-family: 'Roboto Mono', ui-monospace, monospace">@ash · Morning triage</div>
+        <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.62); font-family: 'Roboto Mono', ui-monospace, monospace">Home · gw-home</div>
+      </div>
+    </div>
+    <div style="padding: 12px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: flex-end">
+        <div style="max-width: 300px; background: #B3B6F2; color: #15151A; border-radius: 12px; padding: 10px 12px; font-size: 16px; line-height: 22px">reply that I'll be 15 late</div>
+      </div>
+      <div style="max-width: 320px; background: #1C1C22; border: 1px solid rgba(232,232,236,0.10); border-radius: 12px; padding: 12px; font-size: 16px; line-height: 22px">Looking up the thread and drafting the reply…</div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; background: #1C1C22; border-top: 1px solid {{sheetBorder}}; border-radius: 20px 20px 0 0; padding: 10px 20px 26px; display: flex; flex-direction: column; gap: 14px">
+
+    <div style="width: 34px; height: 4px; border-radius: 999px; background: rgba(232,232,236,0.20); align-self: center"></div>
+
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0">
+        <path d="M12 22s7-3.6 7-9.4V5.4L12 2.6 5 5.4v7.2C5 18.4 12 22 12 22z"></path>
+      </svg>
+      <div style="font-size: 22px; line-height: 28px; font-weight: 600">{{title}}</div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 6px; background: #23232B; border-radius: 999px; padding: 7px 11px; font-size: 12px; font-family: 'Roboto Mono', ui-monospace, monospace; align-self: flex-start">
+      <span style="color: #B3B6F2">@ash</span>
+      <span style="color: rgba(232,232,236,0.30)">on</span>
+      <span style="color: rgba(232,232,236,0.62)">gw-home</span>
+      <span style="color: rgba(232,232,236,0.30)">·</span>
+      <span style="color: rgba(232,232,236,0.62)">node_s22</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">It wants to</div>
+      <div style="background: #23232B; border-radius: 8px; padding: 11px 12px; display: flex; flex-direction: column; gap: 7px">
+        <div style="font-size: 14px; line-height: 20px; font-family: 'Roboto Mono', ui-monospace, monospace; color: #FFCC80">notifications.reply</div>
+        <div style="font-size: 13px; line-height: 18px; color: rgba(232,232,236,0.62)">into <span style="font-family: 'Roboto Mono', ui-monospace, monospace">com.whatsapp</span> thread "Priya R."</div>
+        <div style="border-left: 2px solid rgba(232,232,236,0.20); padding-left: 10px; font-size: 14px; line-height: 20px">"Running about 15 minutes behind — see you at 7:15."</div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{meta}}" as="m" hint-placeholder-count="3">
+        <div style="display: flex; justify-content: space-between; gap: 12px">
+          <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.40)">{{m.k}}</div>
+          <div style="font-size: 12px; line-height: 17px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.62)">{{m.v}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{pending}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div style="display: flex; gap: 8px">
+          <sc-for list="{{options}}" as="o" hint-placeholder-count="3">
+            <div onClick="{{ o.pick }}" style="flex-grow: 1; min-height: 48px; border-radius: 999px; background: #B3B6F2; color: #15151A; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; cursor: pointer">{{o.label}}</div>
+          </sc-for>
+        </div>
+        <div onClick="{{ deny }}" style="min-height: 48px; border-radius: 999px; border: 1px solid rgba(255,180,171,0.5); color: #FFB4AB; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; cursor: pointer">Deny</div>
+        <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40); text-align: center">Only the choices Hermes offered for this request.</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{decided}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 9px">
+        <div style="background: {{receiptBg}}; border: 1px solid {{receiptBorder}}; border-radius: 8px; padding: 11px 12px; display: flex; flex-direction: column; gap: 7px">
+          <div style="font-size: 13px; line-height: 18px; font-weight: 600; color: {{accent}}">{{receiptTitle}}</div>
+          <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
+            <sc-for list="{{trace}}" as="t" hint-placeholder-count="3">
+              <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{t.color}}; background: {{t.bg}}; border-radius: 999px; padding: 4px 8px">{{t.label}}</div>
+            </sc-for>
+          </div>
+          <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.62)">{{receiptBody}}</div>
+        </div>
+        <div onClick="{{ reset }}" style="min-height: 44px; border-radius: 999px; border: 1px solid rgba(232,232,236,0.16); color: rgba(232,232,236,0.62); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; cursor: pointer">Ask me again</div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { decision: null };
+  }
+  renderVals() {
+    const d = this.state.decision;
+    const denied = d === 'deny';
+    const accent = d ? (denied ? '#FFB4AB' : '#80CBC4') : '#FFCC80';
+
+    const options = [
+      { id: 'once', label: 'Once' },
+      { id: 'session', label: 'Session' },
+      { id: 'always', label: 'Always' },
+    ].map((o) => ({ label: o.label, pick: () => this.setState({ decision: o.id }) }));
+
+    const okTrace = [
+      { label: 'command.accepted', color: '#80CBC4', bg: 'rgba(128,203,196,0.14)' },
+      { label: 'progress', color: '#80CBC4', bg: 'rgba(128,203,196,0.14)' },
+      { label: 'completed', color: '#80CBC4', bg: 'rgba(128,203,196,0.14)' },
+    ];
+    const noTrace = [
+      { label: 'denied', color: '#FFB4AB', bg: 'rgba(255,180,171,0.14)' },
+      { label: 'no frame sent', color: 'rgba(232,232,236,0.40)', bg: 'rgba(232,232,236,0.07)' },
+    ];
+
+    const titles = {
+      once: 'Approved this once',
+      session: 'Approved for this session',
+      always: 'Approved from now on',
+      deny: 'Denied',
+    };
+    const bodies = {
+      once: 'The next reply asks again. The receipt is now part of the run.',
+      session: 'Until this session ends, replies into this thread go through without asking.',
+      always: 'A standing grant for notifications.reply on this profile. Revoke it in Capabilities.',
+      deny: 'Nothing reached the phone. The run records the refusal and carries on without the reply.',
+    };
+
+    return {
+      pending: !d,
+      decided: !!d,
+      accent,
+      sheetBorder: d ? (denied ? 'rgba(255,180,171,0.45)' : 'rgba(128,203,196,0.40)') : 'rgba(255,204,128,0.45)',
+      title: d ? 'Decision recorded' : 'Approval required',
+      options,
+      meta: [
+        { k: 'Digest', v: 'sha256:9c02…41ba' },
+        { k: 'Request', v: 'req_01J8…f3 · grant gr_7f3a' },
+        { k: 'Expires', v: 'in 4m 12s' },
+      ],
+      trace: denied ? noTrace : okTrace,
+      receiptTitle: titles[d] || '',
+      receiptBody: bodies[d] || '',
+      receiptBg: denied ? 'rgba(255,180,171,0.08)' : 'rgba(128,203,196,0.08)',
+      receiptBorder: denied ? 'rgba(255,180,171,0.30)' : 'rgba(128,203,196,0.28)',
+      deny: () => this.setState({ decision: 'deny' }),
+      reset: () => this.setState({ decision: null }),
+    };
+  }
+}
+</script>
+</body>
+</html>

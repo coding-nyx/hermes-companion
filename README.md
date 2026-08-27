@@ -1,6 +1,8 @@
 # Hermes Companion — Android PoC
 
-Android-first mobile companion for the Hermes agent fleet. Status: **PoC scaffold**, buildable + tests passing. Not yet wired to a real Hermes gateway; uses an in-process mock backend per the plan's PoC scope.
+Android-first mobile companion for the Hermes agent fleet. Status: **PoC scaffold**, buildable + tests passing. Talks to a gateway over HTTP/SSE; `mock-server/` is the local double. The in-process `MockHermesBackend` is now a test fixture, not the app's wiring.
+
+Design concept (25 screens) and implementation architecture live in `design/` and `plan/10-architecture/`.
 
 See `plan/` for the decomposed product and architecture plan. See `Hermes-Companion-Plan.md` for the consolidated original.
 
@@ -19,8 +21,9 @@ Per `plan/08-delivery/poc-scope.md` — the first vertical slice:
 
 ## What's deliberately out (PoC scope cuts)
 
-- Real Hermes HTTP API client (only the in-process `MockHermesBackend`)
 - Room persistence / outbox / per-route ack watermarks (state lives in memory)
+- Boot-time start of the connection service (needs a receiver; today it starts from a visible Activity)
+- Transport privilege tiers and gateway discovery
 - `NotificationListenerService`, `CallScreeningService`, `InCallService` (real Android node plumbing)
 - `Hermes-companion` plugin and node broker WebSocket
 - Hermes approval canonicalization, Ed25519 pairing, Keystore token envelopes
@@ -41,48 +44,38 @@ Output: `app/build/outputs/apk/debug/app-debug.apk` (~16 MB).
 ANDROID_HOME=$HOME/Library/Android/sdk ./gradlew :app:testDebugUnitTest
 ```
 
-18 tests across:
+48 tests across:
 
 - `domain/RoutingKeyTest` — structural equality of conversation and node routes
-- `backend/MockHermesBackendTest` — capability discovery, profile seeding, session listing, run event sequence, approval gating, route validation
-- `backend/BackendRegistryIsolationTest` — multi-gateway fleet, profile handle disambiguation, selection isolation across gateway removal
+- `transport/hermes` `MockHermesBackendTest` — capability discovery, profile seeding, session listing, run event sequence, approval **resumption** and denial, route validation
+- `data/repo/BackendRegistryIsolationTest` — multi-gateway fleet, profile handle disambiguation, selection isolation across gateway removal
+- `net/SseParserTest` — spec conformance: single-space stripping, multi-line data, comments and heartbeats, truncated streams, early stop
+- `net/HttpHermesBackendStreamTest` — run mapping order, no dropped deltas under a slow collector, cancellation releases the HTTP call
+- `data/repo/ConnectionSupervisorTest` — backoff grows and is capped, a dead gateway retries without busy-looping, a healthy gateway settles into one probe per interval, one gateway failing does not slow another, forgetting a gateway stops its loop, and a successful probe resumes a run left open
+- `data/repo/RepositoryTest` — an unreachable gateway is recorded not thrown, a dead gateway neither hides a live one nor loses its cached roster, one assistant message per run, a gated run's approval survives in storage and resumes after a decision, and a run is collected even when nobody observes it
 
 ## Layout
 
 ```
 hermes-companion/
-├── Hermes-Companion-Plan.md        # consolidated original
-├── plan/                           # decomposed sub-plans (read these)
-├── README.md                       # this file
-├── settings.gradle.kts             # Gradle settings + repos
-├── build.gradle.kts                # root build (AGP, Kotlin, serialization plugin)
-├── gradle.properties               # JVM args, AndroidX flags
-├── gradle/wrapper/                 # Gradle 8.7 wrapper
-├── gradlew, gradlew.bat            # wrapper scripts
-└── app/
-    ├── build.gradle.kts            # AGP 8.5.2, Kotlin 1.9.24, Compose 2024.06
-    ├── proguard-rules.pro
-    └── src/
-        ├── main/
-        │   ├── AndroidManifest.xml
-        │   ├── java/com/hermes/companion/
-        │   │   ├── CompanionApp.kt
-        │   │   ├── MainActivity.kt
-        │   │   ├── domain/        # object model (§2)
-        │   │   ├── backend/       # HermesBackend + MockHermesBackend + registry
-        │   │   └── ui/
-        │   │       ├── theme/     # Material3 colors/typography
-        │   │       ├── nav/       # Route sealed class
-        │   │       ├── shell/     # responsive bottom nav / nav rail
-        │   │       ├── agents/    # gateway → profile → session list
-        │   │       ├── chat/      # streaming + tool cards + approval sheet
-        │   │       ├── settings/  # gateway manager
-        │   │       └── node/      # PoC placeholder
-        │   └── res/               # strings/themes/colors/icons
-        └── test/java/com/hermes/companion/
-            ├── domain/
-            └── backend/
+├── plan/                           # product, architecture and parity plans (read these)
+├── design/                         # 25-screen concept: *.dc.html + canvas.json
+├── mock-server/server.mjs          # local double for the Hermes API
+├── core/domain/                    # pure Kotlin: routes, capabilities, events (no Android)
+├── core/common/                    # small shared helpers
+├── transport/auth/                 # credentials; exposes signed requests only
+├── transport/hermes/               # HermesBackend port + HTTP/SSE impl + mock double
+├── data/db/                        # Room: entities, DAOs, the CompanionStore facade
+├── data/repo/                      # repositories, run tracker, supervisors, registry
+└── app/                            # Compose UI and navigation only
 ```
+
+Module boundaries are load-bearing, not cosmetic: `core/domain` uses the JVM
+plugin so an Android import there is a compile error, and `transport/hermes`
+keeps okhttp as an `implementation` dependency behind `httpHermesBackend()` so
+the app cannot reach an HTTP type. `:app` resolves zero okhttp, transport or
+Room entries on its compile classpath — it talks only to `:data:repo`.
+See `plan/10-architecture/modules.md`.
 
 ## Source pointers back to the plan
 
@@ -101,8 +94,9 @@ hermes-companion/
 
 ## Known follow-ups
 
-- Replace `MockHermesBackend` with an HTTP-backed `HermesBackend` once the real contract is pinned
-- Add Room + per-route ack watermark
-- Wire `NotificationListenerService` + `getActiveNotifications()` reconciliation
-- Implement node pairing UI (Ed25519 Keystore keypair + QR/deep-link)
-- Add a hermes-companion plugin to the OpenClaw/Hermes gateway side
+Ordered in `plan/10-architecture/migration.md`. Next up:
+
+- Step 5: the outbound outbox, including the unacknowledged state
+- Step 6: discovery (mDNS, wide-area DNS-SD) and transport privilege tiers
+- Step 8: first real capability end to end (`notifications.read` + `device.status`)
+- Step 8: first real capability end to end (`notifications.read` + `device.status`)

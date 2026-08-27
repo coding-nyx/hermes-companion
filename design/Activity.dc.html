@@ -1,0 +1,209 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 16px 10px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: baseline; gap: 9px">
+      <div style="font-size: 22px; line-height: 28px; font-weight: 600">Activity</div>
+      <div style="font-size: 13px; line-height: 18px; color: rgba(232,232,236,0.40)">every event, and what became of it</div>
+    </div>
+    <div style="display: flex; gap: 6px; flex-wrap: wrap">
+      <sc-for list="{{filters}}" as="f" hint-placeholder-count="4">
+        <div onClick="{{ f.pick }}" style="min-height: 44px; display: flex; align-items: center; padding: 0 13px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 500; background: {{f.bg}}; color: {{f.fg}}; border: 1px solid {{f.bd}}">{{f.label}}</div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 7px; flex-grow: 1; overflow: hidden">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+      <div onClick="{{ r.toggle }}" style="background: #1C1C22; border: 1px solid {{r.border}}; border-radius: 12px; padding: 11px 12px; display: flex; flex-direction: column; gap: 9px; cursor: pointer">
+
+        <div style="display: flex; align-items: flex-start; gap: 10px">
+          <div style="width: 28px; height: 28px; border-radius: 8px; background: {{r.iconBg}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; font-weight: 700; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{r.color}}">{{r.glyph}}</div>
+          <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+            <div style="display: flex; align-items: center; gap: 7px">
+              <div style="font-size: 14px; line-height: 20px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{r.title}}</div>
+              <div style="flex-grow: 1"></div>
+              <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.35); flex-shrink: 0">{{r.time}}</div>
+            </div>
+            <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{r.subtitle}}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 3px">
+          <sc-for list="{{r.steps}}" as="s" hint-placeholder-count="5">
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 4px">
+              <div style="height: 3px; border-radius: 999px; background: {{s.color}}"></div>
+              <div style="font-size: 10px; line-height: 13px; letter-spacing: 0.2px; color: {{s.label}}">{{s.name}}</div>
+            </div>
+          </sc-for>
+          <div style="font-size: 11px; line-height: 14px; font-weight: 600; color: {{r.color}}; background: {{r.iconBg}}; border-radius: 999px; padding: 4px 9px; margin-left: 5px; flex-shrink: 0">{{r.outcome}}</div>
+        </div>
+
+        <sc-if value="{{r.open}}" hint-placeholder-val="{{ true }}">
+          <div style="background: {{r.detailBg}}; border-left: 2px solid {{r.color}}; border-radius: 4px; padding: 9px 11px; display: flex; flex-direction: column; gap: 5px">
+            <div style="font-size: 12px; line-height: 17px; font-weight: 600; color: {{r.color}}">{{r.detailTitle}}</div>
+            <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.62)">{{r.detailBody}}</div>
+            <div style="font-size: 11px; line-height: 15px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.55)">{{r.route}}</div>
+            <div style="font-size: 11px; line-height: 15px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.40)">{{r.detailMeta}}</div>
+          </div>
+        </sc-if>
+
+      </div>
+    </sc-for>
+    <div style="flex-grow: 1"></div>
+  </div>
+
+  <div style="flex-shrink: 0; padding: 10px 16px; border-top: 1px solid rgba(232,232,236,0.08); display: flex; flex-direction: column; gap: 5px">
+    <sc-for list="{{queues}}" as="q" hint-placeholder-count="2">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <div style="width: 7px; height: 7px; border-radius: 999px; background: {{q.color}}; flex-shrink: 0"></div>
+        <div style="font-size: 12px; line-height: 16px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.62)">{{q.gw}}</div>
+        <div style="flex-grow: 1"></div>
+        <div style="font-size: 12px; line-height: 16px; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{q.color}}">{{q.detail}}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="height: 80px; flex-shrink: 0; border-top: 1px solid rgba(232,232,236,0.10); background: #1A1A20; display: flex; align-items: stretch">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <div style="padding: 4px 18px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.62)" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><circle cx="12" cy="4" r="1.8"></circle><circle cx="19" cy="17" r="1.8"></circle><circle cx="5" cy="17" r="1.8"></circle><path d="M12 9V5.8M14.5 13.6l2.7 1.8M9.5 13.6l-2.7 1.8"></path></svg></div>
+      <div style="font-size: 12px; color: rgba(232,232,236,0.62)">Agents</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <div style="background: rgba(179,182,242,0.18); border-radius: 999px; padding: 4px 18px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B3B6F2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 9a6 6 0 10-12 0c0 5-2 6-2 6h16s-2-1-2-6"></path><path d="M10.5 20a2 2 0 003 0"></path></svg></div>
+      <div style="font-size: 12px; font-weight: 500; color: #B3B6F2">Activity</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <div style="padding: 4px 18px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.62)" stroke-width="1.7" stroke-linecap="round"><rect x="6" y="2.5" width="12" height="19" rx="2.4"></rect><path d="M10.5 18.6h3"></path></svg></div>
+      <div style="font-size: 12px; color: rgba(232,232,236,0.62)">Node</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+      <div style="padding: 4px 18px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.62)" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-2.9 1.2V21a2 2 0 11-4 0v-.1A1.7 1.7 0 007.7 19l-.1.1a2 2 0 11-2.8-2.8l.1-.1A1.7 1.7 0 003 13.4H3a2 2 0 110-4h.1A1.7 1.7 0 004.9 7.7l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 002.9-1.2V3a2 2 0 114 0v.1A1.7 1.7 0 0016.3 5l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 001.2 2.9H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"></path></svg></div>
+      <div style="font-size: 12px; color: rgba(232,232,236,0.62)">Settings</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { filter: 'all', open: 'cliq' };
+    this.TEAL = '#80CBC4';
+    this.SAND = '#FFCC80';
+    this.RED = '#FFB4AB';
+    this.DIM = 'rgba(232,232,236,0.22)';
+  }
+  renderVals() {
+    const f = this.state.filter;
+    const openId = this.state.open;
+    const STEPS = ['captured', 'uploaded', 'acked', 'judged', 'outcome'];
+
+    const mkSteps = (reached, color) =>
+      STEPS.map((name, i) => ({
+        name,
+        color: i < reached ? color : this.DIM,
+        label: i < reached ? 'rgba(232,232,236,0.45)' : 'rgba(232,232,236,0.22)',
+      }));
+
+    const defs = [
+      {
+        id: 'wa', kind: 'notifications', glyph: 'WA', title: 'Priya R. — "are we still on for 7?"',
+        subtitle: 'com.whatsapp · notifications.read', route: 'gw-home › @ash › Morning triage', time: '07:12',
+        outcome: 'Notified', color: this.TEAL, reached: 5,
+        detailTitle: 'Delivered as an unread in Morning triage',
+        detailBody: 'Judged worth interrupting for: a named contact asking a direct question inside your evening window.',
+        detailMeta: 'evt_01J8f3 · seq 8841 · acked 41 ms',
+      },
+      {
+        id: 'cliq', kind: 'notifications', glyph: 'CQ', title: 'Cliq #deploys — 14 messages',
+        subtitle: 'com.zoho.cliq · notifications.read', route: 'gw-home › @ash', time: '07:04',
+        outcome: 'Suppressed', color: 'rgba(232,232,236,0.55)', reached: 4,
+        detailTitle: 'Why this did not ping you',
+        detailBody: 'Matched your quiet rule for work channels outside 09:00–19:00. It was still captured, uploaded and judged — suppression is a decision on the record, not a dropped event.',
+        detailMeta: 'rule work-channels-quiet · evt_01J8ez · seq 8836',
+      },
+      {
+        id: 'call', kind: 'calls', glyph: '↘', title: 'Missed call · +91 98··· 4471',
+        subtitle: 'unknown caller · calls.observe', route: 'gw-cloud › @ash-cloud', time: '06:58',
+        outcome: 'Failed', color: this.RED, reached: 4,
+        detailTitle: 'Stuck at judgment, not lost',
+        detailBody: 'The configured model returned a quota error. The event stays pending and keeps its place in the queue; nothing was acknowledged as handled.',
+        detailMeta: 'attempt 3 of 6 · next retry 42s · evt_01J8ex',
+      },
+      {
+        id: 'cron', kind: 'jobs', glyph: '⏱', title: 'Standup digest',
+        subtitle: 'cron 07:00 · companion platform adapter', route: 'gw-home › @misty › Reading list', time: '07:00',
+        outcome: 'Notified', color: this.TEAL, reached: 5,
+        detailTitle: 'Proactive message, routed not broadcast',
+        detailBody: 'The gateway addressed it to companion:node_s22/misty/reading-list. It landed in that lane only.',
+        detailMeta: 'run_01J8ev · delivered 07:00:04',
+      },
+    ];
+
+    const filters = [
+      { id: 'all', label: 'All' },
+      { id: 'notifications', label: 'Notifications' },
+      { id: 'calls', label: 'Calls' },
+      { id: 'jobs', label: 'Jobs' },
+    ].map((x) => ({
+      label: x.label,
+      bg: f === x.id ? 'rgba(179,182,242,0.16)' : '#1C1C22',
+      fg: f === x.id ? '#B3B6F2' : 'rgba(232,232,236,0.62)',
+      bd: f === x.id ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.12)',
+      pick: () => this.setState({ filter: x.id }),
+    }));
+
+    const rows = defs
+      .filter((d) => f === 'all' || d.kind === f)
+      .map((d) => ({
+        glyph: d.glyph,
+        title: d.title,
+        subtitle: d.subtitle,
+        route: d.route,
+        time: d.time,
+        outcome: d.outcome,
+        color: d.color,
+        iconBg: d.color === this.TEAL ? 'rgba(128,203,196,0.14)' : d.color === this.RED ? 'rgba(255,180,171,0.14)' : 'rgba(232,232,236,0.08)',
+        border: openId === d.id ? 'rgba(232,232,236,0.22)' : 'rgba(232,232,236,0.10)',
+        steps: mkSteps(d.reached, d.color),
+        open: openId === d.id,
+        detailTitle: d.detailTitle,
+        detailBody: d.detailBody,
+        detailMeta: d.detailMeta,
+        detailBg: 'rgba(232,232,236,0.03)',
+        toggle: () => this.setState({ open: openId === d.id ? null : d.id }),
+      }));
+
+    return {
+      filters,
+      rows,
+      queues: [
+        { gw: 'gw-home', detail: '0 queued · acked seq 8841', color: this.TEAL },
+        { gw: 'gw-cloud', detail: '3 queued · stale 4m · seq 8838', color: this.SAND },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

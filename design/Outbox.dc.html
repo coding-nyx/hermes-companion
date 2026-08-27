@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 16px 10px; display: flex; align-items: center; gap: 11px; flex-shrink: 0">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+    <div style="display: flex; flex-direction: column; flex-grow: 1">
+      <div style="font-size: 22px; line-height: 28px; font-weight: 600">Outbox</div>
+      <div style="font-size: 12px; line-height: 16px; color: {{headColor}}">{{headLabel}}</div>
+    </div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 7px; flex-grow: 1; overflow: hidden">
+
+    <sc-for list="{{items}}" as="i" hint-placeholder-count="4">
+      <div style="background: #1C1C22; border: 1px solid {{i.border}}; border-radius: 12px; padding: 11px 12px; display: flex; flex-direction: column; gap: 7px">
+
+        <div style="display: flex; align-items: center; gap: 8px">
+          <div style="font-size: 11px; line-height: 14px; font-weight: 600; color: {{i.color}}; background: {{i.bg}}; border-radius: 999px; padding: 3px 8px; flex-shrink: 0">{{i.state}}</div>
+          <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.40); flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{i.route}}</div>
+          <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.30); flex-shrink: 0">{{i.time}}</div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px">
+          <sc-if value="{{i.isVoice}}" hint-placeholder-val="{{ true }}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.45)" stroke-width="1.8" stroke-linecap="round" style="flex-shrink: 0"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0013 0M12 18v3"></path></svg>
+          </sc-if>
+          <sc-if value="{{i.isText}}" hint-placeholder-val="{{ true }}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.45)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M21 12a8 8 0 01-8 8H8l-4 3v-6a8 8 0 018-11h1a8 8 0 018 6z"></path></svg>
+          </sc-if>
+          <div style="font-size: 14px; line-height: 20px; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{i.body}}</div>
+        </div>
+
+        <div style="font-size: 11px; line-height: 16px; color: rgba(232,232,236,0.45)">{{i.detail}}</div>
+
+        <sc-if value="{{i.needsDecision}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; gap: 7px; padding-top: 1px">
+            <div onClick="{{ i.retry }}" style="flex-grow: 1; min-height: 44px; border-radius: 999px; background: #B3B6F2; color: #15151A; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; cursor: pointer">Send it again</div>
+            <div onClick="{{ i.drop }}" style="flex-grow: 1; min-height: 44px; border-radius: 999px; border: 1px solid rgba(255,180,171,0.45); color: #FFB4AB; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; cursor: pointer">Drop it</div>
+          </div>
+        </sc-if>
+
+      </div>
+    </sc-for>
+
+    <div style="flex-grow: 1"></div>
+
+    <div style="background: #1C1C22; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 7px; margin-bottom: 20px">
+      <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">Per gateway limits</div>
+      <sc-for list="{{limits}}" as="l" hint-placeholder-count="3">
+        <div style="display: flex; align-items: baseline; gap: 9px">
+          <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.55); flex-grow: 1">{{l.k}}</div>
+          <div style="font-size: 12px; line-height: 17px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.75)">{{l.v}}</div>
+        </div>
+      </sc-for>
+      <div style="font-size: 11px; line-height: 16px; color: rgba(232,232,236,0.40); padding-top: 2px">Every submission is journalled before the network is touched, and replayed under the same idempotency key. Nothing is sent twice because a socket died mid-write.</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { ambiguous: 'open' };
+  }
+  renderVals() {
+    const amb = this.state.ambiguous;
+
+    const style = {
+      sent: { c: '#80CBC4', b: 'rgba(128,203,196,0.14)', bd: 'rgba(232,232,236,0.08)' },
+      flight: { c: '#B3B6F2', b: 'rgba(179,182,242,0.14)', bd: 'rgba(179,182,242,0.25)' },
+      queued: { c: '#FFCC80', b: 'rgba(255,204,128,0.14)', bd: 'rgba(232,232,236,0.10)' },
+      unknown: { c: '#FFB4AB', b: 'rgba(255,180,171,0.14)', bd: 'rgba(255,180,171,0.45)' },
+    };
+
+    const ambRow =
+      amb === 'open'
+        ? {
+            state: 'no answer', kind: 'unknown', route: 'gw-cloud › @ash-cloud › Deploy check', time: '06:41',
+            body: 'roll back the migration', detail: 'Written, sent, never acknowledged. It may have landed. Sending again reuses the same key, so a duplicate cannot be created — but if the gateway never had it, nothing happened at all.',
+            needsDecision: true, isVoice: false,
+          }
+        : amb === 'retried'
+        ? {
+            state: 'acked', kind: 'sent', route: 'gw-cloud › @ash-cloud › Deploy check', time: '06:41',
+            body: 'roll back the migration', detail: 'Replayed under key sub_01J8f1 · the gateway confirmed it had never seen it.',
+            needsDecision: false, isVoice: false,
+          }
+        : {
+            state: 'dropped', kind: 'queued', route: 'gw-cloud › @ash-cloud › Deploy check', time: '06:41',
+            body: 'roll back the migration', detail: 'Removed from the outbox by you. If it had landed, the run already acted on it — check the transcript.',
+            needsDecision: false, isVoice: false,
+          };
+
+    const defs = [
+      ambRow,
+      { state: 'in flight', kind: 'flight', route: 'gw-home › @ash › Evening handoff', time: '07:14', body: 'what did the meter read this morning', detail: 'Waiting on the gateway ack. 1.4 MB image attached.', needsDecision: false, isVoice: false },
+      { state: 'queued', kind: 'queued', route: 'gw-home › @misty › Reading list', time: '07:02', body: 'Voice note · 0:14', detail: 'Recorded while the tailnet was down. Goes out in sequence when the link returns.', needsDecision: false, isVoice: true },
+      { state: 'acked', kind: 'sent', route: 'gw-home › @ash › Morning triage', time: '06:58', body: 'reply that I will be 15 late', detail: 'Confirmed at 06:58:02 · seq 8840.', needsDecision: false, isVoice: false },
+    ];
+
+    const items = defs.map((d) => {
+      const st = style[d.kind];
+      return {
+        state: d.state,
+        route: d.route,
+        time: d.time,
+        body: d.body,
+        detail: d.detail,
+        isVoice: d.isVoice,
+        isText: !d.isVoice,
+        needsDecision: d.needsDecision,
+        color: st.c,
+        bg: st.b,
+        border: st.bd,
+        retry: () => this.setState({ ambiguous: 'retried' }),
+        drop: () => this.setState({ ambiguous: 'dropped' }),
+      };
+    });
+
+    return {
+      items,
+      headLabel: amb === 'open' ? '4 submissions · 1 needs your decision' : '4 submissions · all resolved',
+      headColor: amb === 'open' ? '#FFB4AB' : 'rgba(232,232,236,0.40)',
+      limits: [
+        { k: 'Messages held', v: '4 of 50' },
+        { k: 'Attachments held', v: '1.4 of 48 MB' },
+        { k: 'Discarded after', v: '48 hours' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

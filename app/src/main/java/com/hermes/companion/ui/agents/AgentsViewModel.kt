@@ -4,56 +4,43 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.hermes.companion.CompanionApp
-import com.hermes.companion.backend.HermesBackend
-import com.hermes.companion.backend.MockHermesBackend
-import com.hermes.companion.domain.AgentProfile
+import com.hermes.companion.data.repo.ConversationRepository
+import com.hermes.companion.data.repo.Fleet
+import com.hermes.companion.data.repo.FleetRepository
 import com.hermes.companion.domain.ConversationRoute
-import com.hermes.companion.domain.GatewayConnection
-import com.hermes.companion.domain.Session
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-data class AgentsUiState(
-    val gateways: List<GatewayConnection> = emptyList(),
-    val profiles: List<AgentProfile> = emptyList(),
-    val sessionsByRoute: Map<ConversationRoute, List<Session>> = emptyMap(),
-    val loading: Boolean = true,
-)
-
+/**
+ * Observes the database. It has no backend reference, cannot throw a network
+ * exception, and does not need an error field: reachability arrives as data on
+ * every gateway row.
+ */
 class AgentsViewModel(
-    private val registry: com.hermes.companion.backend.BackendRegistry,
+    private val fleet: FleetRepository,
+    private val conversations: ConversationRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(AgentsUiState())
-    val state: StateFlow<AgentsUiState> = _state.asStateFlow()
+    val state: StateFlow<Fleet> = fleet.fleet()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), Fleet())
 
     init {
         refresh()
     }
 
     fun refresh() {
+        viewModelScope.launch { fleet.refresh() }
+    }
+
+    fun createThread(gatewayId: String, profileId: String, title: String, onCreated: (ConversationRoute) -> Unit) {
         viewModelScope.launch {
-            val gateways = registry.gateways.value
-            val profiles = registry.unionRoster()
-            val sessions = mutableMapOf<ConversationRoute, List<Session>>()
-            gateways.forEach { gw ->
-                val backend = registry.backendFor(gw.id) ?: return@forEach
-                require(backend is MockHermesBackend)
-                profiles.filter { it.gatewayId == gw.id }.forEach { profile ->
-                    val sessList = backend.listSessionsForProfile(gw.id, profile.profileId)
-                    sessList.forEach { s ->
-                        sessions[ConversationRoute(gw.id, profile.profileId, s.sessionId)] = sessList
-                    }
+            val dummyRoute = ConversationRoute(gatewayId, profileId, "new")
+            conversations.createSession(dummyRoute, title)
+                .onSuccess { session ->
+                    onCreated(ConversationRoute(gatewayId, profileId, session.sessionId))
                 }
-            }
-            _state.value = AgentsUiState(
-                gateways = gateways,
-                profiles = profiles,
-                sessionsByRoute = sessions,
-                loading = false,
-            )
         }
     }
 
@@ -61,8 +48,11 @@ class AgentsViewModel(
         fun factory(): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    AgentsViewModel(CompanionApp.get().registry) as T
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    val app = CompanionApp.get()
+                    return AgentsViewModel(app.data.fleet, app.data.conversations) as T
+                }
             }
     }
 }
+

@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 16px 10px; display: flex; align-items: center; gap: 11px; flex-shrink: 0">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+    <div style="display: flex; flex-direction: column; flex-grow: 1">
+      <div style="font-size: 22px; line-height: 28px; font-weight: 600">Live stream</div>
+      <div style="font-size: 12px; line-height: 16px; color: {{linkColor}}; font-family: 'Roboto Mono', ui-monospace, monospace">{{linkLabel}}</div>
+    </div>
+    <div onClick="{{ togglePause }}" style="min-height: 44px; display: flex; align-items: center; gap: 7px; padding: 0 13px; border-radius: 999px; border: 1px solid {{btnBorder}}; color: {{btnColor}}; font-size: 13px; font-weight: 600; cursor: pointer">{{btnLabel}}</div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 11px; flex-grow: 1; overflow: hidden">
+
+    <sc-if value="{{paused}}" hint-placeholder-val="{{ true }}">
+      <div style="background: rgba(255,204,128,0.08); border: 1px solid rgba(255,204,128,0.35); border-radius: 10px; padding: 11px 12px; display: flex; flex-direction: column; gap: 4px">
+        <div style="font-size: 13px; line-height: 18px; font-weight: 600; color: #FFCC80">Paused — nothing is being dropped</div>
+        <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.62)">Events still land in the local outbox with their sequence numbers. They go out in order when you resume.</div>
+      </div>
+    </sc-if>
+
+    <div style="background: #1C1C22; border: 1px solid rgba(232,232,236,0.12); border-radius: 12px; padding: 13px; display: flex; flex-direction: column; gap: 11px">
+      <div style="display: flex; gap: 0">
+        <sc-for list="{{counters}}" as="c" hint-placeholder-count="3">
+          <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 2px">
+            <div style="font-size: 20px; line-height: 25px; font-weight: 600; color: {{c.color}}">{{c.v}}</div>
+            <div style="font-size: 11px; line-height: 15px; color: rgba(232,232,236,0.45)">{{c.k}}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display: flex; align-items: flex-end; gap: 3px; height: 46px">
+        <sc-for list="{{bars}}" as="b" hint-placeholder-count="12">
+          <div style="flex-grow: 1; height: {{b.h}}; background: {{b.color}}; border-radius: 2px 2px 0 0"></div>
+        </sc-for>
+      </div>
+      <div style="display: flex; justify-content: space-between">
+        <div style="font-size: 10px; line-height: 13px; color: rgba(232,232,236,0.30)">an hour ago</div>
+        <div style="font-size: 10px; line-height: 13px; color: rgba(232,232,236,0.30)">now</div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 6px">
+      <sc-for list="{{filters}}" as="f" hint-placeholder-count="3">
+        <div onClick="{{ f.pick }}" style="min-height: 44px; flex-grow: 1; display: flex; align-items: center; justify-content: center; border-radius: 999px; cursor: pointer; font-size: 12px; font-weight: 500; background: {{f.bg}}; color: {{f.fg}}; border: 1px solid {{f.bd}}">{{f.label}}</div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 5px">
+      <div style="font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(232,232,236,0.40)">Going out now</div>
+      <sc-for list="{{tail}}" as="t" hint-placeholder-count="4">
+        <div style="background: #1C1C22; border-radius: 10px; padding: 9px 11px; display: flex; flex-direction: column; gap: 3px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div style="font-size: 11px; line-height: 15px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.35); flex-shrink: 0">{{t.time}}</div>
+            <div style="font-size: 13px; line-height: 18px; font-weight: 500; flex-grow: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{t.source}}</div>
+            <div style="font-size: 10px; line-height: 13px; font-weight: 600; color: {{t.color}}; background: {{t.bg}}; border-radius: 999px; padding: 3px 7px; flex-shrink: 0; white-space: nowrap">{{t.state}}</div>
+          </div>
+          <div style="font-size: 11px; line-height: 16px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{t.payload}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="flex-grow: 1"></div>
+
+    <div style="padding-bottom: 20px; display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{lags}}" as="l" hint-placeholder-count="2">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <div style="width: 6px; height: 6px; border-radius: 999px; background: {{l.color}}; flex-shrink: 0"></div>
+          <div style="font-size: 11px; line-height: 16px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.55); flex-grow: 1">{{l.route}}</div>
+          <div style="font-size: 11px; line-height: 16px; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{l.color}}">{{l.lag}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { paused: false, filter: 'all' };
+    this.TEAL = '#80CBC4';
+    this.SAND = '#FFCC80';
+    this.INDIGO = '#B3B6F2';
+  }
+  renderVals() {
+    const paused = this.state.paused;
+    const f = this.state.filter;
+    const T = this.TEAL, S = this.SAND, I = this.INDIGO;
+
+    const heights = [18, 26, 12, 34, 22, 40, 16, 46, 30, 24, 38, 20];
+    const bars = heights.map((h, i) => ({
+      h: h + 'px',
+      color: paused && i > 9 ? 'rgba(255,204,128,0.35)' : i === 11 ? I : 'rgba(179,182,242,0.45)',
+    }));
+
+    const filters = [
+      { id: 'all', label: 'All' },
+      { id: 'notifications', label: 'Notifications' },
+      { id: 'device', label: 'Device' },
+    ].map((x) => ({
+      label: x.label,
+      bg: f === x.id ? 'rgba(179,182,242,0.16)' : '#1C1C22',
+      fg: f === x.id ? I : 'rgba(232,232,236,0.62)',
+      bd: f === x.id ? 'rgba(179,182,242,0.55)' : 'rgba(232,232,236,0.12)',
+      pick: () => this.setState({ filter: x.id }),
+    }));
+
+    const defs = [
+      { kind: 'notifications', time: '07:12', source: 'WhatsApp · Priya R.', payload: 'from "Priya R." · body 24 chars · number [redacted]' },
+      { kind: 'notifications', time: '07:09', source: 'Cliq · #deploys', payload: 'summarised · 14 messages · no bodies sent' },
+      { kind: 'device', time: '07:00', source: 'Battery and network', payload: 'battery 74% · wifi · thermal nominal' },
+      { kind: 'notifications', time: '06:58', source: 'Missed call · unknown', payload: 'number [redacted] · duration 0s · not in contacts' },
+    ];
+
+    const tail = defs
+      .filter((d) => f === 'all' || d.kind === f)
+      .map((d, i) => ({
+        time: d.time,
+        source: d.source,
+        payload: d.payload,
+        state: paused ? 'queued' : i === 0 ? 'in flight' : 'acked',
+        color: paused ? S : i === 0 ? I : T,
+        bg: paused ? 'rgba(255,204,128,0.14)' : i === 0 ? 'rgba(179,182,242,0.14)' : 'rgba(128,203,196,0.14)',
+      }));
+
+    return {
+      paused,
+      bars,
+      filters,
+      tail,
+      counters: [
+        { v: '142', k: 'captured today', color: '#E8E8EC' },
+        { v: '38', k: 'sent to Hermes', color: T },
+        { v: '104', k: 'stayed local', color: 'rgba(232,232,236,0.55)' },
+      ],
+      linkLabel: paused ? 'paused · 3 waiting in the outbox' : 'wss tailnet · seq 8841',
+      linkColor: paused ? S : T,
+      btnLabel: paused ? 'Resume' : 'Pause',
+      btnColor: paused ? T : S,
+      btnBorder: paused ? 'rgba(128,203,196,0.5)' : 'rgba(255,204,128,0.5)',
+      lags: [
+        { route: 'gw-home › @ash', lag: paused ? 'held' : '41 ms', color: paused ? S : T },
+        { route: 'gw-cloud › @ash-cloud', lag: '4m behind', color: S },
+      ],
+      togglePause: () => this.setState({ paused: !this.state.paused }),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #B3B6F2; text-decoration: none; }
+    a:hover { color: #CBCDF8; }
+    @keyframes pulse { 50% { opacity: 0.35; } }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <div style="padding: 4px 16px 10px; display: flex; align-items: center; gap: 11px; flex-shrink: 0">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+    <div style="display: flex; flex-direction: column; flex-grow: 1">
+      <div style="font-size: 22px; line-height: 28px; font-weight: 600">Jobs</div>
+      <div style="font-size: 12px; line-height: 16px; color: rgba(232,232,236,0.40)">{{summary}}</div>
+    </div>
+  </div>
+
+  <div style="padding: 0 16px; display: flex; flex-direction: column; gap: 7px; flex-grow: 1; overflow: hidden">
+
+    <sc-for list="{{jobs}}" as="j" hint-placeholder-count="4">
+      <div style="background: #1C1C22; border: 1px solid {{j.border}}; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+
+        <div style="display: flex; align-items: center; gap: 9px">
+          <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1; min-width: 0">
+            <div style="font-size: 15px; line-height: 20px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: {{j.titleColor}}">{{j.name}}</div>
+            <div style="font-size: 11px; line-height: 15px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.42); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{j.route}}</div>
+          </div>
+          <div style="font-size: 11px; line-height: 14px; font-weight: 600; color: {{j.stateColor}}; background: {{j.stateBg}}; border-radius: 999px; padding: 4px 9px; flex-shrink: 0; white-space: nowrap">{{j.state}}</div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+          <div style="display: flex; align-items: baseline; gap: 5px">
+            <div style="font-size: 10px; line-height: 14px; color: rgba(232,232,236,0.35)">runs</div>
+            <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: rgba(232,232,236,0.70)">{{j.schedule}}</div>
+          </div>
+          <div style="display: flex; align-items: baseline; gap: 5px">
+            <div style="font-size: 10px; line-height: 14px; color: rgba(232,232,236,0.35)">next</div>
+            <div style="font-size: 11px; line-height: 14px; font-family: 'Roboto Mono', ui-monospace, monospace; color: {{j.nextColor}}">{{j.next}}</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px">
+          <div style="width: 6px; height: 6px; border-radius: 999px; background: {{j.lastColor}}; flex-shrink: 0; animation: {{j.lastAnim}}"></div>
+          <div style="font-size: 11px; line-height: 16px; color: rgba(232,232,236,0.55); flex-grow: 1">{{j.last}}</div>
+        </div>
+
+        <div style="display: flex; gap: 6px">
+          <div onClick="{{ j.toggle }}" style="min-height: 44px; flex-grow: 1; display: flex; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid {{j.pauseBorder}}; color: {{j.pauseColor}}; font-size: 12px; font-weight: 600; cursor: pointer">{{j.pauseLabel}}</div>
+          <div onClick="{{ j.runNow }}" style="min-height: 44px; flex-grow: 1; display: flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(179,182,242,0.14); border: 1px solid rgba(179,182,242,0.40); color: #B3B6F2; font-size: 12px; font-weight: 600; cursor: pointer">{{j.runLabel}}</div>
+        </div>
+
+      </div>
+    </sc-for>
+
+    <div style="flex-grow: 1"></div>
+
+    <div style="border-left: 2px solid rgba(232,232,236,0.20); padding-left: 10px; margin-bottom: 20px">
+      <div style="font-size: 12px; line-height: 17px; color: rgba(232,232,236,0.55)">A job belongs to one route, like everything else. Pausing it on Home does not pause the same job on Cloud — they are different jobs on different machines that happen to share a name.</div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { paused: { digest: false, sweep: true, backup: false }, running: null };
+  }
+  renderVals() {
+    const paused = this.state.paused;
+    const running = this.state.running;
+
+    const defs = [
+      {
+        id: 'digest', name: 'Standup digest', route: 'gw-home › @misty › Reading list',
+        schedule: '07:00 daily', next: 'tomorrow 07:00',
+        last: 'Delivered 07:00:04 today · 1 unread', lastColor: '#80CBC4',
+      },
+      {
+        id: 'sweep', name: 'Archive stale threads', route: 'gw-home › @ash',
+        schedule: 'Sundays 03:00', next: 'paused',
+        last: 'Last ran 16 Aug · archived 4 threads', lastColor: 'rgba(232,232,236,0.40)',
+      },
+      {
+        id: 'backup', name: 'Snapshot workspace', route: 'gw-cloud › @work › Standup notes',
+        schedule: 'every 6h', next: 'in 2h 14m',
+        last: 'Failed 01:00 · provider quota, retried and passed at 01:04', lastColor: '#FFCC80',
+      },
+    ];
+
+    const jobs = defs.map((d) => {
+      const isPaused = !!paused[d.id];
+      const isRunning = running === d.id;
+      return {
+        name: d.name,
+        route: d.route,
+        schedule: d.schedule,
+        next: isPaused ? 'paused' : d.next,
+        nextColor: isPaused ? 'rgba(232,232,236,0.35)' : 'rgba(232,232,236,0.70)',
+        last: isRunning ? 'Running now — started a moment ago' : d.last,
+        lastColor: isRunning ? '#B3B6F2' : d.lastColor,
+        lastAnim: isRunning ? 'pulse 1s ease-in-out infinite' : 'none',
+        state: isRunning ? 'Running' : isPaused ? 'Paused' : 'Scheduled',
+        stateColor: isRunning ? '#B3B6F2' : isPaused ? 'rgba(232,232,236,0.40)' : '#80CBC4',
+        stateBg: isRunning ? 'rgba(179,182,242,0.14)' : isPaused ? 'rgba(232,232,236,0.07)' : 'rgba(128,203,196,0.14)',
+        titleColor: isPaused ? 'rgba(232,232,236,0.62)' : '#E8E8EC',
+        border: isRunning ? 'rgba(179,182,242,0.40)' : 'rgba(232,232,236,0.10)',
+        pauseLabel: isPaused ? 'Resume' : 'Pause',
+        pauseColor: isPaused ? '#80CBC4' : 'rgba(232,232,236,0.62)',
+        pauseBorder: isPaused ? 'rgba(128,203,196,0.45)' : 'rgba(232,232,236,0.16)',
+        runLabel: isRunning ? 'Stop this run' : 'Run now',
+        toggle: () => {
+          const next = Object.assign({}, this.state.paused);
+          next[d.id] = !next[d.id];
+          this.setState({ paused: next });
+        },
+        runNow: () => this.setState({ running: running === d.id ? null : d.id }),
+      };
+    });
+
+    const activeCount = defs.filter((d) => !paused[d.id]).length;
+    return {
+      jobs,
+      summary: activeCount + ' scheduled, ' + (defs.length - activeCount) + ' paused · across 2 gateways',
+    };
+  }
+}
+</script>
+</body>
+</html>

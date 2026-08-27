@@ -4,52 +4,48 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.hermes.companion.CompanionApp
-import com.hermes.companion.backend.BackendRegistry
-import com.hermes.companion.backend.MockHermesBackend
-import com.hermes.companion.domain.GatewayConnection
+import com.hermes.companion.common.reason
+import com.hermes.companion.data.repo.Fleet
+import com.hermes.companion.data.repo.FleetRepository
 import com.hermes.companion.domain.GatewayKind
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class SettingsUiState(
-    val gateways: List<GatewayConnection> = emptyList(),
+    val fleet: Fleet = Fleet(),
+    val error: String? = null,
 )
 
 class SettingsViewModel(
-    private val registry: BackendRegistry,
+    private val fleet: FleetRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(SettingsUiState())
-    val state: StateFlow<SettingsUiState> = _state.asStateFlow()
+    private val errors = MutableStateFlow<String?>(null)
 
-    init {
-        refresh()
-    }
+    val state: StateFlow<SettingsUiState> =
+        combine(fleet.fleet(), errors) { f, e -> SettingsUiState(f, e) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
-    fun refresh() {
-        _state.value = SettingsUiState(gateways = registry.gateways.value)
+    fun addGateway(label: String, baseUrl: String, kind: GatewayKind) {
+        viewModelScope.launch {
+            errors.value = fleet.addGateway(label, baseUrl, kind).exceptionOrNull()?.reason()
+        }
     }
 
     fun removeGateway(gatewayId: String) {
-        registry.removeGateway(gatewayId)
-        refresh()
+        viewModelScope.launch {
+            errors.value = fleet.forget(gatewayId).exceptionOrNull()?.reason()
+        }
     }
 
-    fun addMockGateway(label: String, kind: GatewayKind, profileIds: List<String>) {
-        val id = "gw-${label.lowercase().replace(" ", "-")}-${System.currentTimeMillis() % 10_000}"
-        val backend = MockHermesBackend(
-            gateway = GatewayConnection(
-                id = id,
-                label = label,
-                kind = kind,
-                baseUrl = "mock://$id",
-                authRef = "none",
-            ),
-            profileIds = profileIds,
-        )
-        registry.addGateway(backend)
-        refresh()
+    fun refresh() {
+        viewModelScope.launch {
+            fleet.refresh()
+        }
     }
 
     companion object {
@@ -57,7 +53,7 @@ class SettingsViewModel(
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    SettingsViewModel(CompanionApp.get().registry) as T
+                    SettingsViewModel(CompanionApp.get().data.fleet) as T
             }
     }
 }
