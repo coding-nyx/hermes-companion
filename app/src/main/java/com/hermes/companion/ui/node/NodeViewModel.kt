@@ -1,5 +1,6 @@
 package com.hermes.companion.ui.node
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hermes.companion.data.repo.CapabilityStatus
@@ -7,13 +8,18 @@ import com.hermes.companion.data.repo.NodeCapabilityItem
 import com.hermes.companion.data.repo.NodeGrantItem
 import com.hermes.companion.data.repo.NodePairing
 import com.hermes.companion.data.repo.NodeRepository
-import com.hermes.companion.data.repo.StreamRuleItem
 import com.hermes.companion.data.repo.NodeState
+import com.hermes.companion.data.repo.StreamRuleItem
+import com.hermes.companion.domain.AndroidRequirement
+import com.hermes.companion.domain.RequirementKind
+import com.hermes.companion.data.repo.deepLinkFor
+import com.hermes.companion.data.repo.isRuntimePermissionRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -67,6 +73,25 @@ class NodeViewModel @Inject constructor(
 
     fun unpair(gatewayId: String) {
         viewModelScope.launch { repo.unpairNode(gatewayId) }
+    }
+
+    /**
+     * Open the first deep-link for the first missing permission. The UI
+     * triggers runtime-permission requests directly via a launcher in
+     * `CapabilityRow`; this VM-side helper is the catch-all for everything
+     * else (settings panels for notification access / accessibility / usage
+     * access / Shizuku). Idempotent: safe to call repeatedly.
+     */
+    fun grantFirstMissing(context: Context) {
+        viewModelScope.launch {
+            val missing = repo.observeNodeState().first()
+                .capabilities.firstOrNull { it.status == CapabilityStatus.MissingPermission && it.requirement != null }
+                ?: return@launch
+            val req = missing.requirement!!
+            if (isRuntimePermissionRequest(req)) return@launch // UI handles these via launcher
+            val intent = deepLinkFor(req) ?: return@launch
+            runCatching { context.startActivity(intent) }
+        }
     }
 
     val grants: StateFlow<List<NodeGrantItem>> = repo.observeGrants()

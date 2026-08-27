@@ -27,6 +27,8 @@ data class CapabilityCoverage(
     val capability: NodeCapability,
     val health: CapabilityHealth,
     val detail: String,
+    /** First (most-actionable) Android grant this capability needs, if any. */
+    val requirement: AndroidRequirement? = null,
 )
 
 /**
@@ -38,7 +40,7 @@ class AdapterRegistry(private val adapters: List<CapabilityAdapter>) {
     fun all(): List<CapabilityAdapter> = adapters
     fun forFamily(family: String): CapabilityAdapter? = adapters.firstOrNull { it.capability.family == family }
     fun coverage(): List<CapabilityCoverage> = adapters.map {
-        CapabilityCoverage(it.capability, it.health(), detailFor(it))
+        CapabilityCoverage(it.capability, it.health(), detailFor(it), it.requires.firstOrNull())
     }
 
     private fun detailFor(a: CapabilityAdapter): String = when (a.health()) {

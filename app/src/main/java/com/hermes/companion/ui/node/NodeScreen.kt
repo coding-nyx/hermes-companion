@@ -3,6 +3,7 @@ package com.hermes.companion.ui.node
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -59,6 +62,8 @@ import com.hermes.companion.data.repo.CapabilityStatus
 import com.hermes.companion.data.repo.HardwareLease
 import com.hermes.companion.data.repo.NodeCapabilityItem
 import com.hermes.companion.data.repo.PrivacyLogEntry
+import com.hermes.companion.data.repo.deepLinkFor
+import com.hermes.companion.data.repo.isRuntimePermissionRequest
 
 private val Teal = StatusOk
 private val Sand = StatusWarn
@@ -145,6 +150,18 @@ fun NodeScreen(
                     StatPair("link", node.linkType)
                 }
             }
+        }
+
+        // Grant-all-missing shortcut: open the first settings panel for any
+        // permission that's still "Needs permission" on this device. Runtime
+        // permissions are requested in the VM one at a time via the launcher.
+        val context = LocalContext.current
+        val missingCount = node.capabilities.count { it.status == CapabilityStatus.MissingPermission }
+        if (missingCount > 0) {
+            Button(
+                onClick = { vm.grantFirstMissing(context) },
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text("Grant $missingCount missing") }
         }
 
         // Filter chips
@@ -325,10 +342,33 @@ private fun CapabilityRow(cap: NodeCapabilityItem) {
         CapabilityStatus.OsLimited -> LimitedColor
         CapabilityStatus.Unavailable -> Coral
     }
+    val context = LocalContext.current
+
+    // Tap → either request a runtime permission via the system dialog, or
+    // deep-link to the matching settings panel. After returning from either
+    // path, the VM's capability flow re-reads the grant state and the row
+    // flips to "Working" automatically.
+    val permLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { /* ignored — VM observes the change */ }
+    val canTap = cap.status == CapabilityStatus.MissingPermission && cap.requirement != null
+    val onTap: () -> Unit = onTap@{
+        val req = cap.requirement ?: return@onTap
+        if (isRuntimePermissionRequest(req)) {
+            permLauncher.launch(req.detail)
+        } else {
+            runCatching { context.startActivity(deepLinkFor(req) ?: return@onTap) }
+        }
+    }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier
+            .fillMaxWidth()
+            .let { if (canTap) it.then(Modifier.clickable(onClick = onTap)) else it },
+        colors = CardDefaults.cardColors(
+            containerColor = if (canTap) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            else MaterialTheme.colorScheme.surface,
+        ),
         shape = RoundedCornerShape(8.dp),
     ) {
         Row(
@@ -356,7 +396,7 @@ private fun CapabilityRow(cap: NodeCapabilityItem) {
                 )
             }
             Text(
-                cap.stateLabel,
+                if (canTap) "${cap.stateLabel}  ›  grant" else cap.stateLabel,
                 style = MaterialTheme.typography.labelSmall,
                 color = statusColor,
                 fontWeight = FontWeight.SemiBold,

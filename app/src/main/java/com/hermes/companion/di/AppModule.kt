@@ -11,6 +11,7 @@ import com.hermes.companion.data.repo.FleetRepository
 import com.hermes.companion.data.repo.NodeConnectionManager
 import com.hermes.companion.data.repo.NodeRepository
 import com.hermes.companion.data.repo.OutboxRepository
+import com.hermes.companion.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,7 +46,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideBiometricGate(impl: AndroidBiometricGate): BiometricGate = impl
+    fun provideBiometricGate(impl: AndroidBiometricGate): BiometricGate =
+        if (BuildConfig.DEBUG) com.hermes.companion.common.AllowAllGate else impl
 
     @Provides
     @Singleton

@@ -132,6 +132,8 @@ data class NodeCapabilityItem(
     val status: CapabilityStatus,
     val stateLabel: String,
     val description: String,
+    /** What Android grant is missing if status == MissingPermission. */
+    val requirement: com.hermes.companion.domain.AndroidRequirement? = null,
 )
 
 data class HardwareLease(

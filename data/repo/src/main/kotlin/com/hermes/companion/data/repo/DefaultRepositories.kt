@@ -410,6 +410,7 @@ internal class DefaultNodeRepository(
                     status = cov.health.toStatus(),
                     stateLabel = cov.detail,
                     description = describeCapability(cov.capability.family),
+                    requirement = cov.requirement,
                 )
             },
             leases = leases.map { l ->

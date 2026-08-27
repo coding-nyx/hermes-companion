@@ -48,7 +48,7 @@ class DeviceStatusAdapter(private val context: Context) : CapabilityAdapter {
 
     private fun networkKind(): String {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return "unknown"
-        val caps = cm.getNetworkCapabilities(cm.activeNetwork) ?: return "offline"
+        val caps = try { cm.getNetworkCapabilities(cm.activeNetwork) } catch (e: SecurityException) { null } ?: return "offline"
         return when {
             caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "wifi"
             caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "cellular"
