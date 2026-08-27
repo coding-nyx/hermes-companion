@@ -9,7 +9,9 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import com.hermes.companion.service.CompanionConnectionService
 import com.hermes.companion.ui.shell.Shell
 import com.hermes.companion.ui.theme.HermesTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {

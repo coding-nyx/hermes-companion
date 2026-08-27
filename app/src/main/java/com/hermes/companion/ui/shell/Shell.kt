@@ -147,12 +147,3 @@ private fun NavGraph(nav: androidx.navigation.NavHostController, padding: Paddin
         }
     }
 }
-
-@Composable
-private fun Placeholder(text: String) {
-    Box(Modifier.fillMaxSize().padding(24.dp)) {
-        Column {
-            Text(text, style = MaterialTheme.typography.titleMedium)
-        }
-    }
-}

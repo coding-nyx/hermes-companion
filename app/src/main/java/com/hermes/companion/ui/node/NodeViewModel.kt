@@ -1,19 +1,19 @@
 package com.hermes.companion.ui.node
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.hermes.companion.CompanionApp
 import com.hermes.companion.data.repo.CapabilityStatus
 import com.hermes.companion.data.repo.NodeCapabilityItem
 import com.hermes.companion.data.repo.NodeRepository
 import com.hermes.companion.data.repo.NodeState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class NodeUiState(
     val node: NodeState = NodeState(),
@@ -21,7 +21,8 @@ data class NodeUiState(
     val filteredCapabilities: List<NodeCapabilityItem> = emptyList(),
 )
 
-class NodeViewModel(
+@HiltViewModel
+class NodeViewModel @Inject constructor(
     private val repo: NodeRepository,
 ) : ViewModel() {
 
@@ -51,14 +52,5 @@ class NodeViewModel(
         viewModelScope.launch {
             repo.runCanary()
         }
-    }
-
-    companion object {
-        fun factory(): ViewModelProvider.Factory =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    NodeViewModel(CompanionApp.get().data.node) as T
-            }
     }
 }

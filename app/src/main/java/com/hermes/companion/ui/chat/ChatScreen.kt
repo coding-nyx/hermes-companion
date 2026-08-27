@@ -38,7 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.hermes.companion.domain.ConversationRoute
 import com.hermes.companion.domain.Message
 
@@ -47,7 +47,7 @@ import com.hermes.companion.domain.Message
 fun ChatScreen(
     route: ConversationRoute,
     onBack: () -> Unit,
-    vm: ChatViewModel = viewModel(factory = ChatViewModel.factory()),
+    vm: ChatViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(route) { vm.bind(route) }
     val state by vm.state.collectAsStateWithLifecycle()
@@ -168,8 +168,7 @@ private fun MessageBubble(msg: Message) {
                         Text(
                             msg.text,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = if (isUser) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSurface,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 } else if (msg is Message.User) {

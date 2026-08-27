@@ -36,7 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.hermes.companion.data.repo.Connectivity
 import com.hermes.companion.data.repo.GatewayView
 import com.hermes.companion.data.repo.ProfileView
@@ -46,7 +46,7 @@ import com.hermes.companion.domain.Session
 @Composable
 fun AgentsScreen(
     onOpenChat: (ConversationRoute) -> Unit,
-    vm: AgentsViewModel = viewModel(factory = AgentsViewModel.factory()),
+    vm: AgentsViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     var newThreadTarget by remember { mutableStateOf<Pair<String, String>?>(null) } // gatewayId to profileId

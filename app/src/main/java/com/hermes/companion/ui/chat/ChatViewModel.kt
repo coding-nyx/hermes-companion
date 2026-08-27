@@ -1,13 +1,12 @@
 package com.hermes.companion.ui.chat
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.hermes.companion.CompanionApp
 import com.hermes.companion.data.repo.ConversationRepository
 import com.hermes.companion.data.repo.ConversationState
 import com.hermes.companion.domain.ApprovalOption
 import com.hermes.companion.domain.ConversationRoute
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,6 +16,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class ChatUiState(
     val conversation: ConversationState = ConversationState(),
@@ -36,7 +36,8 @@ data class ChatUiState(
  * the data layer, so leaving Chat no longer cancels it.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class ChatViewModel(
+@HiltViewModel
+class ChatViewModel @Inject constructor(
     private val conversations: ConversationRepository,
 ) : ViewModel() {
 
@@ -82,14 +83,5 @@ class ChatViewModel(
         val route = route.value ?: return
         val runId = state.value.conversation.activeRun?.runId ?: return
         viewModelScope.launch { conversations.stop(route, runId) }
-    }
-
-    companion object {
-        fun factory(): ViewModelProvider.Factory =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    ChatViewModel(CompanionApp.get().data.conversations) as T
-            }
     }
 }

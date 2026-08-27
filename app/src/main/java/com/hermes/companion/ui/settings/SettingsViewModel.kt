@@ -1,26 +1,27 @@
 package com.hermes.companion.ui.settings
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.hermes.companion.CompanionApp
 import com.hermes.companion.common.reason
 import com.hermes.companion.data.repo.Fleet
 import com.hermes.companion.data.repo.FleetRepository
 import com.hermes.companion.domain.GatewayKind
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class SettingsUiState(
     val fleet: Fleet = Fleet(),
     val error: String? = null,
 )
 
-class SettingsViewModel(
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
     private val fleet: FleetRepository,
 ) : ViewModel() {
 
@@ -46,14 +47,5 @@ class SettingsViewModel(
         viewModelScope.launch {
             fleet.refresh()
         }
-    }
-
-    companion object {
-        fun factory(): ViewModelProvider.Factory =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    SettingsViewModel(CompanionApp.get().data.fleet) as T
-            }
     }
 }

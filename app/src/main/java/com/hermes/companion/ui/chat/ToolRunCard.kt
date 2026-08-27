@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
@@ -40,10 +41,11 @@ fun ToolRunCard(run: ToolRun) {
                         ToolStatus.Running -> Icons.Filled.PlayArrow
                         ToolStatus.Pending -> Icons.Filled.HourglassEmpty
                         ToolStatus.Completed -> Icons.Filled.CheckCircle
-                        ToolStatus.Failed -> Icons.Filled.HourglassEmpty
+                        ToolStatus.Failed -> Icons.Filled.ErrorOutline
                     },
                     contentDescription = run.status.name,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    tint = if (run.status == ToolStatus.Failed) MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSecondaryContainer,
                 )
                 Box(Modifier.size(8.dp))
                 Text(

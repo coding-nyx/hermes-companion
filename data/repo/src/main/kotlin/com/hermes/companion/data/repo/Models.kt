@@ -55,7 +55,7 @@ data class RunView(
 
 enum class RunPhase { Streaming, AwaitingApproval, Completed, Failed;
     companion object {
-        fun parse(raw: String): RunPhase = entries.firstOrNull { it.stored == raw } ?: Completed
+        fun parse(raw: String): RunPhase = entries.firstOrNull { it.stored == raw } ?: Failed // unknown state is never treated as success
     }
     val stored: String get() = when (this) {
         Streaming -> "streaming"

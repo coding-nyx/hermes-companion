@@ -42,15 +42,16 @@ fun ApprovalSheet(
             Box(Modifier.size(4.dp))
             Text("Digest: ${request.digest}", style = MaterialTheme.typography.bodyMedium)
             Box(Modifier.size(20.dp))
+            // Only the choices Hermes offered for THIS request — never a hardcoded set.
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(
-                    ApprovalOption.Once,
-                    ApprovalOption.Session,
-                    ApprovalOption.Always,
-                ).forEach { opt ->
+                request.options.filter { it != ApprovalOption.Deny }.forEach { opt ->
                     Button(onClick = { onDecision(opt) }) { Text(opt.label) }
                 }
-                OutlinedButton(onClick = { onDecision(ApprovalOption.Deny) }) { Text("Deny") }
+                if (ApprovalOption.Deny in request.options) {
+                    OutlinedButton(onClick = { onDecision(ApprovalOption.Deny) }) {
+                        Text(ApprovalOption.Deny.label)
+                    }
+                }
             }
             Box(Modifier.size(12.dp))
         }

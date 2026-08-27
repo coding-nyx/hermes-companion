@@ -2,47 +2,30 @@ package com.hermes.companion
 
 import android.app.Application
 import com.hermes.companion.data.repo.CompanionData
-import com.hermes.companion.domain.GatewayConnection
-import com.hermes.companion.domain.GatewayKind
+import com.hermes.companion.di.AppScope
+import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
- * Application-scoped state. The scope here outlives every screen, so a run
- * keeps being collected into the database after you leave Chat. Step 4 moves
- * it into a foreground service, which is what makes a run survive the app
- * being backgrounded.
+ * Application-scoped state. Hilt owns the object graph; the injected [scope]
+ * outlives every screen so a run keeps being collected into the database after
+ * you leave Chat. No gateway is baked in — the fleet is hydrated from Room and
+ * grows through Discovery / Settings.
  */
+@HiltAndroidApp
 class CompanionApp : Application() {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    @Inject lateinit var data: CompanionData
 
-    val data: CompanionData by lazy { CompanionData(this, scope) }
+    @Inject @AppScope lateinit var scope: CoroutineScope
 
     override fun onCreate() {
         super.onCreate()
-        instance = this
         scope.launch {
-            data.bootstrap(seedFleet())
+            data.bootstrap(emptyList())
             data.fleet.refresh()
         }
-    }
-
-    /** Only used on first run, when the gateway table is still empty. */
-    private fun seedFleet(): List<GatewayConnection> {
-        val host = BuildConfig.DEFAULT_HERMES_HOST
-        val port = BuildConfig.DEFAULT_HERMES_PORT
-        return listOf(
-            GatewayConnection("gw-hub11", "Hub-11 (Live)", GatewayKind.RemoteHttp, "http://100.88.4.63:7800/gw-hub11", "none"),
-            GatewayConnection("gw-home", "Home (mock)", GatewayKind.RemoteHttp, "http://$host:$port/gw-home", "none"),
-            GatewayConnection("gw-cloud", "Cloud (mock)", GatewayKind.RemoteHttp, "http://$host:$port/gw-cloud", "none"),
-        )
-    }
-
-    companion object {
-        private lateinit var instance: CompanionApp
-        fun get(): CompanionApp = instance
     }
 }

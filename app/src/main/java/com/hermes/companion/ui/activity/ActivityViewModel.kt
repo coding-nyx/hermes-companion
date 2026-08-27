@@ -1,19 +1,19 @@
 package com.hermes.companion.ui.activity
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.hermes.companion.CompanionApp
 import com.hermes.companion.data.repo.ActivityItem
 import com.hermes.companion.data.repo.ActivityKind
 import com.hermes.companion.data.repo.ActivityRepository
 import com.hermes.companion.data.repo.ActivityState
 import com.hermes.companion.data.repo.QueueSummary
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
 
 data class ActivityUiState(
     val items: List<ActivityItem> = emptyList(),
@@ -22,12 +22,13 @@ data class ActivityUiState(
     val expandedId: String? = null,
 )
 
-class ActivityViewModel(
+@HiltViewModel
+class ActivityViewModel @Inject constructor(
     private val repo: ActivityRepository,
 ) : ViewModel() {
 
     private val filter = MutableStateFlow<ActivityKind?>(null)
-    private val expandedId = MutableStateFlow<String?>("evt-wa")
+    private val expandedId = MutableStateFlow<String?>(null)
 
     val state: StateFlow<ActivityUiState> = combine(
         repo.observeActivity(),
@@ -53,14 +54,5 @@ class ActivityViewModel(
 
     fun toggleExpanded(id: String) {
         expandedId.value = if (expandedId.value == id) null else id
-    }
-
-    companion object {
-        fun factory(): ViewModelProvider.Factory =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    ActivityViewModel(CompanionApp.get().data.activity) as T
-            }
     }
 }

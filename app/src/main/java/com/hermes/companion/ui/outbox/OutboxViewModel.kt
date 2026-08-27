@@ -1,17 +1,18 @@
 package com.hermes.companion.ui.outbox
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.hermes.companion.CompanionApp
 import com.hermes.companion.data.repo.OutboxRepository
 import com.hermes.companion.data.repo.OutboxState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class OutboxViewModel(
+@HiltViewModel
+class OutboxViewModel @Inject constructor(
     private val repo: OutboxRepository,
 ) : ViewModel() {
 
@@ -28,14 +29,5 @@ class OutboxViewModel(
         viewModelScope.launch {
             repo.dropSubmission(id)
         }
-    }
-
-    companion object {
-        fun factory(): ViewModelProvider.Factory =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    OutboxViewModel(CompanionApp.get().data.outbox) as T
-            }
     }
 }

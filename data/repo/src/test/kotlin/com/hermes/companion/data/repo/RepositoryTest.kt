@@ -2,6 +2,7 @@ package com.hermes.companion.data.repo
 
 import com.hermes.companion.backend.HermesBackend
 import com.hermes.companion.backend.MockHermesBackend
+import com.hermes.companion.data.db.RunEntity
 import com.hermes.companion.data.db.toEntity
 import com.hermes.companion.domain.AgentProfile
 import com.hermes.companion.domain.ApprovalOption
@@ -255,24 +256,29 @@ class RepositoryTest {
     }
 
     @Test
-    fun `activity repository observes timeline and queues`() = runTest {
+    fun `activity repository maps real runs and one queue per gateway`() = runTest {
         val fakes = Fakes()
         seed(fakes, mock("gw-test", listOf("ash")))
+        fakes.runs.upsert(
+            RunEntity("gw-test", "ash", "sess-1", "run-1", RunPhase.Completed.stored, null, null, null, 1_000L),
+        )
         val repo = DefaultActivityRepository(fakes.store)
         val state = repo.observeActivity().first()
-        assertTrue(state.items.isNotEmpty())
+        assertEquals(1, state.items.size)
+        assertEquals("run-1", state.items[0].id)
         assertEquals(1, state.queues.size)
         assertEquals("gw-test", state.queues[0].gatewayId)
     }
 
     @Test
-    fun `node repository executes canary test pipeline`() = runTest {
+    fun `node repository canary reports not-paired until real capabilities land`() = runTest {
         val repo = DefaultNodeRepository()
         val steps = repo.runCanary().getOrThrow()
-        assertEquals(3, steps.size)
+        assertEquals(2, steps.size)
         val finalState = repo.observeNodeState().first()
-        assertTrue(finalState.canaryPassed)
+        assertFalse(finalState.canaryPassed)   // node is not paired yet
         assertFalse(finalState.canaryRunning)
+        assertTrue(finalState.capabilities.isEmpty())
     }
 
     @Test

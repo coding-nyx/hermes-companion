@@ -15,6 +15,7 @@ import com.hermes.companion.net.httpHermesBackend
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 
@@ -208,7 +209,8 @@ internal class DefaultActivityRepository(
     ) { runs, gateways, _ ->
         val queueSummaries = gateways.map { gw ->
             val isLive = gw.health == GatewayHealth.Healthy.name
-            val detail = if (isLive) "0 queued · acked seq 8842" else "3 queued · stale ${gw.error ?: "unreachable"}"
+            // Real queue depth / ack watermark arrive with the outbound table (Phase 2).
+            val detail = if (isLive) "connected" else "unreachable: ${gw.error ?: "no response"}"
             QueueSummary(gw.id, detail, isLive)
         }
 
@@ -242,102 +244,29 @@ internal class DefaultActivityRepository(
             )
         }
 
-        val fallbackItems = if (runItems.isEmpty()) listOf(
-            ActivityItem(
-                id = "evt-wa",
-                kind = ActivityKind.Notification,
-                glyph = "WA",
-                title = "Priya R. — \"are we still on for 7?\"",
-                subtitle = "com.whatsapp · notifications.read",
-                routeDisplay = "gw-home › @ash › Morning triage",
-                createdAt = System.currentTimeMillis() - 120_000,
-                outcome = ActivityOutcome.Notified,
-                stage = 5,
-                detailTitle = "Delivered as an unread in Morning triage",
-                detailBody = "Judged worth interrupting for: named contact asking a direct question inside your evening window.",
-                detailMeta = "evt_01J8f3 · seq 8841 · acked 41 ms",
-            ),
-            ActivityItem(
-                id = "evt-cq",
-                kind = ActivityKind.Notification,
-                glyph = "CQ",
-                title = "Cliq #deploys — 14 messages",
-                subtitle = "com.zoho.cliq · notifications.read",
-                routeDisplay = "gw-home › @ash",
-                createdAt = System.currentTimeMillis() - 300_000,
-                outcome = ActivityOutcome.Suppressed,
-                stage = 4,
-                detailTitle = "Why this did not ping you",
-                detailBody = "Matched quiet rule for work channels outside 09:00–19:00. Captured, uploaded and judged on the record.",
-                detailMeta = "rule work-channels-quiet · evt_01J8ez · seq 8836",
-            ),
-            ActivityItem(
-                id = "evt-call",
-                kind = ActivityKind.Call,
-                glyph = "↘",
-                title = "Missed call · +91 98··· 4471",
-                subtitle = "unknown caller · calls.observe",
-                routeDisplay = "gw-cloud › @ash-cloud",
-                createdAt = System.currentTimeMillis() - 600_000,
-                outcome = ActivityOutcome.Failed,
-                stage = 4,
-                detailTitle = "Stuck at judgment, not lost",
-                detailBody = "The configured model returned a quota error. The event stays pending in queue.",
-                detailMeta = "attempt 3 of 6 · next retry 42s · evt_01J8ex",
-            ),
-            ActivityItem(
-                id = "evt-cron",
-                kind = ActivityKind.Job,
-                glyph = "⏱",
-                title = "Standup digest",
-                subtitle = "cron 07:00 · companion platform adapter",
-                routeDisplay = "gw-home › @misty › Reading list",
-                createdAt = System.currentTimeMillis() - 900_000,
-                outcome = ActivityOutcome.Notified,
-                stage = 5,
-                detailTitle = "Proactive message, routed not broadcast",
-                detailBody = "The gateway addressed it to companion:node_s22/misty/reading-list.",
-                detailMeta = "run_01J8ev · delivered 07:00:04",
-            )
-        ) else emptyList()
 
         ActivityState(
-            items = runItems + fallbackItems,
+            items = runItems,
             queues = queueSummaries,
         )
     }
 }
 
 internal class DefaultNodeRepository : NodeRepository {
+    // Honest placeholder until the node runtime + real Android adapters land
+    // (Phase 5). It advertises NO capability it cannot actually serve, so the
+    // Node screen shows an unpaired device rather than fabricated coverage.
     private val state = kotlinx.coroutines.flow.MutableStateFlow(
         NodeState(
-            nodeName = "Galaxy S22",
-            nodeId = "node_s22",
-            sequence = 8842L,
-            brokerStatus = "Broker connected",
-            batteryMode = "unrestricted",
-            linkType = "wss tailnet",
-            capabilities = listOf(
-                NodeCapabilityItem("notifications.read", "notifications.read", CapabilityStatus.Working, "Working", "Reads active and incoming notifications"),
-                NodeCapabilityItem("device.status", "device.status", CapabilityStatus.Working, "Working", "Monitors battery, connectivity and lock state"),
-                NodeCapabilityItem("calls.observe", "calls.observe", CapabilityStatus.Working, "Working", "Observes call states and logs"),
-                NodeCapabilityItem("notifications.reply", "notifications.reply", CapabilityStatus.Working, "Working", "Dispatches inline notification actions"),
-                NodeCapabilityItem("calls.answer", "calls.answer", CapabilityStatus.MissingPermission, "Needs dialer role", "Requires default phone/dialer role"),
-                NodeCapabilityItem("messages.sms.send", "messages.sms.send", CapabilityStatus.MissingPermission, "Needs SMS role", "Requires SMS app permission"),
-                NodeCapabilityItem("screen.capture", "screen.capture", CapabilityStatus.OsLimited, "Consent per session", "Requires foreground consent token"),
-                NodeCapabilityItem("clipboard.read", "clipboard.read", CapabilityStatus.OsLimited, "OS-limited", "Restricted in background on Android 10+"),
-                NodeCapabilityItem("location.read", "location.read", CapabilityStatus.Unavailable, "Location off", "Device location services disabled"),
-            ),
-            leases = listOf(
-                HardwareLease("camera.snap", "gw-home › @ash · 38s left", false),
-                HardwareLease("microphone.record", "free", true),
-                HardwareLease("screen.capture", "gw-cloud waiting on @ash", false),
-            ),
-            privacyLog = listOf(
-                PrivacyLogEntry("07:12", "notifications.read · com.whatsapp · title and preview sent, number redacted to @ash"),
-                PrivacyLogEntry("07:04", "notifications.read · com.zoho.cliq · counted only, body never left the device"),
-                PrivacyLogEntry("06:58", "calls.observe · +91 98··· 4471 · caller number masked at source"),
-            ),
+            nodeName = "This device",
+            nodeId = "",
+            sequence = 0L,
+            brokerStatus = "Not paired",
+            batteryMode = "unknown",
+            linkType = "none",
+            capabilities = emptyList(),
+            leases = emptyList(),
+            privacyLog = emptyList(),
         )
     )
 
@@ -345,16 +274,13 @@ internal class DefaultNodeRepository : NodeRepository {
 
     override suspend fun runCanary(): Result<List<String>> = runCatching {
         state.value = state.value.copy(canaryRunning = true, canaryPassed = false)
-        kotlinx.coroutines.delay(350)
         val steps = listOf(
-            "local synthetic notification posted → listener fired in 8 ms",
-            "node.event signed with Keystore → broker acked seq ${state.value.sequence + 1}",
-            "@ash received Canary event in Morning triage with confirmed receipt",
+            "Node is not paired yet — pair a gateway and enable Full Node Mode.",
+            "The end-to-end canary runs once real capabilities are wired (Phase 5).",
         )
         state.value = state.value.copy(
-            sequence = state.value.sequence + 1,
             canaryRunning = false,
-            canaryPassed = true,
+            canaryPassed = false,
             canarySteps = steps,
         )
         steps
@@ -366,48 +292,18 @@ internal class DefaultOutboxRepository(
     private val conversations: ConversationRepository,
 ) : OutboxRepository {
     override fun observeOutbox(): Flow<OutboxState> = store.messages.observeAll().map { messages ->
-        val pendingMessages = messages.filter { it.pending }
-        val items = if (pendingMessages.isNotEmpty()) {
-            pendingMessages.map { m ->
-                OutboxItem(
-                    id = m.id,
-                    route = ConversationRoute(m.gatewayId, m.profileId, m.sessionId),
-                    routeDisplay = "${m.gatewayId} › @${m.profileId} › ${m.sessionId.takeLast(6)}",
-                    text = m.text,
-                    createdAt = m.createdAt,
-                    state = if (m.runId != null) "in flight" else "unacknowledged",
-                    needsDecision = m.runId == null,
-                )
-            }
-        } else {
-            listOf(
-                OutboxItem(
-                    id = "sub-1",
-                    route = ConversationRoute("gw-cloud", "ash-cloud", "sess-deploy"),
-                    routeDisplay = "gw-cloud › @ash-cloud › Deploy check",
-                    text = "roll back the migration",
-                    createdAt = System.currentTimeMillis() - 180_000,
-                    state = "unacknowledged",
-                    needsDecision = true,
-                ),
-                OutboxItem(
-                    id = "sub-2",
-                    route = ConversationRoute("gw-home", "ash", "sess-evening"),
-                    routeDisplay = "gw-home › @ash › Evening handoff",
-                    text = "what did the meter read this morning",
-                    createdAt = System.currentTimeMillis() - 60_000,
-                    state = "in flight",
-                    needsDecision = false,
-                ),
-                OutboxItem(
-                    id = "sub-3",
-                    route = ConversationRoute("gw-home", "misty", "sess-reading"),
-                    routeDisplay = "gw-home › @misty › Reading list",
-                    text = "Voice note · 0:14",
-                    createdAt = System.currentTimeMillis() - 300_000,
-                    state = "queued",
-                    needsDecision = false,
-                ),
+        // Real pending submissions only. The dedicated outbound table with
+        // idempotency-key replay and the "unacknowledged" terminal state lands
+        // in Phase 2; today a pending message row is the stand-in.
+        val items = messages.filter { it.pending }.map { m ->
+            OutboxItem(
+                id = m.id,
+                route = ConversationRoute(m.gatewayId, m.profileId, m.sessionId),
+                routeDisplay = "${m.gatewayId} › @${m.profileId} › ${m.sessionId.takeLast(6)}",
+                text = m.text,
+                createdAt = m.createdAt,
+                state = if (m.runId != null) "in flight" else "unacknowledged",
+                needsDecision = m.runId == null,
             )
         }
         OutboxState(
@@ -418,9 +314,14 @@ internal class DefaultOutboxRepository(
     }
 
     override suspend fun retrySubmission(id: String): Result<Unit> = runCatching {
-        // If it exists in DB, retry submit
-        val msg = store.messages.observeAll().map { list -> list.firstOrNull { it.id == id } }
-        // Conversation submission
+        val msg = store.messages.observeAll().first().firstOrNull { it.id == id }
+            ?: error("submission $id not found")
+        val route = ConversationRoute(msg.gatewayId, msg.profileId, msg.sessionId)
+        // Drop the stale local row, then resubmit its text. Phase 2 replaces
+        // this with an idempotency-key replay against the outbound table.
+        store.messages.delete(id)
+        conversations.submit(route, msg.text).getOrThrow()
+        Unit
     }
 
     override suspend fun dropSubmission(id: String): Result<Unit> = runCatching {

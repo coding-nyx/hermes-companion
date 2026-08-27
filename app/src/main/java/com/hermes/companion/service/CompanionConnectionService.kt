@@ -10,10 +10,11 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import com.hermes.companion.CompanionApp
 import com.hermes.companion.MainActivity
 import com.hermes.companion.R
+import com.hermes.companion.data.repo.ConnectionSupervisor
 import com.hermes.companion.data.repo.FleetStatus
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,6 +22,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Owns every gateway connection. Nothing about a connection lives in a
@@ -29,7 +31,10 @@ import kotlinx.coroutines.launch
  *
  * See `plan/10-architecture/runtime.md`.
  */
+@AndroidEntryPoint
 class CompanionConnectionService : Service() {
+
+    @Inject lateinit var supervisor: ConnectionSupervisor
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var supervision: Job? = null
@@ -41,10 +46,9 @@ class CompanionConnectionService : Service() {
         // within a few seconds of the service starting.
         startForeground(NOTIFICATION_ID, notification(FleetStatus()))
 
-        val data = CompanionApp.get().data
-        supervision = data.supervisor.start(scope)
+        supervision = supervisor.start(scope)
         scope.launch {
-            data.supervisor.status.collectLatest { status ->
+            supervisor.status.collectLatest { status ->
                 notificationManager().notify(NOTIFICATION_ID, notification(status))
             }
         }

@@ -35,24 +35,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.hermes.companion.ui.theme.Indigo80
+import com.hermes.companion.ui.theme.StatusError
+import com.hermes.companion.ui.theme.StatusOk
+import com.hermes.companion.ui.theme.StatusWarn
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.hermes.companion.data.repo.OutboxItem
 
-private val Teal = Color(0xFF80CBC4)
-private val Sand = Color(0xFFFFCC80)
-private val Coral = Color(0xFFFFB4AB)
-private val Purple = Color(0xFFB3B6F2)
+private val Teal = StatusOk
+private val Sand = StatusWarn
+private val Coral = StatusError
+private val Purple = Indigo80
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OutboxScreen(
     onBack: () -> Unit,
-    vm: OutboxViewModel = viewModel(factory = OutboxViewModel.factory()),
+    vm: OutboxViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     val needsDecisionCount = state.items.count { it.needsDecision }

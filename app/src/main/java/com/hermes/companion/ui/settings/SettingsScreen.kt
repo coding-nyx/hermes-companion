@@ -41,7 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.hermes.companion.BuildConfig
 import com.hermes.companion.data.repo.GatewayView
 import com.hermes.companion.domain.GatewayConnection
@@ -51,7 +51,7 @@ import com.hermes.companion.domain.GatewayKind
 @Composable
 fun SettingsScreen(
     onOpenOutbox: () -> Unit = {},
-    vm: SettingsViewModel = viewModel(factory = SettingsViewModel.factory()),
+    vm: SettingsViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
     var showAdd by remember { mutableStateOf(false) }
