@@ -17,6 +17,7 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val fleet: Fleet = Fleet(),
+    val activeGatewayId: String? = null,
     val error: String? = null,
 )
 
@@ -28,7 +29,7 @@ class SettingsViewModel @Inject constructor(
     private val errors = MutableStateFlow<String?>(null)
 
     val state: StateFlow<SettingsUiState> =
-        combine(fleet.fleet(), errors) { f, e -> SettingsUiState(f, e) }
+        combine(fleet.fleet(), fleet.observeActive(), errors) { f, a, e -> SettingsUiState(f, a, e) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
     fun addGateway(label: String, baseUrl: String, kind: GatewayKind) {
@@ -46,6 +47,12 @@ class SettingsViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             fleet.refresh()
+        }
+    }
+
+    fun setActive(gatewayId: String) {
+        viewModelScope.launch {
+            errors.value = fleet.setActive(gatewayId).exceptionOrNull()?.reason()
         }
     }
 }

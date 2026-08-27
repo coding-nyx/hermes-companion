@@ -348,5 +348,34 @@ class RepositoryTest {
         assertEquals(row.runId, again)
     }
 
+
+    @Test
+    fun `observeActive returns null when no row set`() = runTest {
+        val fakes = Fakes()
+        val registry = seed(fakes, mock("gw-test", listOf("ash")))
+        val repo = DefaultFleetRepository(fakes.store, registry)
+        assertNull(repo.observeActive().first())
+    }
+
+    @Test
+    fun `setActive then observeActive returns the gatewayId`() = runTest {
+        val fakes = Fakes()
+        val registry = seed(fakes, mock("gw-test", listOf("ash")))
+        val repo = DefaultFleetRepository(fakes.store, registry)
+        repo.setActive("gw-test")
+        val active = repo.observeActive().first()
+        assertEquals("gw-test", active)
+    }
+
+    @Test
+    fun `setActive replaces prior selection`() = runTest {
+        val fakes = Fakes()
+        val registry = seed(fakes, mock("gw-test", listOf("ash")), mock("gw-other", listOf("ash")))
+        val repo = DefaultFleetRepository(fakes.store, registry)
+        repo.setActive("gw-test")
+        repo.setActive("gw-other")
+        assertEquals("gw-other", repo.observeActive().first())
+    }
+
 }
 

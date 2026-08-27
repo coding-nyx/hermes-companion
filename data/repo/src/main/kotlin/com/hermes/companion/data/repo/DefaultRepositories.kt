@@ -118,6 +118,19 @@ internal class DefaultFleetRepository(
         val segment = url.substringAfterLast('/').substringBefore('?').substringBefore('#')
         return if (segment.startsWith("gw-")) segment else "gw-adhoc-" + Integer.toHexString(url.hashCode())
     }
+
+    override fun observeActive(): Flow<String?> =
+        store.activeGateway.observe().map { it?.gatewayId }
+
+    override suspend fun setActive(gatewayId: String): Result<Unit> = runCatching {
+        store.activeGateway.set(
+            com.hermes.companion.data.db.ActiveGatewayEntity(
+                gatewayId = gatewayId,
+                updatedAt = System.currentTimeMillis(),
+            )
+        )
+        Unit
+    }
 }
 
 internal class DefaultConversationRepository(

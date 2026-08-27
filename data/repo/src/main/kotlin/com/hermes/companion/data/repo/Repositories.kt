@@ -15,6 +15,10 @@ interface FleetRepository {
     suspend fun refresh()
     suspend fun addGateway(label: String, baseUrl: String, kind: GatewayKind): Result<String>
     suspend fun forget(gatewayId: String): Result<Unit>
+    /** Observes the active gatewayId, or null if none is set. */
+    fun observeActive(): Flow<String?>
+    /** Marks [gatewayId] as the active gateway. Replaces any prior selection. */
+    suspend fun setActive(gatewayId: String): Result<Unit>
 }
 
 interface ConversationRepository {
