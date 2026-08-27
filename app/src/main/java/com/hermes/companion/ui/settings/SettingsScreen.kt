@@ -52,6 +52,7 @@ import com.hermes.companion.domain.GatewayKind
 fun SettingsScreen(
     onOpenOutbox: () -> Unit = {},
     onOpenDiscover: () -> Unit = {},
+    onOpenDiagnostics: () -> Unit = {},
     vm: SettingsViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -64,6 +65,7 @@ fun SettingsScreen(
             IconButton(onClick = vm::refresh) {
                 Icon(Icons.Filled.Refresh, contentDescription = "Refresh Gateways")
             }
+            androidx.compose.material3.TextButton(onClick = onOpenDiagnostics) { Text("Diagnostics") }
             androidx.compose.material3.OutlinedButton(onClick = onOpenDiscover) { Text("Discover") }
             Box(Modifier.size(8.dp))
             Button(onClick = { showAdd = true }) { Text("Add") }

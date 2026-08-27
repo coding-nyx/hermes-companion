@@ -41,6 +41,7 @@ import com.hermes.companion.ui.node.NodeGrantsScreen
 import com.hermes.companion.ui.node.NodeScreen
 import com.hermes.companion.ui.setup.NodeSetupScreen
 import com.hermes.companion.ui.outbox.OutboxScreen
+import com.hermes.companion.ui.diagnostics.DiagnosticsScreen
 import com.hermes.companion.ui.discover.DiscoverScreen
 import com.hermes.companion.ui.settings.SettingsScreen
 
@@ -140,10 +141,14 @@ private fun NavGraph(nav: androidx.navigation.NavHostController, padding: Paddin
             SettingsScreen(
                 onOpenOutbox = { nav.navigate(Route.Outbox.path) },
                 onOpenDiscover = { nav.navigate(Route.Discover.path) },
+                onOpenDiagnostics = { nav.navigate(Route.Diagnostics.path) },
             )
         }
         composable(Route.Discover.path) {
             DiscoverScreen(onBack = { nav.popBackStack() }, onAdded = { nav.popBackStack() })
+        }
+        composable(Route.Diagnostics.path) {
+            DiagnosticsScreen(onBack = { nav.popBackStack() })
         }
         composable(Route.Outbox.path) {
             OutboxScreen(onBack = { nav.popBackStack() })
