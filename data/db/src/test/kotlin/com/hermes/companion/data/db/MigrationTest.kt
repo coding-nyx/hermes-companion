@@ -106,6 +106,20 @@ class MigrationTest {
         db.close()
     }
 
+
+    @Test
+    fun migrate5To6_addsStreamRules() {
+        helper.createDatabase(dbName, 1).close()
+        val db = helper.runMigrationsAndValidate(
+            dbName, 6, true, MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
+        )
+        db.execSQL("INSERT INTO stream_rules (source,mode,updatedAt) VALUES ('com.whatsapp','Summarise',1)")
+        db.query("SELECT mode FROM stream_rules WHERE source='com.whatsapp'").use { c ->
+            c.moveToFirst(); assertEquals("Summarise", c.getString(0))
+        }
+        db.close()
+    }
+
     @Suppress("unused")
     private fun ctx() = ApplicationProvider.getApplicationContext<android.content.Context>()
 }

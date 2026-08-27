@@ -16,8 +16,9 @@ import androidx.room.RoomDatabase
         NodeIdentityEntity::class,
         GrantEntity::class,
         LeaseEntity::class,
+        StreamRuleEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 internal abstract class CompanionDatabase : RoomDatabase() {
@@ -30,6 +31,7 @@ internal abstract class CompanionDatabase : RoomDatabase() {
     abstract fun nodeIdentity(): NodeIdentityDao
     abstract fun grants(): GrantDao
     abstract fun leases(): LeaseDao
+    abstract fun streamRules(): StreamRuleDao
 }
 
 /**
@@ -50,6 +52,7 @@ class CompanionStore(
     val nodeIdentity: NodeIdentityDao,
     val grants: GrantDao,
     val leases: LeaseDao,
+    val streamRules: StreamRuleDao,
 )
 
 fun openCompanionStore(context: Context): CompanionStore {
@@ -59,5 +62,5 @@ fun openCompanionStore(context: Context): CompanionStore {
     val db = Room.databaseBuilder(context, CompanionDatabase::class.java, "companion.db")
         .addMigrations(*ALL_MIGRATIONS)
         .build()
-    return CompanionStore(db.gateways(), db.profiles(), db.sessions(), db.messages(), db.runs(), db.outbound(), db.nodeIdentity(), db.grants(), db.leases())
+    return CompanionStore(db.gateways(), db.profiles(), db.sessions(), db.messages(), db.runs(), db.outbound(), db.nodeIdentity(), db.grants(), db.leases(), db.streamRules())
 }

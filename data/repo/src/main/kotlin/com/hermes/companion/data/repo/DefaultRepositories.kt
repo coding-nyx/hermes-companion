@@ -346,6 +346,20 @@ internal class DefaultNodeRepository(
             rows.map { g -> NodeGrantItem(g.gatewayId, g.nodeId, g.profileId, g.capability, g.mode) }
         }
 
+    override fun observeStreamRules(): Flow<List<StreamRuleItem>> =
+        combine(ticker, store.streamRules.observeAll()) { _, rules ->
+            val ruleMap = rules.associateBy { it.source }
+            val sources = (com.hermes.companion.node.service.HermesNotificationListenerService.activeSnapshot()
+                .map { it.packageName } + rules.map { it.source }).distinct().sorted()
+            sources.map { src -> StreamRuleItem(src, ruleMap[src]?.mode ?: StreamMode.StreamFull.name) }
+        }
+
+    override suspend fun setStreamRule(source: String, mode: String): Result<Unit> = runCatching {
+        store.streamRules.upsert(
+            com.hermes.companion.data.db.StreamRuleEntity(source, mode, System.currentTimeMillis()),
+        )
+    }
+
     override suspend fun setGrant(gatewayId: String, nodeId: String, profileId: String, capability: String, mode: String): Result<Unit> = runCatching {
         if (!gate.require(BiometricGate.Gate.CAPABILITY_CHANGE)) error("capability change not authenticated")
         store.grants.upsert(

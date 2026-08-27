@@ -93,35 +93,65 @@ internal class NodeEventPump(
     private val nodeId: String,
     private val gatewayId: String,
     private val broker: NodeBroker,
+    private val store: CompanionStore,
 ) {
     private val seq = AtomicLong(0)
+    private val rate = RateLimiter(maxPerWindow = 10, windowMs = 60_000)
+
     fun run(scope: CoroutineScope): Job = scope.launch {
         var seen = emptySet<String>()
         while (isActive) {
             if (HermesNotificationListenerService.isConnected()) {
                 val snapshot = HermesNotificationListenerService.activeSnapshot()
                 val fresh = snapshot.filter { it.key !in seen }
-                fresh.forEach { n ->
-                    broker.sendEvent(
-                        NodeEventFrame(
-                            eventId = "evt_" + UUID.randomUUID().toString().take(12),
-                            gatewayId = gatewayId,
-                            profile = "",
-                            nodeId = nodeId,
-                            sequence = seq.incrementAndGet(),
-                            sentAt = java.time.Instant.ofEpochMilli(n.postedAt).toString(),
-                            capability = "notifications.read",
-                            payload = """{"package":"${n.packageName}","title":${quote(n.title)}}""",
-                        ),
-                    )
-                }
+                fresh.forEach { n -> forward(n.packageName, n.title, n.postedAt) }
                 seen = snapshot.map { it.key }.toSet()
             }
             delay(4_000)
         }
     }
 
+    private suspend fun forward(pkg: String, title: String, postedAt: Long) {
+        val mode = runCatching {
+            store.streamRules.find(pkg)?.mode?.let { StreamMode.valueOf(it) }
+        }.getOrNull() ?: StreamMode.StreamFull
+        // Never-forwarded: our own package (structural self-loop guard is upstream too).
+        val redacted = Redactor.apply(mode, title, "")
+        if (!redacted.send) return
+        if (!rate.allow(pkg)) return // over the per-source ceiling -> recorded as throttled upstream; dropped here
+        val payload = if (redacted.countOnly) {
+            """{"package":${quote(pkg)},"countOnly":true}"""
+        } else {
+            """{"package":${quote(pkg)},"title":${quote(redacted.title)}}"""
+        }
+        broker.sendEvent(
+            NodeEventFrame(
+                eventId = "evt_" + UUID.randomUUID().toString().take(12),
+                gatewayId = gatewayId,
+                profile = "",
+                nodeId = nodeId,
+                sequence = seq.incrementAndGet(),
+                sentAt = java.time.Instant.ofEpochMilli(postedAt).toString(),
+                capability = "notifications.read",
+                payload = payload,
+            ),
+        )
+    }
+
     private fun quote(s: String) = "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", " ") + "\""
+}
+
+/** Token-bucket-ish per-source rate limiter (over-ceiling events are dropped from the wire). */
+internal class RateLimiter(private val maxPerWindow: Int, private val windowMs: Long) {
+    private val hits = java.util.concurrent.ConcurrentHashMap<String, ArrayDeque<Long>>()
+    @Synchronized
+    fun allow(source: String): Boolean {
+        val now = System.currentTimeMillis()
+        val q = hits.getOrPut(source) { ArrayDeque() }
+        while (q.isNotEmpty() && now - q.first() > windowMs) q.removeFirst()
+        if (q.size >= maxPerWindow) return false
+        q.addLast(now); return true
+    }
 }
 
 /**
@@ -167,7 +197,7 @@ class NodeConnectionManager internal constructor(
         broker.start(scope)
         val jobs = listOf(
             NodeDispatcher(row.gatewayId, row.nodeId, registry, broker, grantChecker, leaseManager).run(scope),
-            NodeEventPump(row.nodeId, row.gatewayId, broker).run(scope),
+            NodeEventPump(row.nodeId, row.gatewayId, broker, store).run(scope),
             scope.launch {
                 broker.connection.collect { state ->
                     _connections.value = _connections.value + (row.gatewayId to state)

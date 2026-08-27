@@ -70,6 +70,7 @@ private val LimitedColor = StatusDim
 fun NodeScreen(
     onOpenSetup: () -> Unit = {},
     onOpenGrants: () -> Unit = {},
+    onOpenStreamRules: () -> Unit = {},
     vm: NodeViewModel = hiltViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
@@ -90,6 +91,9 @@ fun NodeScreen(
             OutlinedButton(onClick = onOpenGrants, modifier = Modifier.weight(1f)) {
                 Text("Grants")
             }
+        }
+        OutlinedButton(onClick = onOpenStreamRules, modifier = Modifier.fillMaxWidth()) {
+            Text("What this phone streams")
         }
 
         NodePairingSection(vm)

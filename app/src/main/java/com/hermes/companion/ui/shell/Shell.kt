@@ -39,6 +39,7 @@ import com.hermes.companion.ui.chat.ChatScreen
 import com.hermes.companion.ui.nav.Route
 import com.hermes.companion.ui.node.NodeGrantsScreen
 import com.hermes.companion.ui.node.NodeScreen
+import com.hermes.companion.ui.node.StreamRulesScreen
 import com.hermes.companion.ui.setup.NodeSetupScreen
 import com.hermes.companion.ui.outbox.OutboxScreen
 import com.hermes.companion.ui.diagnostics.DiagnosticsScreen
@@ -129,6 +130,7 @@ private fun NavGraph(nav: androidx.navigation.NavHostController, padding: Paddin
             NodeScreen(
                 onOpenSetup = { nav.navigate(Route.NodeSetup.path) },
                 onOpenGrants = { nav.navigate(Route.NodeGrants.path) },
+                onOpenStreamRules = { nav.navigate(Route.StreamRules.path) },
             )
         }
         composable(Route.NodeSetup.path) {
@@ -136,6 +138,9 @@ private fun NavGraph(nav: androidx.navigation.NavHostController, padding: Paddin
         }
         composable(Route.NodeGrants.path) {
             NodeGrantsScreen(onBack = { nav.popBackStack() })
+        }
+        composable(Route.StreamRules.path) {
+            StreamRulesScreen(onBack = { nav.popBackStack() })
         }
         composable(Route.Settings.path) {
             SettingsScreen(

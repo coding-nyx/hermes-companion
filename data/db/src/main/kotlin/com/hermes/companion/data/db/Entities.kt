@@ -150,3 +150,11 @@ data class LeaseEntity(
     val acquiredAt: Long,
     val expiresAt: Long,
 )
+
+/** Per-source streaming rule: how much of a source's events leaves the device. */
+@Entity(tableName = "stream_rules")
+data class StreamRuleEntity(
+    @PrimaryKey val source: String,
+    val mode: String,
+    val updatedAt: Long,
+)

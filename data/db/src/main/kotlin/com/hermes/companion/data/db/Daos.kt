@@ -214,3 +214,15 @@ interface LeaseDao {
     @Query("DELETE FROM leases WHERE gatewayId = :gatewayId")
     suspend fun deleteForGateway(gatewayId: String)
 }
+
+@Dao
+interface StreamRuleDao {
+    @Query("SELECT * FROM stream_rules")
+    fun observeAll(): Flow<List<StreamRuleEntity>>
+
+    @Query("SELECT * FROM stream_rules WHERE source = :source")
+    suspend fun find(source: String): StreamRuleEntity?
+
+    @Upsert
+    suspend fun upsert(rule: StreamRuleEntity)
+}

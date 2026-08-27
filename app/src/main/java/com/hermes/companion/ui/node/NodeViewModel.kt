@@ -7,6 +7,7 @@ import com.hermes.companion.data.repo.NodeCapabilityItem
 import com.hermes.companion.data.repo.NodeGrantItem
 import com.hermes.companion.data.repo.NodePairing
 import com.hermes.companion.data.repo.NodeRepository
+import com.hermes.companion.data.repo.StreamRuleItem
 import com.hermes.companion.data.repo.NodeState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,5 +76,12 @@ class NodeViewModel @Inject constructor(
         viewModelScope.launch {
             repo.setGrant(item.gatewayId, item.nodeId, item.profileId, item.capability, mode)
         }
+    }
+
+    val streamRules: StateFlow<List<StreamRuleItem>> = repo.observeStreamRules()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun setStreamRule(source: String, mode: String) {
+        viewModelScope.launch { repo.setStreamRule(source, mode) }
     }
 }

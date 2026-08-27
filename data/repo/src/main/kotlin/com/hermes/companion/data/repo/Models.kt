@@ -145,6 +145,9 @@ data class PrivacyLogEntry(
     val text: String,
 )
 
+/** A per-source stream rule, shaped for the Stream Rules screen. */
+data class StreamRuleItem(val source: String, val mode: String)
+
 /** A capability grant row, shaped for the Grants screen. */
 data class NodeGrantItem(
     val gatewayId: String,

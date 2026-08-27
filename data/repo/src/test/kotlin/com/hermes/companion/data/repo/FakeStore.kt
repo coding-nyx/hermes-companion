@@ -7,6 +7,8 @@ import com.hermes.companion.data.db.GrantEntity
 import com.hermes.companion.data.db.LeaseDao
 import com.hermes.companion.data.db.LeaseEntity
 import com.hermes.companion.data.db.NodeIdentityDao
+import com.hermes.companion.data.db.StreamRuleDao
+import com.hermes.companion.data.db.StreamRuleEntity
 import com.hermes.companion.data.db.NodeIdentityEntity
 import com.hermes.companion.data.db.OutboundEntity
 import com.hermes.companion.data.db.GatewayDao
@@ -147,7 +149,8 @@ internal class Fakes {
     val nodeIdentity = FakeNodeIdentityDao()
     val grants = FakeGrantDao()
     val leases = FakeLeaseDao()
-    val store = CompanionStore(gateways, profiles, sessions, messages, runs, outbound, nodeIdentity, grants, leases)
+    val streamRules = FakeStreamRuleDao()
+    val store = CompanionStore(gateways, profiles, sessions, messages, runs, outbound, nodeIdentity, grants, leases, streamRules)
 }
 
 internal class FakeOutboundDao : OutboundDao {
@@ -201,4 +204,11 @@ internal class FakeLeaseDao : LeaseDao {
         rows.value = rows.value.filterNot { it.capability == capability && it.requestId == requestId }
     }
     override suspend fun deleteForGateway(gatewayId: String) { rows.value = rows.value.filterNot { it.gatewayId == gatewayId } }
+}
+
+internal class FakeStreamRuleDao : StreamRuleDao {
+    val rows = kotlinx.coroutines.flow.MutableStateFlow<List<StreamRuleEntity>>(emptyList())
+    override fun observeAll() = rows
+    override suspend fun find(source: String) = rows.value.firstOrNull { it.source == source }
+    override suspend fun upsert(rule: StreamRuleEntity) { rows.value = rows.value.filterNot { it.source == rule.source } + rule }
 }
