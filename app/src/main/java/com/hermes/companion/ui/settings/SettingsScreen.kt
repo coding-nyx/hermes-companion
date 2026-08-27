@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Outbox
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import com.hermes.companion.ui.components.HermesCard
 
 /**
  * T3B: 3-tab Settings screen.
@@ -70,17 +69,14 @@ fun SettingsScreen(
         }
 
         // Outbox entry banner - always visible above the active tab.
-        Card(
+        HermesCard(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .clickable(onClick = onOpenOutbox)
                 .semantics { contentDescription = "Open outbound outbox" },
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            ),
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         ) {
             Row(
-                Modifier.padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -122,7 +118,7 @@ fun SettingsScreen(
                         .firstOrNull { it.gateway.id == state.activeGatewayId }
                         ?.profiles ?: emptyList(),
                 )
-                2 -> NotificationRoutingTab()
+                2 -> NotificationRoutingTab(ruleRepo = vm.ruleRepo)
             }
         }
 

@@ -1,0 +1,13 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1520, "h": 1560 },
+    { "file": "Chat.dc.html", "x": 1600, "y": 0, "w": 390, "h": 844, "title": "Chat" },
+    { "file": "Switcher.dc.html", "x": 2070, "y": 0, "w": 390, "h": 844, "title": "Fleet switcher" },
+    { "file": "FullNodeMode.dc.html", "x": 1600, "y": 964, "w": 390, "h": 844, "title": "Full Node Mode" }
+  ],
+  "annotations": [
+    { "id": "note-blueprint", "x": 0, "y": -132, "w": 520, "text": "Blueprint: every page + view grouped by the 7 product flows. Teal = built, sand = partial, dim = planned." },
+    { "id": "note-wires", "x": 1600, "y": -132, "w": 400, "text": "Three key low-fi wireframes: the chat surface, the fleet switcher, and the Full Node Mode trust ladder." }
+  ],
+  "launch": { "view": "canvas" }
+}

@@ -10,6 +10,7 @@ import com.hermes.companion.data.repo.DiscoveryRepository
 import com.hermes.companion.data.repo.FleetRepository
 import com.hermes.companion.data.repo.NodeConnectionManager
 import com.hermes.companion.data.repo.NodeRepository
+import com.hermes.companion.data.repo.NotificationRuleRepository
 import com.hermes.companion.data.repo.OutboxRepository
 import com.hermes.companion.BuildConfig
 import dagger.Module
@@ -74,6 +75,9 @@ object AppModule {
 
     @Provides
     fun provideOutboxRepository(data: CompanionData): OutboxRepository = data.outbox
+
+    @Provides
+    fun provideNotificationRuleRepository(data: CompanionData): NotificationRuleRepository = data.notificationRules
 
     @Provides
     @Singleton

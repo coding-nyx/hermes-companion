@@ -24,6 +24,8 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val fleet: FleetRepository,
+    /** Exposed for the Routing tab, which collects rule flows directly. */
+    val ruleRepo: com.hermes.companion.data.repo.NotificationRuleRepository,
 ) : ViewModel() {
 
     private val errors = MutableStateFlow<String?>(null)

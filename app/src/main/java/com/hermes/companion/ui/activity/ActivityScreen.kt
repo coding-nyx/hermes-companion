@@ -15,8 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +39,9 @@ import com.hermes.companion.data.repo.ActivityItem
 import com.hermes.companion.data.repo.ActivityKind
 import com.hermes.companion.data.repo.ActivityOutcome
 import com.hermes.companion.data.repo.QueueSummary
+import com.hermes.companion.ui.components.HermesCard
+import com.hermes.companion.ui.components.MetaText
+import com.hermes.companion.ui.components.StatusDot
 
 private val Teal = StatusOk
 private val Sand = StatusWarn
@@ -146,139 +147,129 @@ private fun ActivityCard(
 
     val iconBg = outcomeColor.copy(alpha = 0.15f)
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onToggle),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(12.dp),
+    HermesCard(
+        modifier = Modifier.clickable(onClick = onToggle),
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentPadding = 12.dp,
     ) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Header
-            Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+        // Header
+        Row(
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(iconBg),
+                contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(iconBg),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        item.glyph,
-                        color = outcomeColor,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
-                        fontFamily = FontFamily.Monospace,
-                    )
-                }
-
-                Column(Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(
-                            item.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f),
-                            maxLines = 1,
-                        )
-                        Text(
-                            formatTime(item.createdAt),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                        )
-                    }
-                    Text(
-                        item.subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    )
-                }
+                Text(
+                    item.glyph,
+                    color = outcomeColor,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    fontFamily = FontFamily.Monospace,
+                )
             }
 
-            // Progression Steps
-            val steps = listOf("captured", "uploaded", "acked", "judged", "outcome")
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                steps.forEachIndexed { i, stepName ->
-                    val isReached = (i + 1) <= item.stage
-                    val stepColor = if (isReached) outcomeColor else DimColor
-                    Column(Modifier.weight(1f)) {
-                        Box(
-                            Modifier
-                                .fillMaxWidth()
-                                .size(height = 3.dp, width = 0.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(stepColor),
-                        )
-                        Box(Modifier.size(2.dp))
-                        Text(
-                            stepName,
-                            fontSize = 9.sp,
-                            color = if (isReached) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
-                            maxLines = 1,
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(iconBg)
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
+            Column(Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        item.outcome.name,
-                        color = outcomeColor,
-                        fontSize = 11.sp,
+                        item.title,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
                     )
-                }
-            }
-
-            // Expanded Detail View
-            if (isExpanded) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-                        .padding(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        item.detailTitle,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = outcomeColor,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        item.detailBody,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-                    )
-                    Text(
-                        item.routeDisplay,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
-                    )
-                    Text(
-                        item.detailMeta,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
+                    MetaText(
+                        formatTime(item.createdAt),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     )
                 }
+                Text(
+                    item.subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+            }
+        }
+
+        // Progression Steps
+        val steps = listOf("captured", "uploaded", "acked", "judged", "outcome")
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            steps.forEachIndexed { i, stepName ->
+                val isReached = (i + 1) <= item.stage
+                val stepColor = if (isReached) outcomeColor else DimColor
+                Column(Modifier.weight(1f)) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .size(height = 3.dp, width = 0.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(stepColor),
+                    )
+                    Box(Modifier.size(2.dp))
+                    Text(
+                        stepName,
+                        fontSize = 9.sp,
+                        color = if (isReached) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
+                        maxLines = 1,
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(iconBg)
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
+            ) {
+                Text(
+                    item.outcome.name,
+                    color = outcomeColor,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
+
+        // Expanded Detail View
+        if (isExpanded) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                    .padding(10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    item.detailTitle,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = outcomeColor,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    item.detailBody,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                )
+                MetaText(
+                    item.routeDisplay,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                )
+                MetaText(
+                    item.detailMeta,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                )
             }
         }
     }
@@ -292,12 +283,7 @@ private fun QueueSummaryRow(q: QueueSummary) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth(),
     ) {
-        Box(
-            Modifier
-                .size(7.dp)
-                .clip(CircleShape)
-                .background(dotColor),
-        )
+        StatusDot(dotColor, size = 7.dp)
         Text(
             q.gatewayId,
             style = MaterialTheme.typography.labelMedium,

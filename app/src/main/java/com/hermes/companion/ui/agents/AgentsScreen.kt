@@ -1,6 +1,5 @@
 package com.hermes.companion.ui.agents
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -34,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,6 +40,8 @@ import com.hermes.companion.data.repo.GatewayView
 import com.hermes.companion.data.repo.ProfileView
 import com.hermes.companion.domain.ConversationRoute
 import com.hermes.companion.domain.Session
+import com.hermes.companion.ui.components.HermesCard
+import com.hermes.companion.ui.components.StatusDot
 
 @Composable
 fun AgentsScreen(
@@ -101,12 +100,7 @@ private fun GatewayGroup(
 ) {
     Column(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(view.connectivity.dotColor()),
-            )
+            StatusDot(view.connectivity.dotColor())
             Box(Modifier.size(8.dp))
             Text(
                 view.gateway.label,
@@ -160,43 +154,41 @@ private fun ProfileRow(
     onOpenChat: (String) -> Unit,
     onNewThread: () -> Unit,
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    HermesCard(
+        modifier = Modifier.padding(vertical = 4.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentPadding = 12.dp,
+        verticalArrangement = Arrangement.Top,
     ) {
-        Column(Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("@${view.profile.handle.display}", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Box(Modifier.size(8.dp))
-                Text(
-                    view.profile.displayName,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
-                )
-                Box(Modifier.size(8.dp))
-                IconButton(
-                    onClick = onNewThread,
-                    modifier = Modifier.size(32.dp),
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = "New Thread", modifier = Modifier.size(20.dp))
-                }
-            }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("@${view.profile.handle.display}", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Box(Modifier.size(8.dp))
-            if (view.sessions.isEmpty()) {
-                Text(
-                    "No sessions cached",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                )
+            Text(
+                view.profile.displayName,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Box(Modifier.size(8.dp))
+            IconButton(
+                onClick = onNewThread,
+                modifier = Modifier.size(32.dp),
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "New Thread", modifier = Modifier.size(20.dp))
             }
-            view.sessions.forEach { session ->
-                SessionRow(session) { onOpenChat(session.sessionId) }
-            }
+        }
+        Box(Modifier.size(8.dp))
+        if (view.sessions.isEmpty()) {
+            Text(
+                "No sessions cached",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+            )
+        }
+        view.sessions.forEach { session ->
+            SessionRow(session) { onOpenChat(session.sessionId) }
         }
     }
 }

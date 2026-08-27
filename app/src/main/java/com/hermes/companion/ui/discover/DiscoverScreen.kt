@@ -13,8 +13,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +33,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hermes.companion.data.repo.DiscoveredGatewayItem
 import com.hermes.companion.domain.TransportTier
+import com.hermes.companion.ui.components.HermesCard
+import com.hermes.companion.ui.components.SectionHeader
 import com.hermes.companion.ui.theme.StatusOk
 import com.hermes.companion.ui.theme.StatusWarn
 
@@ -70,11 +70,8 @@ fun DiscoverScreen(
             )
 
             // Tailscale status
-            Card(
-                Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-            ) {
-                Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            HermesCard {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text("Tailscale", style = MaterialTheme.typography.titleSmall)
                         Text(
@@ -88,7 +85,7 @@ fun DiscoverScreen(
                 }
             }
 
-            Text("ON THIS NETWORK", style = MaterialTheme.typography.labelMedium)
+            SectionHeader("On this network")
             if (state.gateways.isEmpty()) {
                 Text(
                     "No gateways advertised on this network yet. Add one manually below, or by its Tailscale name.",
@@ -98,7 +95,7 @@ fun DiscoverScreen(
             }
             state.gateways.forEach { g -> DiscoveredRow(g) { vm.add(g.label, g.baseUrl) { onAdded() } } }
 
-            Text("ADD MANUALLY", style = MaterialTheme.typography.labelMedium)
+            SectionHeader("Add manually")
             ManualAdd(vm, onAdded)
         }
     }
@@ -106,11 +103,8 @@ fun DiscoverScreen(
 
 @Composable
 private fun DiscoveredRow(g: DiscoveredGatewayItem, onAdd: () -> Unit) {
-    Card(
-        Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-    ) {
-        Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+    HermesCard {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(g.label, style = MaterialTheme.typography.titleSmall)
                 Text("${g.host}:${g.port} · ${g.source}", style = MaterialTheme.typography.labelSmall,

@@ -65,6 +65,10 @@ import com.hermes.companion.data.repo.NodeCapabilityItem
 import com.hermes.companion.data.repo.PrivacyLogEntry
 import com.hermes.companion.data.repo.deepLinkFor
 import com.hermes.companion.data.repo.isRuntimePermissionRequest
+import com.hermes.companion.ui.components.HermesCard
+import com.hermes.companion.ui.components.MetaText
+import com.hermes.companion.ui.components.SectionHeader
+import com.hermes.companion.ui.components.StatusDot
 
 private val Teal = StatusOk
 private val Sand = StatusWarn
@@ -124,8 +128,11 @@ fun NodeScreen(
                         node.nodeName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
                     )
-                    Box(Modifier.weight(1f))
+                    Box(Modifier.size(8.dp))
                     Box(
                         modifier = Modifier
                             .clip(CircleShape)
@@ -137,6 +144,8 @@ fun NodeScreen(
                             color = Teal,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            softWrap = false,
                         )
                     }
                 }
@@ -195,12 +204,7 @@ fun NodeScreen(
         // Coverage Matrix Section
         val workingCount = node.capabilities.count { it.status == CapabilityStatus.Working }
         val restCount = node.capabilities.size - workingCount
-        Text(
-            "COVERAGE — $workingCount working, $restCount not",
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-        )
+        SectionHeader("Coverage — $workingCount working, $restCount not")
 
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             state.filteredCapabilities.forEach { cap ->
@@ -216,12 +220,7 @@ fun NodeScreen(
         ) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "EXCLUSIVE HARDWARE",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    )
+                    SectionHeader("Exclusive hardware")
                     Box(Modifier.weight(1f))
                     Text(
                         "one holder at a time",
@@ -302,13 +301,7 @@ fun NodeScreen(
         }
 
         // Privacy Log Section
-        Text(
-            "WHAT LEFT THIS PHONE",
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-            modifier = Modifier.padding(top = 4.dp),
-        )
+        SectionHeader("What left this phone", modifier = Modifier.padding(top = 4.dp))
 
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             node.privacyLog.forEach { entry ->
@@ -326,12 +319,7 @@ private fun StatPair(key: String, value: String) {
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
         )
-        Text(
-            value,
-            style = MaterialTheme.typography.labelSmall,
-            fontFamily = FontFamily.Monospace,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-        )
+        MetaText(value, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f))
     }
 }
 
@@ -377,18 +365,15 @@ private fun CapabilityRow(cap: NodeCapabilityItem) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Box(
-                Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(statusColor),
-            )
+            StatusDot(statusColor, size = 8.dp)
             Column(Modifier.weight(1f)) {
                 Text(
                     cap.name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     cap.description,
@@ -415,18 +400,19 @@ private fun LeaseRow(lease: HardwareLease) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             lease.capability,
             style = MaterialTheme.typography.bodySmall,
             fontFamily = FontFamily.Monospace,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
         )
-        Box(Modifier.weight(1f))
-        Text(
+        MetaText(
             lease.holder,
-            style = MaterialTheme.typography.labelSmall,
-            fontFamily = FontFamily.Monospace,
             color = if (lease.isAvailable) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f) else Sand,
         )
     }
@@ -439,10 +425,8 @@ private fun PrivacyLogRow(entry: PrivacyLogEntry) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        Text(
+        MetaText(
             entry.time,
-            style = MaterialTheme.typography.labelSmall,
-            fontFamily = FontFamily.Monospace,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
         )
         Text(
@@ -476,13 +460,28 @@ private fun NodePairingSection(vm: NodeViewModel) {
             )
         }
         pairings.forEach { p ->
-            Card(
-                Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-            ) {
-                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            HermesCard(contentPadding = 12.dp) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    val pairId = p.nodeId.ifBlank { p.gatewayId }
+                    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+                    val ctx = LocalContext.current
                     Column(Modifier.weight(1f)) {
-                        Text(p.nodeId.ifBlank { p.gatewayId }, style = MaterialTheme.typography.titleSmall)
+                        // Full pairing id stays inspectable: one ellipsized line,
+                        // tap to copy the whole value.
+                        Text(
+                            pairId,
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.clickable {
+                                clipboard.setText(androidx.compose.ui.text.AnnotatedString(pairId))
+                                android.widget.Toast.makeText(ctx, "Copied $pairId", android.widget.Toast.LENGTH_SHORT).show()
+                            },
+                        )
                         Text(
                             (if (p.connected) "connected · " else "offline · ") + "${p.grantedCaps.size} caps",
                             style = MaterialTheme.typography.bodySmall,

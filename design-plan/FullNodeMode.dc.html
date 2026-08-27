@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap">
+  <style>
+    body { margin: 0; background: #15151A; color: #E8E8EC; font-family: Roboto, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'Roboto Mono', ui-monospace, monospace; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #15151A; display: flex; flex-direction: column; overflow: hidden">
+  <div style="padding: 8px 12px 0; font-size: 11px; letter-spacing: 1px; color: rgba(232,232,236,0.3)">FULL NODE MODE · WIREFRAME</div>
+  <div style="padding: 12px 16px; display: flex; flex-direction: column; gap: 4px">
+    <div style="font-size: 22px; font-weight: 600">Full Node Mode</div>
+    <div style="font-size: 12px; color: rgba(232,232,236,0.55)">A trust ladder, not a wizard. Each rung adds one power.</div>
+  </div>
+  <!-- tier chips -->
+  <div style="display: flex; gap: 8px; padding: 0 16px 12px">
+    <div style="background: rgba(128,203,196,0.16); color: #80CBC4; border-radius: 999px; padding: 5px 11px; font-size: 12px; font-weight: 500">Standard</div>
+    <div style="background: rgba(128,203,196,0.16); color: #80CBC4; border-radius: 999px; padding: 5px 11px; font-size: 12px; font-weight: 500">Accessibility</div>
+    <div style="background: #24242C; color: rgba(232,232,236,0.5); border-radius: 999px; padding: 5px 11px; font-size: 12px">Shizuku / ADB</div>
+  </div>
+  <!-- ladder -->
+  <div style="flex: 1; overflow: hidden; padding: 0 16px; display: flex; flex-direction: column; gap: 0">
+    <!-- rung: satisfied -->
+    <div style="display: flex; gap: 12px">
+      <div style="display: flex; flex-direction: column; align-items: center; width: 20px">
+        <div style="width: 20px; height: 20px; border-radius: 999px; background: #80CBC4; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#15151A" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div style="width: 2px; flex: 1; background: rgba(128,203,196,0.4)"></div>
+      </div>
+      <div style="flex: 1; padding-bottom: 14px"><div style="font-size: 15px; font-weight: 600">Notification access</div><div style="font-size: 12px; color: rgba(232,232,236,0.55)">The source of truth for notifications. Unlocks 4 capabilities.</div></div>
+    </div>
+    <!-- rung: satisfied -->
+    <div style="display: flex; gap: 12px">
+      <div style="display: flex; flex-direction: column; align-items: center; width: 20px">
+        <div style="width: 20px; height: 20px; border-radius: 999px; background: #80CBC4; display: flex; align-items: center; justify-content: center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#15151A" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div style="width: 2px; flex: 1; background: rgba(255,255,255,0.1)"></div>
+      </div>
+      <div style="flex: 1; padding-bottom: 14px"><div style="font-size: 15px; font-weight: 600">Accessibility (remote control)</div><div style="font-size: 12px; color: rgba(232,232,236,0.55)">Screen inspection + input injection. Unlocks 2.</div></div>
+    </div>
+    <!-- rung: needs grant -->
+    <div style="display: flex; gap: 12px">
+      <div style="display: flex; flex-direction: column; align-items: center; width: 20px">
+        <div style="width: 20px; height: 20px; border-radius: 999px; border: 2px solid #FFCC80; box-sizing: border-box"></div>
+        <div style="width: 2px; flex: 1; background: rgba(255,255,255,0.1)"></div>
+      </div>
+      <div style="flex: 1; padding-bottom: 14px; display: flex; align-items: flex-start; gap: 8px">
+        <div style="flex: 1"><div style="font-size: 15px; font-weight: 600">Contacts</div><div style="font-size: 12px; color: rgba(232,232,236,0.55)">Resolve callers and senders to names.</div></div>
+        <div style="background: #B3B6F2; color: #15151A; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600">Grant</div>
+      </div>
+    </div>
+    <!-- rung: needs grant -->
+    <div style="display: flex; gap: 12px">
+      <div style="display: flex; flex-direction: column; align-items: center; width: 20px">
+        <div style="width: 20px; height: 20px; border-radius: 999px; border: 2px solid #FFCC80; box-sizing: border-box"></div>
+        <div style="width: 2px; flex: 1; background: rgba(255,255,255,0.1)"></div>
+      </div>
+      <div style="flex: 1; padding-bottom: 14px; display: flex; align-items: flex-start; gap: 8px">
+        <div style="flex: 1"><div style="font-size: 15px; font-weight: 600">Usage access</div><div style="font-size: 12px; color: rgba(232,232,236,0.55)">Foreground app usage over the last day.</div></div>
+        <div style="background: #B3B6F2; color: #15151A; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600">Grant</div>
+      </div>
+    </div>
+    <!-- rung: elevated -->
+    <div style="display: flex; gap: 12px">
+      <div style="display: flex; flex-direction: column; align-items: center; width: 20px">
+        <div style="width: 20px; height: 20px; border-radius: 999px; border: 2px dashed rgba(232,232,236,0.3); box-sizing: border-box"></div>
+      </div>
+      <div style="flex: 1; display: flex; align-items: flex-start; gap: 8px">
+        <div style="flex: 1"><div style="font-size: 15px; font-weight: 600">Elevated tier (Shizuku / root)</div><div style="font-size: 12px; color: rgba(232,232,236,0.55)">Allowlisted shell + silent grants. Optional.</div></div>
+        <div style="border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 12px; font-size: 12px; color: rgba(232,232,236,0.75)">Set up</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.06)">
+    <div style="background: #24242C; border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 10px">
+      <div style="font-size: 13px; flex: 1; color: rgba(232,232,236,0.8)">Auto-grant remaining rungs</div>
+      <div style="font-size: 11px; color: rgba(232,232,236,0.45)">via Shizuku</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

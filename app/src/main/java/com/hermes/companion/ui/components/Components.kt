@@ -29,12 +29,18 @@ import com.hermes.companion.ui.theme.HermesMono
  */
 
 @Composable
-fun HermesCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+fun HermesCard(
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    contentPadding: androidx.compose.ui.unit.Dp = 14.dp,
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(8.dp),
+    content: @Composable ColumnScope.() -> Unit,
+) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
     ) {
-        Column(Modifier.padding(14.dp), content = content)
+        Column(Modifier.padding(contentPadding), verticalArrangement = verticalArrangement, content = content)
     }
 }
 

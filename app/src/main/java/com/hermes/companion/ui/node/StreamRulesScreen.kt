@@ -10,8 +10,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,10 +22,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hermes.companion.data.repo.StreamRuleItem
+import com.hermes.companion.ui.components.HermesCard
 
 private val MODES = listOf("StreamFull", "Summarise", "CountOnly", "Ignore")
 private fun label(m: String) = when (m) {
@@ -87,22 +87,25 @@ fun StreamRulesScreen(
 
 @Composable
 private fun RuleRow(rule: StreamRuleItem, onSet: (String) -> Unit) {
-    Card(
-        Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-    ) {
+    HermesCard {
         Row(
-            Modifier.fillMaxWidth().padding(14.dp),
+            Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(rule.source, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            Text(
+                rule.source,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
             SuggestionChip(
                 onClick = {
                     val next = MODES[(MODES.indexOf(rule.mode).coerceAtLeast(0) + 1) % MODES.size]
                     onSet(next)
                 },
-                label = { Text(label(rule.mode)) },
+                label = { Text(label(rule.mode), maxLines = 1, softWrap = false) },
             )
         }
     }

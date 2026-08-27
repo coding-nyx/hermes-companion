@@ -11,8 +11,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hermes.companion.data.repo.Connectivity
+import com.hermes.companion.ui.components.HermesCard
+import com.hermes.companion.ui.components.SectionHeader
 import com.hermes.companion.ui.theme.StatusError
 import com.hermes.companion.ui.theme.StatusOk
 import com.hermes.companion.ui.theme.StatusWarn
@@ -57,7 +57,7 @@ fun DiagnosticsScreen(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("PER GATEWAY", style = MaterialTheme.typography.labelMedium)
+            SectionHeader("Per gateway")
             fleet.gateways.forEach { gw ->
                 val (state, color) = when (gw.connectivity) {
                     is Connectivity.Live -> "reachable" to StatusOk
@@ -72,7 +72,7 @@ fun DiagnosticsScreen(
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            Text("NODE", style = MaterialTheme.typography.labelMedium)
+            SectionHeader("Node")
             if (pairings.isEmpty()) {
                 Check("Node pairing", "not paired", StatusWarn, "pair from the Node tab")
             } else {
@@ -86,7 +86,7 @@ fun DiagnosticsScreen(
                 }
             }
 
-            Text("END-TO-END CANARY", style = MaterialTheme.typography.labelMedium)
+            SectionHeader("End-to-end canary")
             Button(onClick = vm::runCanary, enabled = !node.canaryRunning, modifier = Modifier.fillMaxWidth()) {
                 Text(if (node.canaryRunning) "Running…" else "Run canary")
             }
@@ -100,11 +100,8 @@ fun DiagnosticsScreen(
 
 @Composable
 private fun Check(name: String, state: String, color: androidx.compose.ui.graphics.Color, detail: String) {
-    Card(
-        Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-    ) {
-        Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+    HermesCard {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(Modifier.weight(1f)) {
                 Text(name, style = MaterialTheme.typography.titleSmall)
                 Text(detail, style = MaterialTheme.typography.labelSmall,
