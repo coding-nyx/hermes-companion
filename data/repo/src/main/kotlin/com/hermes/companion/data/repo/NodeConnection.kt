@@ -171,6 +171,19 @@ class NodeConnectionManager internal constructor(
     private data class Live(val broker: NodeBroker, val jobs: List<Job>)
 
     private val grantChecker = GrantChecker(store)
+    private val refreshHookRef = java.util.concurrent.atomic.AtomicReference<(String) -> Unit>(null)
+
+    /**
+     * T8: register the post-pair refresh hook. Called from [CompanionData.init]
+     * after both [NodeConnectionManager] and the [DefaultFleetRepository] exist.
+     * The hook receives the gatewayId and is responsible for firing
+     * DefaultFleetRepository.refreshGatewayFor(gatewayId) on the appropriate
+     * CoroutineScope.
+     */
+    fun setRefreshHook(hook: (gatewayId: String) -> Unit) {
+        refreshHookRef.set(hook)
+    }
+
     private val leaseManager = LeaseManager(store)
 
     /** Exposed so the Node screen can render live leases with holder + expiry. */
@@ -269,6 +282,16 @@ class NodeConnectionManager internal constructor(
                     GrantEntity(gatewayId, "", r.nodeId, cap, GrantMode.AllowWhileUnlocked.name, null, null, now)
                 },
             )
+            // T8: keep the `gateways` table coherent with the just-paired
+            // node so Settings -> Gateways lists it, and so
+            // DefaultFleetRepository.refresh can populate profiles +
+            // sessions. Without this, paired gateways were invisible to
+            // the fleet view and refresh() skipped them.
+            val gatewayRow = ensureGatewayRowForPair(store, baseUrl, gatewayId)
+            // Fire-and-forget the refresh so we don't block the pair call.
+            // The hook is provided by [CompanionData] which wires the real
+            // DefaultFleetRepository.refreshGateway in production.
+            refreshHookRef.get()?.invoke(gatewayRow.id)
             Unit
         }
     }

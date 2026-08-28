@@ -9,6 +9,7 @@ import com.hermes.companion.domain.GatewayConnection
 import com.hermes.companion.domain.GatewayHealth
 import com.hermes.companion.net.httpHermesBackend
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Assembles the data layer. The [scope] outlives every screen and owns run
@@ -41,6 +42,23 @@ class CompanionData(
 
     /** Driven by the foreground service; see plan/10-architecture/runtime.md. */
     val supervisor: ConnectionSupervisor = ConnectionSupervisor(store, registry, tracker)
+
+    init {
+        // T8: a successful Node tab -> "Pair as node" flow writes a
+        // node_identity row and (now) a gateways row. Fire-and-forget a
+        // profiles/sessions refresh for the just-added gateway so the
+        // user sees their Profiles populate immediately.
+        //
+        // DefaultFleetRepository.refreshGateway() runs on the supplied
+        // CoroutineScope so the pair call itself doesn't block on the
+        // HTTP GET /v1/profiles round-trip. Failures are swallowed inside
+        // refreshGateway (it just sets health=Down).
+        nodeConnections.setRefreshHook { gatewayId ->
+            scope.launch {
+                (fleet as? DefaultFleetRepository)?.refreshGatewayFor(gatewayId)
+            }
+        }
+    }
 
     /**
      * Hydrates transport from what is already stored, seeding the registry on

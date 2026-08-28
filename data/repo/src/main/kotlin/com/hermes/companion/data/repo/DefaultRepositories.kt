@@ -63,6 +63,20 @@ internal class DefaultFleetRepository(
         store.gateways.all().forEach { row -> refreshGateway(row) }
     }
 
+    /**
+     * T8: refresh profiles + sessions for a single gateway. Called from
+     * NodeConnection.pair via the post-pair refresh hook so a freshly
+     * paired node's profiles populate without a manual "Refresh" tap on
+     * the Gateways tab.
+     *
+     * Best-effort: a missing row is a no-op, a failed refresh leaves the
+     * gateway marked Down via [refreshGateway].
+     */
+    suspend fun refreshGatewayFor(gatewayId: String) {
+        val row = store.gateways.find(gatewayId) ?: return
+        refreshGateway(row)
+    }
+
     private suspend fun refreshGateway(row: GatewayEntity) {
         val backend = registry.backendFor(row.id) ?: return
         val now = System.currentTimeMillis()
