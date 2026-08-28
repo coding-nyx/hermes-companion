@@ -88,7 +88,7 @@ fun AppearanceScreen(onBack: () -> Unit, vm: AppearanceViewModel = hiltViewModel
                 }
             }
             Text(
-                "Dark-first is the Hermes look; Light and System are available. Changes apply instantly.",
+                "Dark is the Hermes look (ink, cream type, caduceus). Light is a paper cream of the same brand. Material You is optional.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

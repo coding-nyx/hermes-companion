@@ -4,6 +4,9 @@
 
 Multi-gateway pairing with one active gateway at a time. Profile + Chat + Notification Routing tabs in Settings. NotificationListenerService hooks the new 5-action router.
 
+Visual: chrome restyled to the web companion (ink `#080807` / cream `#f2f0ea`, Figtree + Instrument Serif + IBM Plex Mono, caduceus). Chat / Agents / Activity / Node / Settings stay. Pair-as-node talks to the companion plugin on `:8642` (`POST /pair`, `WS /ws/node`).
+
+
 ### Added
 
 - `ActiveGatewayEntity` + `ActiveGatewayDao` — singleton-table pattern (`PK = 1`, `gatewayId`, `updatedAt`) in Room DB v7. `FleetRepository.observeActive()` / `setActive(gatewayId)`. Destructive migration from v6 (no MIGRATION_6_7).

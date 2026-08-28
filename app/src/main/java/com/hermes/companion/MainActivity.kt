@@ -95,11 +95,12 @@ private fun LockScreen(onUnlock: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("Hermes Companion", style = MaterialTheme.typography.titleLarge)
+            com.hermes.companion.ui.components.HermesMark(48.dp)
+            androidx.compose.foundation.layout.Spacer(Modifier.padding(10.dp))
+            Text("Hermes", style = MaterialTheme.typography.titleLarge)
             Text(
-                "Locked",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                "COMPANION",
+                style = com.hermes.companion.ui.theme.HermesType.kicker,
             )
             androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))
             Button(onClick = onUnlock) { Text("Unlock") }

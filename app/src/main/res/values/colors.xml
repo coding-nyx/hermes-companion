@@ -2,6 +2,10 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <!-- Matches Compose surface so there is no flash before the UI draws. -->
-    <color name="hermes_window_bg">#FFFAFAFC</color>
+    <color name="hermes_bg">#FF080807</color>
+    <color name="hermes_background">#FF0B0B0A</color>
+    <color name="hermes_fg">#FFF2F0EA</color>
+    <color name="hermes_surface">#FF141413</color>
+    <color name="hermes_border">#1FF2F0EA</color>
+    <color name="hermes_window_bg">#FF0B0B0A</color>
 </resources>

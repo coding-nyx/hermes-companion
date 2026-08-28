@@ -1,10 +1,20 @@
-# Hermes Companion — Android PoC
+# Hermes Companion — Android
 
-Android-first mobile companion for the Hermes agent fleet. Status: **PoC scaffold**, buildable + tests passing. Talks to a gateway over HTTP/SSE; `mock-server/` is the local double. The in-process `MockHermesBackend` is now a test fixture, not the app's wiring.
+Android-first mobile companion for the Hermes agent fleet. Current product branch: **`feat/completion`** (v0.2). Looks like the [web companion](https://github.com/coding-nyx/hermes-companion-web).
 
-Design concept (25 screens) and implementation architecture live in `design/` and `plan/10-architecture/`.
+Talks on **two planes**:
+
+| Plane | What | Where |
+| --- | --- | --- |
+| Hermes chat | profiles, runs, SSE | Hermes gateway (`HttpHermesBackend`) |
+| Companion node | pair, device caps, shade forward | [companion plugin](https://github.com/coding-nyx/hermes-companion-plugin) `:8642` |
+
+On the phone: **Node → Pair as node** with `http://<magicdns>:8642` and the plugin setup code. Do not point that dialog at the chat mock (`:9120`).
+
+The look is the web tokens (ink, cream type, caduceus). Navigation stays Chat / Agents / Activity / Node / Settings.
 
 See `plan/` for the decomposed product and architecture plan. See `Hermes-Companion-Plan.md` for the consolidated original.
+
 
 ## What's in this PoC
 

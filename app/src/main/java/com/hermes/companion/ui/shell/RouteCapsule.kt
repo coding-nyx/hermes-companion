@@ -1,12 +1,13 @@
 package com.hermes.companion.ui.shell
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hermes.companion.domain.ConversationRoute
+import com.hermes.companion.ui.components.Caduceus
 import com.hermes.companion.ui.theme.HermesMono
 
 /**
@@ -27,23 +29,27 @@ import com.hermes.companion.ui.theme.HermesMono
  */
 @Composable
 fun RouteCapsule(route: ConversationRoute?, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(14.dp)
     Surface(
         onClick = onClick,
-        modifier = modifier.statusBarsPadding().fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = MaterialTheme.shapes.large,
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, scheme.outlineVariant, shape),
+        color = scheme.surfaceContainerHigh,
+        shape = shape,
     ) {
         Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(Icons.Filled.Hub, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Caduceus(Modifier.size(16.dp), color = scheme.onBackground)
             if (route == null) {
                 Text(
                     "Pick a gateway › profile › thread",
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = scheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f),
                 )
             } else {
@@ -55,7 +61,7 @@ fun RouteCapsule(route: ConversationRoute?, modifier: Modifier = Modifier, onCli
                     modifier = Modifier.weight(1f),
                 )
             }
-            Icon(Icons.Filled.UnfoldMore, contentDescription = "Switch route", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(Icons.Filled.UnfoldMore, contentDescription = "Switch route", tint = scheme.onSurfaceVariant)
         }
     }
 }

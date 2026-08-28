@@ -1,13 +1,21 @@
 package com.hermes.companion.ui.shell
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Hub
@@ -16,11 +24,9 @@ import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -29,7 +35,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -42,18 +50,21 @@ import com.hermes.companion.ui.activity.ActivityScreen
 import com.hermes.companion.ui.agents.AgentsScreen
 import com.hermes.companion.ui.chat.ChatHome
 import com.hermes.companion.ui.chat.ChatScreen
+import com.hermes.companion.ui.components.HermesMark
+import com.hermes.companion.ui.diagnostics.DiagnosticsScreen
+import com.hermes.companion.ui.discover.DiscoverScreen
 import com.hermes.companion.ui.nav.Route
 import com.hermes.companion.ui.node.NodeGrantsScreen
 import com.hermes.companion.ui.node.NodeScreen
 import com.hermes.companion.ui.node.StreamRulesScreen
-import com.hermes.companion.ui.setup.NodeSetupScreen
 import com.hermes.companion.ui.outbox.OutboxScreen
-import com.hermes.companion.ui.diagnostics.DiagnosticsScreen
-import com.hermes.companion.ui.discover.DiscoverScreen
 import com.hermes.companion.ui.settings.AppearanceScreen
 import com.hermes.companion.ui.settings.SettingsScreen
+import com.hermes.companion.ui.setup.NodeSetupScreen
+import com.hermes.companion.ui.theme.HermesType
+import com.hermes.companion.ui.theme.InstrumentSerif
 
-private data class TabItem(val route: Route, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
+private data class TabItem(val route: Route, val label: String, val icon: ImageVector)
 
 @Composable
 fun Shell(size: WindowSizeClass) {
@@ -81,53 +92,94 @@ fun Shell(size: WindowSizeClass) {
         }
     }
 
+    fun goTab(path: String) {
+        nav.navigate(path) {
+            popUpTo(Route.ChatTab.path) { inclusive = false }
+            launchSingleTop = true
+        }
+    }
+
+    val scheme = MaterialTheme.colorScheme
+
     if (expanded) {
-        Row(Modifier.fillMaxSize()) {
-            NavigationRail {
+        Row(Modifier.fillMaxSize().background(scheme.background)) {
+            NavigationRail(
+                containerColor = scheme.background,
+                contentColor = scheme.onBackground,
+            ) {
+                Spacer(Modifier.height(12.dp))
+                HermesMark(28.dp)
+                Spacer(Modifier.height(16.dp))
                 tabs.forEach { tab ->
                     NavigationRailItem(
                         selected = current == tab.route.path,
-                        onClick = {
-                            nav.navigate(tab.route.path) {
-                                popUpTo(Route.ChatTab.path) { inclusive = false }
-                                launchSingleTop = true
-                            }
-                        },
+                        onClick = { goTab(tab.route.path) },
                         icon = { Icon(tab.icon, contentDescription = tab.label) },
-                        label = { Text(tab.label) },
+                        label = { Text(tab.label, style = HermesType.tab) },
+                        colors = NavigationRailItemDefaults.colors(
+                            selectedIconColor = scheme.onBackground,
+                            selectedTextColor = scheme.onBackground,
+                            unselectedIconColor = scheme.onSurfaceVariant,
+                            unselectedTextColor = scheme.onSurfaceVariant,
+                            indicatorColor = scheme.surfaceContainerHigh,
+                        ),
                     )
                 }
             }
             Column(Modifier.weight(1f)) {
-                if (onTab) RouteCapsule(lastRoute) { switcherOpen = true }
+                if (onTab) BrandHeader(lastRoute) { switcherOpen = true }
                 NavGraph(nav, padding = PaddingValues(0.dp), onOpenChat = onOpenChat, lastRoute = lastRoute, onOpenSwitcher = { switcherOpen = true })
             }
         }
     } else {
-        Scaffold(
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            topBar = { if (onTab) RouteCapsule(lastRoute) { switcherOpen = true } },
-            bottomBar = {
-                if (onTab) {
-                    NavigationBar {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .background(scheme.background)
+                .statusBarsPadding(),
+        ) {
+            if (onTab) BrandHeader(lastRoute) { switcherOpen = true }
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                NavGraph(nav, PaddingValues(0.dp), onOpenChat = onOpenChat, lastRoute = lastRoute, onOpenSwitcher = { switcherOpen = true })
+            }
+            if (onTab) {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(scheme.background.copy(alpha = 0.95f))
+                        .border(androidx.compose.foundation.BorderStroke(1.dp, scheme.outlineVariant))
+                        .navigationBarsPadding(),
+                ) {
+                    Row(Modifier.fillMaxWidth().height(64.dp)) {
                         tabs.forEach { tab ->
-                            NavigationBarItem(
-                                selected = current == tab.route.path,
-                                onClick = {
-                                    nav.navigate(tab.route.path) {
-                                        popUpTo(Route.ChatTab.path) { inclusive = false }
-                                        launchSingleTop = true
-                                    }
-                                },
-                                icon = { Icon(tab.icon, contentDescription = tab.label) },
-                                label = { Text(tab.label) },
-                            )
+                            val active = current == tab.route.path ||
+                                (tab.route == Route.ChatTab && current?.startsWith("chat/") == true)
+                            Column(
+                                Modifier
+                                    .weight(1f)
+                                    .fillMaxSize()
+                                    .clickable { goTab(tab.route.path) },
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                            ) {
+                                Icon(
+                                    tab.icon,
+                                    contentDescription = tab.label,
+                                    tint = if (active) scheme.onBackground else scheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    tab.label,
+                                    style = HermesType.tab.copy(
+                                        color = if (active) scheme.onBackground else scheme.onSurfaceVariant,
+                                    ),
+                                )
+                            }
                         }
                     }
                 }
-            },
-        ) { padding ->
-            NavGraph(nav, padding, onOpenChat = onOpenChat, lastRoute = lastRoute, onOpenSwitcher = { switcherOpen = true })
+            }
         }
     }
 
@@ -136,6 +188,27 @@ fun Shell(size: WindowSizeClass) {
             onDismiss = { switcherOpen = false },
             onOpenChat = { r -> onOpenChat(r); switcherOpen = false },
         )
+    }
+}
+
+@Composable
+private fun BrandHeader(route: ConversationRoute?, onOpenSwitcher: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(top = 8.dp, bottom = 8.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            HermesMark(32.dp)
+            Column(Modifier.padding(start = 10.dp).weight(1f)) {
+                Text("Hermes", style = MaterialTheme.typography.titleMedium.copy(fontFamily = InstrumentSerif, color = scheme.onBackground))
+                Text("COMPANION", style = HermesType.kicker)
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        RouteCapsule(route, onClick = onOpenSwitcher)
     }
 }
 

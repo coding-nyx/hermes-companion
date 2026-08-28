@@ -506,13 +506,18 @@ private fun NodePairingSection(vm: NodeViewModel) {
                     OutlinedTextField(
                         value = url, onValueChange = { url = it },
                         label = { Text("Plugin base URL") },
-                        placeholder = { Text("http://host:9120") },
+                        placeholder = { Text("http://hermes.ts.net:8642") },
                         singleLine = true,
                     )
                     OutlinedTextField(
                         value = code, onValueChange = { code = it },
                         label = { Text("Setup code") },
                         singleLine = true,
+                    )
+                    Text(
+                        "Companion plugin on the Hermes machine — port 8642, Tailscale MagicDNS or 100.x. Not the chat gateway.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 }

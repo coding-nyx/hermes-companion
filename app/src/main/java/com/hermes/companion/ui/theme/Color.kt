@@ -2,62 +2,82 @@ package com.hermes.companion.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ── Brand accents (from design/canvas.json) ──────────────────────────────
-val Indigo90 = Color(0xFFE0E1FB)
-val Indigo80 = Color(0xFFB3B6F2)
-val Indigo40 = Color(0xFF3F51B5)
-val Indigo20 = Color(0xFF2A2C57)
+/** Tokens mirrored from the web companion `src/styles.css`. */
+object HermesColors {
+    val Bg = Color(0xFF080807)
+    val Background = Color(0xFF0B0B0A)
+    val Fg = Color(0xFFF2F0EA)
+    val Surface = Color(0xFF141413)
+    val Elevated = Color(0xFF1C1C1A)
+    val Muted = Color(0xFF9C9890)
+    val Subtle = Color(0xFF6E6B64)
+    val Primary = Color(0xFFE8E4D8)
+    val OnPrimary = Color(0xFF0B0B0A)
+    val Ok = Color(0xFF8AA37F)
+    val Warn = Color(0xFFC4A574)
+    val Danger = Color(0xFFC47A6A)
+    val Border = Color(0x1FF2F0EA)
+    val BorderHover = Color(0x3DF2F0EA)
+    val NightWash = Color(0x38C4A070)
+    val Paper = Color(0xFFF2F0EA)
+    val PaperFg = Color(0xFF080807)
+    val PaperSurface = Color(0xFFEBE8E0)
+    val PaperElevated = Color(0xFFE2DED4)
+}
 
-val Teal80 = Color(0xFF80CBC4)
-val Teal40 = Color(0xFF00897B)
-val Teal20 = Color(0xFF0B3E39)
+// ── Brand accents (aliased onto the web palette so existing screens compile) ──
+val Indigo90 = HermesColors.Primary
+val Indigo80 = HermesColors.Primary
+val Indigo40 = HermesColors.OnPrimary
+val Indigo20 = HermesColors.Elevated
 
-val Sand80 = Color(0xFFFFCC80)
-val Sand40 = Color(0xFFEF6C00)
-val Sand20 = Color(0xFF4A2E05)
+val Teal80 = HermesColors.Ok
+val Teal40 = Color(0xFF4F6A46)
+val Teal20 = Color(0xFF1A2618)
 
-val Coral80 = Color(0xFFF2B8B5)
-val Coral40 = Color(0xFFBA1A1A)
-val CoralContainerDark = Color(0xFF5C1D1B)
-val CoralContainerLight = Color(0xFFFFDAD6)
+val Sand80 = HermesColors.Warn
+val Sand40 = Color(0xFF8A6B3D)
+val Sand20 = Color(0xFF3A2E18)
+
+val Coral80 = HermesColors.Danger
+val Coral40 = Color(0xFF8A4A3E)
+val CoralContainerDark = Color(0xFF3A221E)
+val CoralContainerLight = Color(0xFFE8D4CE)
 
 // ── Dark (primary look) neutrals ─────────────────────────────────────────
-val NightBg = Color(0xFF15151A)
-val NightSurface = Color(0xFF15151A)
-val NightSurfaceContainerLowest = Color(0xFF101015)
-val NightSurfaceContainerLow = Color(0xFF1A1A20)
-val NightSurfaceContainer = Color(0xFF1C1C22)
-val NightSurfaceContainerHigh = Color(0xFF24242C)
-val NightSurfaceContainerHighest = Color(0xFF2E2E36)
-val NightSurfaceVariant = Color(0xFF2A2A32)
-val NightOnSurface = Color(0xFFE8E8EC)
-val NightOnSurfaceVariant = Color(0xFFB6B6C2)
-val NightOutline = Color(0xFF47474F)
-val NightOutlineVariant = Color(0xFF33333B)
+val NightBg = HermesColors.Background
+val NightSurface = HermesColors.Surface
+val NightSurfaceContainerLowest = HermesColors.Bg
+val NightSurfaceContainerLow = HermesColors.Surface
+val NightSurfaceContainer = HermesColors.Surface
+val NightSurfaceContainerHigh = HermesColors.Elevated
+val NightSurfaceContainerHighest = Color(0xFF242422)
+val NightSurfaceVariant = HermesColors.Elevated
+val NightOnSurface = HermesColors.Fg
+val NightOnSurfaceVariant = HermesColors.Muted
+val NightOutline = HermesColors.BorderHover
+val NightOutlineVariant = HermesColors.Border
 
-// ── Light neutrals ───────────────────────────────────────────────────────
-val DayBg = Color(0xFFFAFAFC)
-val DaySurface = Color(0xFFFFFFFF)
-val DaySurfaceContainerLowest = Color(0xFFFFFFFF)
-val DaySurfaceContainerLow = Color(0xFFF6F6FA)
-val DaySurfaceContainer = Color(0xFFF1F1F7)
-val DaySurfaceContainerHigh = Color(0xFFEBEBF2)
-val DaySurfaceContainerHighest = Color(0xFFE5E5EE)
-val DaySurfaceVariant = Color(0xFFE7E7EF)
-val DayOnSurface = Color(0xFF1A1A1F)
-val DayOnSurfaceVariant = Color(0xFF45454F)
-val DayOutline = Color(0xFFC4C4CE)
-val DayOutlineVariant = Color(0xFFE0E0E8)
+// ── Light neutrals (paper cream, not Material grey) ──────────────────────
+val DayBg = HermesColors.Paper
+val DaySurface = HermesColors.PaperSurface
+val DaySurfaceContainerLowest = Color(0xFFF7F5EF)
+val DaySurfaceContainerLow = HermesColors.PaperSurface
+val DaySurfaceContainer = HermesColors.PaperSurface
+val DaySurfaceContainerHigh = HermesColors.PaperElevated
+val DaySurfaceContainerHighest = Color(0xFFD8D4C8)
+val DaySurfaceVariant = HermesColors.PaperElevated
+val DayOnSurface = HermesColors.PaperFg
+val DayOnSurfaceVariant = HermesColors.Subtle
+val DayOutline = Color(0x33080807)
+val DayOutlineVariant = Color(0x1A080807)
 
 // ── Shared semantic status accents ───────────────────────────────────────
-// Single source of truth for coverage/queue/lease status colours, replacing
-// the per-file palette duplications that previously lived in three screens.
-val StatusOk = Teal80        // working / connected
-val StatusWarn = Sand80      // needs a permission or role
-val StatusError = Coral80    // failed / OS-limited hard block
-val StatusDim = Color(0xFF8A8A96) // idle / not-applicable
+val StatusOk = HermesColors.Ok
+val StatusWarn = HermesColors.Warn
+val StatusError = HermesColors.Danger
+val StatusDim = HermesColors.Subtle
 
-// ── Theme-aware status colours (via LocalHermesStatus) ───────────────────
 data class HermesStatusColors(
     val ok: Color,
     val warn: Color,
@@ -65,5 +85,15 @@ data class HermesStatusColors(
     val dim: Color,
 )
 
-val LightStatusColors = HermesStatusColors(ok = Teal40, warn = Sand40, error = Coral40, dim = Color(0xFF8A8A96))
-val DarkStatusColors = HermesStatusColors(ok = Teal80, warn = Sand80, error = Coral80, dim = Color(0xFF8A8A96))
+val LightStatusColors = HermesStatusColors(
+    ok = Teal40,
+    warn = Sand40,
+    error = Coral40,
+    dim = HermesColors.Subtle,
+)
+val DarkStatusColors = HermesStatusColors(
+    ok = HermesColors.Ok,
+    warn = HermesColors.Warn,
+    error = HermesColors.Danger,
+    dim = HermesColors.Subtle,
+)
