@@ -4,6 +4,22 @@ Android-first mobile companion for the Hermes agent fleet. Status: **PoC scaffol
 
 See `plan/` for the decomposed product and architecture plan. See `Hermes-Companion-Plan.md` for the consolidated original.
 
+## Related repos
+
+| Repo | What |
+| --- | --- |
+| [coding-nyx/hermes-companion](https://github.com/coding-nyx/hermes-companion) | This Android app |
+| [coding-nyx/hermes-companion-web](https://github.com/coding-nyx/hermes-companion-web) | Web PWA — pair, chat, device control, notification forwarding |
+| [coding-nyx/hermes-companion-plugin](https://github.com/coding-nyx/hermes-companion-plugin) | Hermes gateway platform plugin (Tailscale + mailbox) |
+
+Install the plugin on the Hermes host:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/coding-nyx/hermes-companion-plugin/main/install.sh | bash
+hermes plugins enable companion
+hermes gateway
+```
+
 ## What's in this PoC
 
 Per `plan/08-delivery/poc-scope.md` — the first vertical slice:
@@ -22,9 +38,11 @@ Per `plan/08-delivery/poc-scope.md` — the first vertical slice:
 - Real Hermes HTTP API client (only the in-process `MockHermesBackend`)
 - Room persistence / outbox / per-route ack watermarks (state lives in memory)
 - `NotificationListenerService`, `CallScreeningService`, `InCallService` (real Android node plumbing)
-- `Hermes-companion` plugin and node broker WebSocket
+- Node broker WebSocket
 - Hermes approval canonicalization, Ed25519 pairing, Keystore token envelopes
 - iOS companion (out of project scope)
+
+The gateway-side plugin now lives in [hermes-companion-plugin](https://github.com/coding-nyx/hermes-companion-plugin).
 
 ## Build
 
@@ -101,8 +119,7 @@ hermes-companion/
 
 ## Known follow-ups
 
-- Replace `MockHermesBackend` with an HTTP-backed `HermesBackend` once the real contract is pinned
+- Replace `MockHermesBackend` with an HTTP-backed `HermesBackend` once the real contract is pinned (see the plugin mailbox in [hermes-companion-plugin](https://github.com/coding-nyx/hermes-companion-plugin))
 - Add Room + per-route ack watermark
 - Wire `NotificationListenerService` + `getActiveNotifications()` reconciliation
 - Implement node pairing UI (Ed25519 Keystore keypair + QR/deep-link)
-- Add a hermes-companion plugin to the OpenClaw/Hermes gateway side
