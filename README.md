@@ -20,6 +20,10 @@ hermes plugins enable companion
 hermes gateway
 ```
 
+## UI
+
+The Compose shell matches the web companion: warm dark surface (`#080807` / `#0b0b0a`), cream type (`#f2f0ea`), Instrument Serif display + Figtree body + IBM Plex Mono kickers, caduceus mark, and the same five tabs — Home, Hermes, Shade, Device, More — plus the three-step pairing flow.
+
 ## What's in this PoC
 
 Per `plan/08-delivery/poc-scope.md` — the first vertical slice:
@@ -31,7 +35,7 @@ Per `plan/08-delivery/poc-scope.md` — the first vertical slice:
 - **Node actions and simulated notification/call events** — capability model + node screen scaffold (`plan/03-android/full-node-mode.md` covers the production checklist)
 - **Request-bound approval decisions** — `ApprovalSheet` with the exact `once / session / always / deny` choices
 - **Gateway manager/test interaction** — `SettingsScreen` + `AddGatewayDialog` adds/removes mock gateways at runtime
-- **Responsive mobile and desktop layouts** — `Shell` switches between bottom `NavigationBar` (compact) and side `NavigationRail` (medium+) via `material3-window-size-class`
+- **Responsive mobile layout** — `Shell` is a compact phone chrome matching the web PWA (status header + five-tab bar). Pairing is a dedicated first-run flow.
 
 ## What's deliberately out (PoC scope cuts)
 
@@ -46,7 +50,7 @@ The gateway-side plugin now lives in [hermes-companion-plugin](https://github.co
 
 ## Screen use (accessibility)
 
-The **Node** tab is now a live coverage matrix, not a placeholder.
+The **Device** tab is the live coverage matrix plus the same radios, levels, and screen-use grant as the web companion.
 
 - **Accessibility** — `CompanionA11yService` reads the UI tree and can tap, swipe, type, and take screenshots (Android 11+). Hermes only mutates the screen after you enable **Allow Hermes to use the screen**.
 - **App usage** — `PACKAGE_USAGE_STATS` for the real foreground app and recent screen time.

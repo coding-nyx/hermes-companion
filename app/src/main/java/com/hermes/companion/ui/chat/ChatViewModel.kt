@@ -64,15 +64,21 @@ class ChatViewModel(
     }
 
     fun send() {
-        val route = _state.value.route ?: return
         val text = _state.value.draft.trim()
         if (text.isEmpty()) return
+        sendPrompt(text)
+    }
+
+    fun sendPrompt(text: String) {
+        val route = _state.value.route ?: return
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) return
         _state.update { it.copy(draft = "", streaming = true, streamingText = "") }
         streamJob = viewModelScope.launch {
             val backend = registry.backendFor(route.gatewayId) ?: return@launch
             require(backend is MockHermesBackend)
             val collectedTools = mutableListOf<ToolRun>()
-            backend.sendAndStream(route, text).collect { event ->
+            backend.sendAndStream(route, trimmed).collect { event ->
                 handleEvent(route, event, collectedTools)
             }
             _state.update { it.copy(streaming = false) }

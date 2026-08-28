@@ -1,39 +1,33 @@
 package com.hermes.companion.ui.agents
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.hermes.companion.domain.AgentProfile
 import com.hermes.companion.domain.ConversationRoute
-import com.hermes.companion.domain.GatewayConnection
-import com.hermes.companion.domain.Session
+import com.hermes.companion.ui.nav.AskHermes
+import com.hermes.companion.ui.components.SurfaceCard
+import com.hermes.companion.ui.theme.HermesColors
+import com.hermes.companion.ui.theme.HermesType
+import com.hermes.companion.ui.theme.HermesTypography
 
 @Composable
 fun AgentsScreen(
@@ -41,122 +35,71 @@ fun AgentsScreen(
     vm: AgentsViewModel = viewModel(factory = AgentsViewModel.factory()),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Agents", style = MaterialTheme.typography.titleLarge)
+    LaunchedEffect(state.loading, state.sessionsByRoute.size) {
+        if (state.loading || AskHermes.pending == null) return@LaunchedEffect
+        val first = state.sessionsByRoute.keys.firstOrNull() ?: return@LaunchedEffect
+        onOpenChat(first)
+    }
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 24.dp),
+    ) {
+        Text("Hermes", style = HermesTypography.displayMedium)
+        Spacer(Modifier.height(4.dp))
         Text(
             "Gateway → profile → session. Same-name profiles across gateways are disambiguated.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            style = HermesTypography.bodyMedium,
         )
-        Box(Modifier.size(12.dp))
+        Spacer(Modifier.height(20.dp))
         if (state.loading) {
-            Text("Loading…")
+            Text("Loading…", style = HermesTypography.bodyMedium)
         } else {
             state.gateways.forEach { gw ->
-                GatewayGroup(
-                    gateway = gw,
-                    profiles = state.profiles.filter { it.gatewayId == gw.id },
-                    sessionsByRoute = state.sessionsByRoute,
-                    onOpenChat = onOpenChat,
-                )
-                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                SectionLabel(gw.label)
+                val profiles = state.profiles.filter { it.gatewayId == gw.id }
+                SurfaceCard(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                    Column {
+                        profiles.forEach { profile ->
+                            val sessions = state.sessionsByRoute
+                                .filterKeys { it.gatewayId == gw.id && it.profileId == profile.profileId }
+                                .values.flatten().distinctBy { it.sessionId }
+                            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        "@${profile.handle.display}",
+                                        style = HermesTypography.titleMedium,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    Text(profile.displayName, style = HermesTypography.bodySmall)
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                sessions.forEach { session ->
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                onOpenChat(ConversationRoute(gw.id, profile.profileId, session.sessionId))
+                                            }
+                                            .padding(vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Column(Modifier.weight(1f)) {
+                                            Text(session.title, style = HermesTypography.bodyLarge.copy(fontSize = 14.sp, color = HermesColors.Fg))
+                                            Text(
+                                                "${session.runState.name.lowercase()} · ${session.unreadCount} unread",
+                                                style = HermesType.kickerSubtle,
+                                            )
+                                        }
+                                        Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = HermesColors.Subtle)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
-    }
-}
-
-@Composable
-private fun GatewayGroup(
-    gateway: GatewayConnection,
-    profiles: List<AgentProfile>,
-    sessionsByRoute: Map<ConversationRoute, List<Session>>,
-    onOpenChat: (ConversationRoute) -> Unit,
-) {
-    Column(Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-            )
-            Box(Modifier.size(8.dp))
-            Text(gateway.label, style = MaterialTheme.typography.titleMedium)
-            Box(Modifier.size(8.dp))
-            Text(
-                gateway.kind.name,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            )
-        }
-        Box(Modifier.size(8.dp))
-        profiles.forEach { profile ->
-            val route = ConversationRoute(gateway.id, profile.profileId, "")
-            val sessions = sessionsByRoute.filterKeys { it.gatewayId == gateway.id && it.profileId == profile.profileId }
-            ProfileRow(
-                profile = profile,
-                sessions = sessions.values.flatten().distinctBy { it.sessionId },
-                onOpenChat = { sessionId ->
-                    onOpenChat(ConversationRoute(gateway.id, profile.profileId, sessionId))
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun ProfileRow(
-    profile: AgentProfile,
-    sessions: List<Session>,
-    onOpenChat: (sessionId: String) -> Unit,
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-    ) {
-        Column(Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "@${profile.handle.display}",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Box(Modifier.weight(1f))
-                Text(
-                    profile.displayName,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                )
-            }
-            Box(Modifier.size(8.dp))
-            sessions.forEach { session ->
-                SessionRow(session, onClick = { onOpenChat(session.sessionId) })
-            }
-        }
-    }
-}
-
-@Composable
-private fun SessionRow(session: Session, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(session.title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                "state=${session.runState.name} unread=${session.unreadCount}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            )
-        }
-        Icon(
-            Icons.Filled.ChevronRight,
-            contentDescription = "Open",
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-        )
     }
 }

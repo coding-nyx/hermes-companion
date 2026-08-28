@@ -130,4 +130,13 @@ object NodePrefs {
     fun setSession(ctx: Context, session: String?) {
         p(ctx).edit().putString(KEY_SESSION, session).apply()
     }
+
+    fun deviceName(ctx: Context) = p(ctx).getString("device_name", "") ?: ""
+    fun setDeviceName(ctx: Context, name: String) = p(ctx).edit().putString("device_name", name).apply()
+
+    fun tailnet(ctx: Context) = p(ctx).getString("tailnet", "") ?: ""
+    fun setTailnet(ctx: Context, v: String) = p(ctx).edit().putString("tailnet", v).apply()
+
+    fun pluginAck(ctx: Context) = p(ctx).getBoolean("plugin_ack", false)
+    fun setPluginAck(ctx: Context, v: Boolean) = p(ctx).edit().putBoolean("plugin_ack", v).apply()
 }
