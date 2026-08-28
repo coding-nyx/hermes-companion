@@ -190,4 +190,6 @@ data class ActiveGatewayEntity(
      */
     val nodeId: String,
     val updatedAt: Long,
+    /** T2: profile to make active when paired. NULL = first profile for the gateway. */
+    val activeProfileId: String? = null,
 )

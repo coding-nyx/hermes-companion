@@ -3,10 +3,10 @@ package com.hermes.companion.common
 import java.io.File
 
 /**
- * T7 (companion-gateway-routing.md): the active gateway URL + nodeId are
- * written by :app to a small JSON file under the app's files dir so the
- * OS-instantiated NLS can read them without a DB join. The two modules
- * live in the same process so the /data/data/<pkg>/files/ path is shared.
+ * T7 + T2: the active gateway URL + nodeId + activeProfileId are written by
+ * :app to a small JSON file under the app's files dir so the OS-instantiated
+ * NLS can read them without a DB join. The two modules live in the same
+ * process so the /data/data/<pkg>/files/ path is shared.
  *
  * SettingsViewModel writes via [writeSync], HermesNotificationListenerService
  * reads via [readSync] on every reconnect.
@@ -14,26 +14,39 @@ import java.io.File
  * Lives in :core:common because :app (Hilt) and :node (OS-instantiated)
  * both depend on :core:common, but neither depends on the other. The
  * encoding is intentionally minimal JSON we control on both sides - not a
- * general JSON library, just enough for `{url: <str>, nodeId: <str>}`.
+ * general JSON library, just enough for the small payload.
  */
 object ActiveGatewayConfig {
     private const val FILE_NAME = "active_gateway.json"
 
-    /** Persist (url, nodeId) as a small JSON object. Idempotent. */
-    fun writeSync(filesDir: File, url: String, nodeId: String) {
+    /** Persist (url, nodeId, activeProfileId?) as a small JSON object. Idempotent. */
+    fun writeSync(
+        filesDir: File,
+        url: String,
+        nodeId: String,
+        activeProfileId: String? = null,
+    ) {
         runCatching {
-            val payload = "{\"url\":\"" + js(url) + "\",\"nodeId\":\"" + js(nodeId) + "\"}"
+            val profilePart = activeProfileId?.let { ",\"activeProfileId\":\"" + js(it) + "\"" } ?: ""
+            val payload =
+                "{\"url\":\"" + js(url) +
+                    "\",\"nodeId\":\"" + js(nodeId) +
+                    "\"" + profilePart + "}"
             File(filesDir, FILE_NAME).writeText(payload)
         }
     }
 
-    /** Read the last persisted pair or (null, null) if no file or malformed. */
-    fun readSync(filesDir: File): Pair<String?, String?> = runCatching {
+    /** Read the last persisted triple or nulls if no file or malformed. */
+    fun readSync(filesDir: File): Triple<String?, String?, String?> = runCatching {
         val f = File(filesDir, FILE_NAME)
-        if (!f.exists()) return Pair(null, null)
+        if (!f.exists()) return Triple(null, null, null)
         val text = f.readText()
-        Pair(parseField(text, "url"), parseField(text, "nodeId"))
-    }.getOrDefault(Pair(null, null))
+        Triple(
+            parseField(text, "url"),
+            parseField(text, "nodeId"),
+            parseField(text, "activeProfileId"),
+        )
+    }.getOrDefault(Triple(null, null, null))
 
     /** Minimal JSON string escaper for our payload. */
     private fun js(s: String): String {

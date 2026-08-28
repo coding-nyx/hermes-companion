@@ -19,7 +19,7 @@ import androidx.room.RoomDatabase
         LeaseEntity::class,
         StreamRuleEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 internal abstract class CompanionDatabase : RoomDatabase() {

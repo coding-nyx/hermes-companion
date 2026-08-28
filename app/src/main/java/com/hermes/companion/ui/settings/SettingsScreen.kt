@@ -113,11 +113,24 @@ fun SettingsScreen(
                     onMakeActive = { vm.setActive(it) },
                     onRefresh = vm::refresh,
                 )
-                1 -> ProfilesTab(
-                    profiles = state.fleet.gateways
+                1 -> {
+                    // T2: resolve the profile list for the active gateway and
+                    // look up its currently-active profile id so ProfilesTab
+                    // can render the "Make active" / "Active" toggle.
+                    val activeGateway = state.fleet.gateways
                         .firstOrNull { it.gateway.id == state.activeGatewayId }
-                        ?.profiles ?: emptyList(),
-                )
+                    val profiles = activeGateway?.profiles ?: emptyList()
+                    val activeProfileId = state.activeGatewayId
+                        ?.let { state.activeProfileByGateway[it] }
+                    ProfilesTab(
+                        profiles = profiles,
+                        activeProfileId = activeProfileId,
+                        onMakeActive = { profileId ->
+                            val gatewayId = state.activeGatewayId ?: return@ProfilesTab
+                            vm.setActiveProfile(gatewayId, profileId)
+                        },
+                    )
+                }
                 2 -> NotificationRoutingTab(ruleRepo = vm.ruleRepo)
                 3 -> VoiceTab(
                     snap = state.voice,

@@ -27,6 +27,20 @@ interface FleetRepository {
     suspend fun observeActiveNodeId(gatewayId: String): String?
 
     /**
+     * T2: Looks up the active profile id for the given gateway. Returns null
+     * if no active profile is set; callers fall back to "first profile for
+     * the gateway" or "ask the user".
+     */
+    suspend fun observeActiveProfileId(gatewayId: String): String?
+
+    /**
+     * T2: Mark the active profile for a gateway. Persists to the
+     * active_gateway row's activeProfileId column. Use [setActive] to also
+     * switch gateways atomically.
+     */
+    suspend fun setActiveProfile(gatewayId: String, profileId: String): Result<Unit>
+
+    /**
      * Full active-gateway view as a single snapshot: id, baseUrl, nodeId, whenSet.
      * Use [observeActiveId] when you only need the gatewayId (most callers).
      */

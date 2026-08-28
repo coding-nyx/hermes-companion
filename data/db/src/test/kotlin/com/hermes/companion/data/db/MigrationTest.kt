@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -116,6 +117,38 @@ class MigrationTest {
         db.execSQL("INSERT INTO stream_rules (source,mode,updatedAt) VALUES ('com.whatsapp','Summarise',1)")
         db.query("SELECT mode FROM stream_rules WHERE source='com.whatsapp'").use { c ->
             c.moveToFirst(); assertEquals("Summarise", c.getString(0))
+        }
+        db.close()
+    }
+
+    @Test
+    fun migrate8To9_addsActiveProfileId() {
+        // v7 -> v8 was destructive, so we can stand up a v8 DB directly using
+        // the v8 schema (registered under schemas/...). Insert the singleton
+        // active_gateway row so we can prove the ALTER preserves data + the
+        // new column defaults to NULL.
+        helper.createDatabase(dbName, 8).apply {
+            execSQL(
+                "INSERT INTO active_gateway (id, gatewayId, url, nodeId, updatedAt) " +
+                    "VALUES (1, 'gw-lab', 'http://lab:9120/gw-lab', 'node-x', 1000)",
+            )
+            close()
+        }
+        val db = helper.runMigrationsAndValidate(dbName, 9, true, MIGRATION_8_9)
+        // The new column exists and defaults to NULL on the surviving v8 row.
+        db.query("SELECT activeProfileId FROM active_gateway WHERE id=1").use { c ->
+            c.moveToFirst()
+            assertNull(
+                "expected null activeProfileId on a v8 row that survived the upgrade",
+                c.getString(0),
+            )
+        }
+        // And the column is nullable + writable, so setActiveProfile can
+        // promote NULL -> "knight" without a schema change.
+        db.execSQL("UPDATE active_gateway SET activeProfileId = 'knight' WHERE id = 1")
+        db.query("SELECT activeProfileId FROM active_gateway WHERE id=1").use { c ->
+            c.moveToFirst()
+            assertEquals("knight", c.getString(0))
         }
         db.close()
     }

@@ -133,7 +133,7 @@ class HermesNotificationListenerService : NotificationListenerService() {
             // available on the instance; we may be called before [instance]
             // is set during cold boot.
             val dir = instance?.filesDir ?: return
-            val (url, node) = ActiveGatewayConfig.readSync(dir)
+            val (url, node, _) = ActiveGatewayConfig.readSync(dir)
             forwarder = NotificationForwarder(
                 activeUrl = url,
                 nodeId = node,

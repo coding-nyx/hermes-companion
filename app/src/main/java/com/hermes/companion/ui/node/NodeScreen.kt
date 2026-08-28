@@ -354,6 +354,7 @@ private fun StatPair(key: String, value: String) {
  * Row total height is ~52dp (6dp top/bottom card padding + ~40dp content),
  * down from the previous ~80dp two-line description layout.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 internal fun CapabilityRow(
     cap: NodeCapabilityItem,
@@ -411,7 +412,45 @@ internal fun CapabilityRow(
 
             // Name + description take all remaining width; both truncate.
             // The tooltip on long-press surfaces the full strings.
-            CapabilityRowNameTooltip(cap = cap, modifier = Modifier.weight(1f))
+            val tooltipState = rememberTooltipState(isPersistent = false)
+            Box(modifier = Modifier.weight(1f)) {
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(
+                        spacingBetweenTooltipAndAnchor = 4.dp,
+                    ),
+                    tooltip = {
+                        PlainTooltip {
+                            Text(
+                                text = cap.name + "\n" + cap.description,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    },
+                    state = tooltipState,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(1.dp),
+                    ) {
+                        Text(
+                            cap.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            cap.description,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        )
+                    }
+                }
+            }
 
             // Status pill: icon-led, hugs the right edge, fixed width band
             // so columns stay aligned across rows.
@@ -419,53 +458,6 @@ internal fun CapabilityRow(
                 status = cap.status,
                 canTap = canTap,
                 color = statusColor,
-            )
-        }
-    }
-}
-
-/**
- * Inline tooltip wrapper for the capability name column. Extracted so the
- * Material3 TooltipBox experimental opt-in stays local and the row body
- * stays readable.
- */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-@Composable
-private fun CapabilityRowNameTooltip(cap: NodeCapabilityItem, modifier: Modifier = Modifier) {
-    val tooltipState = rememberTooltipState(isPersistent = false)
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(
-            spacingBetweenTooltipAndAnchor = 4.dp,
-        ),
-        tooltip = {
-            PlainTooltip {
-                Text(
-                    text = cap.name + "\n" + cap.description,
-                    style = MaterialTheme.typography.bodySmall,
-                )
-            }
-        },
-        state = tooltipState,
-        modifier = modifier,
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(1.dp),
-        ) {
-            Text(
-                cap.name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                cap.description,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             )
         }
     }
@@ -677,11 +669,35 @@ private fun NodePairingSection(vm: NodeViewModel) {
     }
 
     if (showDialog) {
-        NodePairDialog(
-            onDismiss = { showDialog = false },
-            onPair = { url, code, onResult ->
-                vm.pair(url, code) { err -> onResult(err); if (err == null) showDialog = false }
+        var url by remember { mutableStateOf("") }
+        var code by remember { mutableStateOf("") }
+        var error by remember { mutableStateOf<String?>(null) }
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Pair this phone as a node") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = url, onValueChange = { url = it },
+                        label = { Text("Plugin base URL") },
+                        placeholder = { Text("http://host:9120") },
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        value = code, onValueChange = { code = it },
+                        label = { Text("Setup code") },
+                        singleLine = true,
+                    )
+                    error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                }
             },
+            confirmButton = {
+                TextButton(
+                    enabled = url.isNotBlank() && code.isNotBlank(),
+                    onClick = { vm.pair(url, code) { err -> if (err == null) showDialog = false else error = err } },
+                ) { Text("Pair") }
+            },
+            dismissButton = { TextButton(onClick = { showDialog = false }) { Text("Cancel") } },
         )
     }
 }

@@ -150,6 +150,15 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
     }
 }
 
+/** v9: T2 - add activeProfileId column to active_gateway so the UI's
+ * "Make active profile" choice persists across restarts. Additive: defaults
+ * to NULL, falls back to "first profile for the gateway" on read. */
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `active_gateway` ADD COLUMN `activeProfileId` TEXT")
+    }
+}
+
 
 /**
  * v7 -> v8 added `url` + `nodeId` to `active_gateway` (destructive, no MIGRATION_7_8).
@@ -163,4 +172,5 @@ val ALL_MIGRATIONS: Array<Migration> = arrayOf(
     MIGRATION_4_5,
     MIGRATION_5_6,
     MIGRATION_6_7,
+    MIGRATION_8_9,
 )

@@ -144,6 +144,29 @@ internal class DefaultFleetRepository(
     override suspend fun observeActiveNodeId(gatewayId: String): String? =
         store.nodeIdentity.find(gatewayId)?.nodeId
 
+    override suspend fun observeActiveProfileId(gatewayId: String): String? =
+        // Read from the same singleton row as [observeActive]. We only care
+        // about the activeProfileId for the gateway that's currently in the
+        // singleton row; if the caller asked for a different gateway, the
+        // operator hasn't chosen a profile for it yet (so null).
+        store.activeGateway.get()?.takeIf { it.gatewayId == gatewayId }?.activeProfileId
+
+    override suspend fun setActiveProfile(gatewayId: String, profileId: String): Result<Unit> = runCatching {
+        // Read the current singleton row and update its activeProfileId
+        // (keeping url + nodeId from the existing set). If no row exists,
+        // the caller has not yet picked a gateway — refuse rather than
+        // create a half-baked singleton.
+        val current = store.activeGateway.get()
+            ?: error("no active gateway; pick a gateway first")
+        require(current.gatewayId == gatewayId) {
+            "active gateway is ${current.gatewayId}, not $gatewayId"
+        }
+        store.activeGateway.set(
+            current.copy(activeProfileId = profileId)
+        )
+        Unit
+    }
+
     override suspend fun setActive(gatewayId: String, url: String, nodeId: String): Result<Unit> = runCatching {
         store.activeGateway.set(
             com.hermes.companion.data.db.ActiveGatewayEntity(
