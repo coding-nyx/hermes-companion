@@ -13,9 +13,9 @@
     <string name="title_more">More</string>
     <string name="channel_connection">Gateway connections</string>
     <string name="status_no_gateways">No gateways added</string>
-    <string name="status_connected">Connected to %1 gateways</string>
-    <string name="status_partial">Connected to %1 of %2 gateways</string>
-    <string name="status_all_unreachable">%1 gateways unreachable</string>
-    <string name="status_detail">%1 profiles · %2 runs open</string>
+    <string name="status_connected">Connected to %1$d gateways</string>
+    <string name="status_partial">Connected to %1$d of %2$d gateways</string>
+    <string name="status_all_unreachable">%1$d gateways unreachable</string>
+    <string name="status_detail">%1$d profiles · %2$d runs open</string>
     <string name="a11y_description">Lets Hermes read the screen and, only after you allow screen input, tap, swipe, and type. Used for computer-use on this phone. You can turn it off in Accessibility settings at any time.</string>
 </resources>
