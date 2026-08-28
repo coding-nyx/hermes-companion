@@ -1,6 +1,7 @@
 package com.hermes.companion.data.repo
 
 import android.content.Context
+import android.util.Log
 import com.hermes.companion.data.db.openCompanionStore
 import com.hermes.companion.data.db.toDomain
 import com.hermes.companion.data.db.toEntity
@@ -53,9 +54,37 @@ class CompanionData(
         // CoroutineScope so the pair call itself doesn't block on the
         // HTTP GET /v1/profiles round-trip. Failures are swallowed inside
         // refreshGateway (it just sets health=Down).
+        //
+        // CRITICAL (T2fix): the BackendRegistry is only seeded from
+        // bootstrap() once at app start. A fresh gateways row written by
+        // NodeConnection.pair() is therefore unknown to the registry, and
+        // refreshGateway() short-circuits on `registry.backendFor(id) ?: return`,
+        // so the /api/profiles HTTP call never fires and the profiles table
+        // stays empty. The hook must register the backend BEFORE refreshing.
         nodeConnections.setRefreshHook { gatewayId ->
             scope.launch {
-                (fleet as? DefaultFleetRepository)?.refreshGatewayFor(gatewayId)
+                val repo = fleet as? DefaultFleetRepository
+                if (repo == null) {
+                    Log.w("PairFlow", "POST-PAIR: fleet is not DefaultFleetRepository (${fleet::class.java.name}); skipping refresh")
+                    return@launch
+                }
+                // Register the backend if this is a freshly-paired gateway
+                // that bootstrap() has not seen yet. Idempotent: addGateway
+                // overwrites the existing entry for the same id.
+                val existing = store.gateways.find(gatewayId)
+                if (existing != null && registry.backendFor(gatewayId) == null) {
+                    Log.d("PairFlow", "POST-PAIR: registering backend for $gatewayId (${existing.url})")
+                    registry.addGateway(httpHermesBackend(existing.toDomain()))
+                } else {
+                    Log.d("PairFlow", "POST-PAIR: backend already registered for $gatewayId (${existing?.url ?: "row-missing"})")
+                }
+                Log.d("PairFlow", "POST-PAIR: firing refreshGatewayFor($gatewayId)")
+                try {
+                    repo.refreshGatewayFor(gatewayId)
+                    Log.d("PairFlow", "POST-PAIR: refresh complete for $gatewayId")
+                } catch (t: Throwable) {
+                    Log.e("PairFlow", "POST-PAIR: refresh failed for $gatewayId", t)
+                }
             }
         }
     }
