@@ -58,7 +58,7 @@ fun SettingsScreen(
     Column(Modifier.fillMaxSize()) {
         // Tab strip
         PrimaryTabRow(selectedTabIndex = selectedTab) {
-            listOf("Gateways", "Profiles", "Routing").forEachIndexed { idx, title ->
+            listOf("Gateways", "Profiles", "Routing", "Voice").forEachIndexed { idx, title ->
                 Tab(
                     selected = selectedTab == idx,
                     onClick = { selectedTab = idx },
@@ -119,6 +119,10 @@ fun SettingsScreen(
                         ?.profiles ?: emptyList(),
                 )
                 2 -> NotificationRoutingTab(ruleRepo = vm.ruleRepo)
+                3 -> VoiceTab(
+                    snap = state.voice,
+                    onChange = vm::setVoiceConfig,
+                )
             }
         }
 

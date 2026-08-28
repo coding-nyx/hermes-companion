@@ -3,6 +3,7 @@ package com.hermes.companion.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hermes.companion.common.ActiveGatewayConfig
+import com.hermes.companion.common.VoiceConfig
 import com.hermes.companion.common.reason
 import dagger.hilt.android.qualifiers.ApplicationContext
 import com.hermes.companion.data.repo.Fleet
@@ -22,6 +23,8 @@ data class SettingsUiState(
     val fleet: Fleet = Fleet(),
     val activeGatewayId: String? = null,
     val error: String? = null,
+    /** Voice feature config (Phase 1). Loaded from voice.json on init. */
+    val voice: VoiceConfig.VoiceSnapshot = VoiceConfig.DEFAULT_VOICE,
 )
 
 @HiltViewModel
@@ -34,9 +37,16 @@ class SettingsViewModel @Inject constructor(
 
     private val errors = MutableStateFlow<String?>(null)
 
+    /**
+     * Voice snapshot. Seeded from the file-backed JSON store so the UI shows
+     * the persisted choice on first render. Updated by [setVoiceConfig].
+     */
+    private val voice = MutableStateFlow(VoiceConfig.readSync(context.filesDir))
+
     val state: StateFlow<SettingsUiState> =
-        combine(fleet.fleet(), fleet.observeActive(), errors) { f, a, e -> SettingsUiState(f, a, e) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
+        combine(fleet.fleet(), fleet.observeActive(), errors, voice) { f, a, e, v ->
+            SettingsUiState(fleet = f, activeGatewayId = a, error = e, voice = v)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState(voice = voice.value))
 
     fun addGateway(label: String, baseUrl: String, kind: GatewayKind) {
         viewModelScope.launch {
@@ -77,5 +87,19 @@ class SettingsViewModel @Inject constructor(
             ActiveGatewayConfig.writeSync(context.filesDir, url, nodeId)
             errors.value = fleet.setActive(gatewayId, url, nodeId).exceptionOrNull()?.reason()
         }
+    }
+
+    /**
+     * Update the persisted voice config and the UI state. Writes
+     * `voice.json` under [Context.filesDir] via [VoiceConfig.writeSync] so
+     * the OS-instantiated voice services in :node pick it up on their next
+     * reconnect. Same file-backed bridge pattern as [setActive].
+     *
+     * Synchronous file I/O — voice.json is <100 bytes and the call site is
+     * the user tapping a picker, which already does its own dispatch.
+     */
+    fun setVoiceConfig(snap: VoiceConfig.VoiceSnapshot) {
+        VoiceConfig.writeSync(context.filesDir, snap)
+        voice.value = snap
     }
 }
