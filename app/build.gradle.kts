@@ -99,6 +99,12 @@ dependencies {
     implementation(project(":core:domain"))
     implementation(project(":core:common"))
     implementation(project(":data:repo"))
+    implementation(project(":node"))
+    implementation(project(":transport:discovery"))
+    // OkHttp is used by :node (CompanionDiscovery, CompanionLink, etc.) which
+    // :app calls. Re-export so default constructor params resolve on the
+    // :app compile classpath.
+    implementation(libs.okhttp)
 
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)

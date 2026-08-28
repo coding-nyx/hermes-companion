@@ -13,15 +13,21 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -33,12 +39,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import com.hermes.companion.ui.theme.StatusDim
 import com.hermes.companion.ui.theme.StatusError
 import com.hermes.companion.ui.theme.StatusOk
@@ -323,8 +334,31 @@ private fun StatPair(key: String, value: String) {
     }
 }
 
+/**
+ * One capability row in the Coverage matrix.
+ *
+ * Layout is a horizontal [Row] with three slots:
+ *
+ *   [StatusDot]  |  Name + description (weight 1f, truncates with ellipsis)  |  StatusPill
+ *
+ * The status pill is icon-led and as small as the status warrants:
+ *   - Working          → teal CheckCircle, no text
+ *   - OS-limited       → muted Lock  + "OS" pill
+ *   - PermissionNeeded → amber Shield + "Grant ›" pill (whole row is tappable)
+ *   - Unavailable      → coral Lock + "—" pill
+ *
+ * Long-pressing the name area shows a tooltip with the full capability name
+ * and description — useful on narrow phones when the ellipsized name hides
+ * the dotted suffix (e.g. "notifications.dis…").
+ *
+ * Row total height is ~52dp (6dp top/bottom card padding + ~40dp content),
+ * down from the previous ~80dp two-line description layout.
+ */
 @Composable
-private fun CapabilityRow(cap: NodeCapabilityItem) {
+internal fun CapabilityRow(
+    cap: NodeCapabilityItem,
+    modifier: Modifier = Modifier,
+) {
     val statusColor = when (cap.status) {
         CapabilityStatus.Working -> Teal
         CapabilityStatus.MissingPermission -> Sand
@@ -350,10 +384,15 @@ private fun CapabilityRow(cap: NodeCapabilityItem) {
         }
     }
 
+    // Whole-row tap target only when there's a grant to chase. We use plain
+    // [clickable] (not combinedClickable) so the inner TooltipBox's
+    // long-press handler still fires for the tooltip on long-cap-name rows.
+    val rowMod = modifier
+        .fillMaxWidth()
+        .let { base -> if (canTap) base.then(Modifier.clickable(onClick = onTap)) else base }
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .let { if (canTap) it.then(Modifier.clickable(onClick = onTap)) else it },
+        modifier = rowMod.semantics { testTag = "capability-row" },
         colors = CardDefaults.cardColors(
             containerColor = if (canTap) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
             else MaterialTheme.colorScheme.surface,
@@ -361,38 +400,181 @@ private fun CapabilityRow(cap: NodeCapabilityItem) {
         shape = RoundedCornerShape(8.dp),
     ) {
         Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            Modifier
+                .fillMaxWidth()
+                .height(40.dp)
+                .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             StatusDot(statusColor, size = 8.dp)
-            Column(Modifier.weight(1f)) {
-                Text(
-                    cap.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    cap.description,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                )
-            }
-            Text(
-                if (canTap) "${cap.stateLabel}  ›  grant" else cap.stateLabel,
-                style = MaterialTheme.typography.labelSmall,
+
+            // Name + description take all remaining width; both truncate.
+            // The tooltip on long-press surfaces the full strings.
+            CapabilityRowNameTooltip(cap = cap, modifier = Modifier.weight(1f))
+
+            // Status pill: icon-led, hugs the right edge, fixed width band
+            // so columns stay aligned across rows.
+            StatusPill(
+                status = cap.status,
+                canTap = canTap,
                 color = statusColor,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
         }
     }
+}
+
+/**
+ * Inline tooltip wrapper for the capability name column. Extracted so the
+ * Material3 TooltipBox experimental opt-in stays local and the row body
+ * stays readable.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun CapabilityRowNameTooltip(cap: NodeCapabilityItem, modifier: Modifier = Modifier) {
+    val tooltipState = rememberTooltipState(isPersistent = false)
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(
+            spacingBetweenTooltipAndAnchor = 4.dp,
+        ),
+        tooltip = {
+            PlainTooltip {
+                Text(
+                    text = cap.name + "\n" + cap.description,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        },
+        state = tooltipState,
+        modifier = modifier,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+        ) {
+            Text(
+                cap.name,
+                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                cap.description,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+            )
+        }
+    }
+}
+
+/**
+ * Compact icon-led status indicator on the right edge of a [CapabilityRow].
+ * For grant-pending rows the pill carries a chevron to signal that tapping
+ * the row will launch the grant flow.
+ */
+@Composable
+private fun StatusPill(
+    status: CapabilityStatus,
+    canTap: Boolean,
+    color: Color,
+) {
+    val spec = capabilityPillSpec(status, canTap)
+    Row(
+        modifier = Modifier
+            .widthIn(min = if (canTap) 72.dp else 24.dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(color.copy(alpha = 0.12f))
+            .padding(horizontal = if (canTap) 8.dp else 4.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        val icon = when (spec.icon) {
+            StatusIcon.CheckCircle -> Icons.Filled.CheckCircle
+            StatusIcon.Lock -> Icons.Filled.Lock
+            StatusIcon.Shield -> Icons.Filled.Shield
+        }
+        Icon(
+            icon,
+            contentDescription = spec.contentDescription,
+            tint = color,
+            modifier = Modifier.size(if (spec.icon == StatusIcon.CheckCircle) 16.dp else 14.dp),
+        )
+        if (spec.label != null) {
+            Text(
+                spec.label,
+                style = MaterialTheme.typography.labelSmall,
+                color = color,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+            )
+        }
+        if (spec.showChevron) {
+            Icon(
+                Icons.Filled.ChevronRight,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(14.dp),
+            )
+        }
+    }
+}
+
+/** Icon set used by the capability status pill. Pure data for testability. */
+internal enum class StatusIcon { CheckCircle, Lock, Shield }
+
+/**
+ * Pure-data descriptor for a capability status pill. Extracted from the
+ * composable so unit tests can assert the spec without spinning up Compose.
+ */
+internal data class StatusPillSpec(
+    val icon: StatusIcon,
+    val label: String?,
+    val showChevron: Boolean,
+    val contentDescription: String,
+)
+
+/**
+ * Maps a [CapabilityStatus] (and whether the row has a grant to chase) to the
+ * pill design we want on the right edge of the row.
+ *
+ *   Working         → CheckCircle, no text, no chevron
+ *   OS-limited      → Lock + "OS", no chevron
+ *   PermissionNeeded + canTap → Shield + "Grant" + chevron (tappable row)
+ *   PermissionNeeded + !canTap → Shield + "Grant", no chevron
+ *   Unavailable     → Lock, no text, no chevron
+ */
+internal fun capabilityPillSpec(
+    status: CapabilityStatus,
+    canTap: Boolean,
+): StatusPillSpec = when (status) {
+    CapabilityStatus.Working -> StatusPillSpec(
+        icon = StatusIcon.CheckCircle,
+        label = null,
+        showChevron = false,
+        contentDescription = "Working",
+    )
+    CapabilityStatus.OsLimited -> StatusPillSpec(
+        icon = StatusIcon.Lock,
+        label = "OS",
+        showChevron = false,
+        contentDescription = "OS-limited",
+    )
+    CapabilityStatus.MissingPermission -> StatusPillSpec(
+        icon = StatusIcon.Shield,
+        label = "Grant",
+        showChevron = canTap,
+        contentDescription = "Permission needed",
+    )
+    CapabilityStatus.Unavailable -> StatusPillSpec(
+        icon = StatusIcon.Lock,
+        label = null,
+        showChevron = false,
+        contentDescription = "Unavailable",
+    )
 }
 
 @Composable
@@ -495,35 +677,11 @@ private fun NodePairingSection(vm: NodeViewModel) {
     }
 
     if (showDialog) {
-        var url by remember { mutableStateOf("") }
-        var code by remember { mutableStateOf("") }
-        var error by remember { mutableStateOf<String?>(null) }
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text("Pair this phone as a node") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = url, onValueChange = { url = it },
-                        label = { Text("Plugin base URL") },
-                        placeholder = { Text("http://host:9120") },
-                        singleLine = true,
-                    )
-                    OutlinedTextField(
-                        value = code, onValueChange = { code = it },
-                        label = { Text("Setup code") },
-                        singleLine = true,
-                    )
-                    error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                }
+        NodePairDialog(
+            onDismiss = { showDialog = false },
+            onPair = { url, code, onResult ->
+                vm.pair(url, code) { err -> onResult(err); if (err == null) showDialog = false }
             },
-            confirmButton = {
-                TextButton(
-                    enabled = url.isNotBlank() && code.isNotBlank(),
-                    onClick = { vm.pair(url, code) { err -> if (err == null) showDialog = false else error = err } },
-                ) { Text("Pair") }
-            },
-            dismissButton = { TextButton(onClick = { showDialog = false }) { Text("Cancel") } },
         )
     }
 }
