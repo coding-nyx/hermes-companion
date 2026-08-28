@@ -44,6 +44,18 @@ Per `plan/08-delivery/poc-scope.md` — the first vertical slice:
 
 The gateway-side plugin now lives in [hermes-companion-plugin](https://github.com/coding-nyx/hermes-companion-plugin).
 
+## Screen use (accessibility)
+
+The **Node** tab is now a live coverage matrix, not a placeholder.
+
+- **Accessibility** — `CompanionA11yService` reads the UI tree and can tap, swipe, type, and take screenshots (Android 11+). Hermes only mutates the screen after you enable **Allow Hermes to use the screen**.
+- **App usage** — `PACKAGE_USAGE_STATS` for the real foreground app and recent screen time.
+- **Screen capture** — accessibility screenshot first; optional MediaProjection grant for a full frame.
+- **Mailbox** — same outbound pair/inbox/outbox protocol as the web companion. Hermes tools `companion_read_screen`, `companion_tap`, `companion_swipe`, `companion_type`, `companion_app_usage` run on the phone.
+
+Grant accessibility and usage access from the Node page, pair with the gateway URL (Tailscale MagicDNS), then ask Hermes to read the screen.
+
+
 ## Build
 
 ```bash

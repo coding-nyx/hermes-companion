@@ -3,6 +3,7 @@ package com.hermes.companion
 import android.app.Application
 import com.hermes.companion.backend.BackendRegistry
 import com.hermes.companion.backend.MockHermesBackend
+import com.hermes.companion.node.CompanionLink
 
 /**
  * Application-scoped state. The PoC keeps the registry in-memory only;
@@ -18,6 +19,7 @@ class CompanionApp : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        CompanionLink.restore(this)
     }
 
     companion object {

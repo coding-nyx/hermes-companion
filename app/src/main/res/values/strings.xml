@@ -6,4 +6,5 @@
     <string name="title_activity">Activity</string>
     <string name="title_node">Node</string>
     <string name="title_settings">Settings</string>
+    <string name="a11y_description">Lets Hermes read the screen and, only after you allow screen input, tap, swipe, and type. Used for computer-use on this phone. You can turn it off in Accessibility settings at any time.</string>
 </resources>
