@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Voice control + wake word for Hermes Companion — Design v1</title>
+<style>
+  :root{
+    --bg:#0E0E10;
+    --bg-elev:#16161A;
+    --bg-elev-2:#1C1C22;
+    --line:#26262E;
+    --line-2:#33333D;
+    --text:#E6E6EA;
+    --text-dim:#9A9AA8;
+    --text-mute:#6B6B78;
+    --primary:#2C7EF8;
+    --primary-soft:rgba(44,126,248,.16);
+    --accent:#7DD3FC;
+    --accent-soft:rgba(125,211,252,.14);
+    --warn:#F59E0B;
+    --ok:#34D399;
+    --bad:#F87171;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+    --sans:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    --radius:10px;
+    --radius-lg:14px;
+    --pad:clamp(14px,2.2vw,22px);
+    --gap:clamp(12px,1.8vw,18px);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  body{min-height:100vh}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,pre,kbd,samp{font-family:var(--mono);font-size:.86em}
+  code{background:var(--bg-elev-2);padding:.12em .42em;border-radius:5px;border:1px solid var(--line)}
+  pre{background:var(--bg-elev-2);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;overflow:auto;margin:0}
+  pre code{background:none;border:none;padding:0}
+
+  /* Layout */
+  .wrap{max-width:1280px;margin:0 auto;padding:0 var(--pad)}
+  .topbar{position:sticky;top:0;z-index:10;background:rgba(14,14,16,.86);backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid var(--line)}
+  .topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:.2px}
+  .brand-mark{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--primary),var(--accent));display:inline-block;position:relative}
+  .brand-mark::after{content:"";position:absolute;inset:5px;border:2px solid #0E0E10;border-radius:3px;border-top-color:transparent;border-right-color:transparent;transform:rotate(-45deg)}
+  .toc{display:flex;flex-wrap:wrap;gap:14px;color:var(--text-dim);font-size:13px}
+  .toc a{color:var(--text-dim)}
+  .toc a:hover{color:var(--text)}
+
+  /* Hero */
+  .hero{padding:clamp(36px,7vw,72px) 0 clamp(20px,4vw,40px);border-bottom:1px solid var(--line)}
+  .hero h1{font-size:clamp(28px,5vw,46px);line-height:1.1;margin:0 0 14px;letter-spacing:-.5px}
+  .hero p.lede{font-size:clamp(15px,2vw,18px);color:var(--text-dim);max-width:780px;margin:0 0 18px}
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;font-size:12px;border-radius:999px;border:1px solid var(--line-2);background:var(--bg-elev);color:var(--text-dim)}
+  .chip.primary{background:var(--primary-soft);border-color:rgba(44,126,248,.45);color:#BFD4FF}
+  .chip.accent{background:var(--accent-soft);border-color:rgba(125,211,252,.45);color:#CDEEFF}
+  .chip.ok{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);color:#A8F0D2}
+
+  section{padding:clamp(28px,5vw,56px) 0;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:none}
+  h2{font-size:clamp(20px,3vw,28px);margin:0 0 6px;letter-spacing:-.2px}
+  h2 .num{color:var(--text-mute);font-family:var(--mono);font-size:.7em;margin-right:10px;font-weight:500}
+  .section-sub{color:var(--text-dim);font-size:14px;margin:0 0 22px}
+
+  /* Cards / grid */
+  .grid{display:grid;gap:var(--gap)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:980px){.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:620px){.g4,.g3,.g2{grid-template-columns:1fr}}
+
+  .card{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px 18px 16px;display:flex;flex-direction:column;gap:8px}
+  .card .label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-mute)}
+  .card .value{font-size:clamp(22px,3.6vw,30px);font-weight:600;letter-spacing:-.3px}
+  .card .note{font-size:13px;color:var(--text-dim)}
+  .card.outline-primary{border-color:rgba(44,126,248,.4);background:linear-gradient(180deg,rgba(44,126,248,.07),transparent)}
+  .card.outline-accent{border-color:rgba(125,211,252,.4);background:linear-gradient(180deg,rgba(125,211,252,.07),transparent)}
+
+  /* Tables */
+  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-elev)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--bg-elev-2);font-weight:600;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--text-dim)}
+  tr:last-child td{border-bottom:none}
+  td .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;border:1px solid var(--line-2);color:var(--text-dim)}
+  .pill.ok{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.45);color:#A8F0D2}
+  .pill.no{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.4);color:#FBC6C6}
+  .pill.warn{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.4);color:#FBD38D}
+  .pill.primary{background:var(--primary-soft);border-color:rgba(44,126,248,.5);color:#BFD4FF}
+
+  /* Callouts */
+  .call{border:1px solid var(--line);border-left:3px solid var(--primary);background:var(--bg-elev);padding:12px 14px;border-radius:var(--radius);font-size:13.5px;color:var(--text-dim)}
+  .call.warn{border-left-color:var(--warn)}
+  .call.ok{border-left-color:var(--ok)}
+  .call strong{color:var(--text)}
+
+  /* Lists */
+  ul.tight,ol.tight{margin:0;padding-left:1.1em}
+  ul.tight li,ol.tight li{margin-bottom:6px;color:var(--text-dim)}
+  ul.tight li strong,ol.tight li strong{color:var(--text)}
+
+  /* Diagrams */
+  .diagram{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px;overflow:auto}
+  .diagram svg{display:block;max-width:100%;height:auto;margin:0 auto}
+  .diagram-caption{font-size:12px;color:var(--text-mute);margin-top:10px;text-align:center}
+
+  /* Mode cards */
+  .mode-card{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius-lg);padding:18px}
+  .mode-card h3{margin:0 0 6px;font-size:18px;display:flex;align-items:center;gap:10px}
+  .mode-card h3 .dot{width:10px;height:10px;border-radius:50%;background:var(--primary);display:inline-block}
+  .mode-card.alt h3 .dot{background:var(--accent)}
+  .mode-card p{margin:6px 0;color:var(--text-dim);font-size:13.5px}
+  .mode-card .states{margin-top:14px}
+
+  /* Phase timeline */
+  .timeline{display:grid;gap:14px}
+  @media (min-width:780px){.timeline{grid-template-columns:repeat(4,1fr)}}
+  .phase{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--radius);padding:14px;position:relative}
+  .phase .step{font-family:var(--mono);font-size:11px;color:var(--text-mute);letter-spacing:.1em;text-transform:uppercase}
+  .phase h4{margin:6px 0;font-size:16px}
+  .phase .time{font-size:12px;color:var(--accent);margin-bottom:10px}
+  .phase ul{margin:0;padding-left:1.1em;font-size:13px;color:var(--text-dim)}
+  .phase ul li{margin-bottom:4px}
+
+  /* Two-up */
+  .twoup{display:grid;gap:var(--gap)}
+  @media (min-width:880px){.twoup{grid-template-columns:1.1fr 1fr}}
+  .twoup.reverse > :first-child{order:2}
+  @media (max-width:879px){.twoup.reverse > :first-child{order:0}}
+
+  /* Risks */
+  .risk{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-elev);margin-bottom:10px}
+  .risk .marker{font-family:var(--mono);color:var(--warn);font-size:18px;line-height:1.1}
+  .risk strong{color:var(--text);display:block;margin-bottom:2px}
+  .risk span{color:var(--text-dim);font-size:13.5px}
+
+  /* Footer */
+  footer{padding:30px 0 60px;color:var(--text-mute);font-size:12px;text-align:center}
+
+  /* Utility */
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .row.between{justify-content:space-between}
+  .mono{font-family:var(--mono)}
+  .dim{color:var(--text-dim)}
+  .mute{color:var(--text-mute)}
+  .small{font-size:12.5px}
+  hr.div{border:none;border-top:1px solid var(--line);margin:18px 0}
+
+  /* Tabs */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .tab{padding:6px 12px;border:1px solid var(--line-2);border-radius:999px;font-size:12.5px;color:var(--text-dim);background:var(--bg-elev);cursor:pointer;user-select:none}
+  .tab.active{background:var(--primary-soft);border-color:rgba(44,126,248,.5);color:#BFD4FF}
+  .tab-panel{display:none}
+  .tab-panel.active{display:block}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand"><span class="brand-mark"></span>Hermes Companion <span class="dim small">/ design docs</span></div>
+    <nav class="toc">
+      <a href="#overview">Overview</a>
+      <a href="#arch">Architecture</a>
+      <a href="#modes">Modes</a>
+      <a href="#backend">Backend</a>
+      <a href="#perms">Permissions</a>
+      <a href="#focus">Audio focus</a>
+      <a href="#battery">Battery</a>
+      <a href="#fail">Failures</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#phases">Phases</a>
+      <a href="#risks">Risks</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="chip-row" style="margin-bottom:18px">
+      <span class="chip primary">Design v1 — August 2026</span>
+      <span class="chip accent">Layered on v0.2 (commits 3348c3a, ed1bd70)</span>
+      <span class="chip ok">Additive, no T7/T8 changes</span>
+    </div>
+    <h1>Voice control + wake word for Hermes Companion</h1>
+    <p class="lede">An always-listening wake-word service ("hey hermes") and a push-to-talk dictation path, wired into the same gateway proxy and Hermes webhook plumbing that already carries notifications and OTP replies.</p>
+    <div class="chip-row">
+      <span class="chip">Wake-word on-device only</span>
+      <span class="chip">Reuses ActiveGatewayConfig pattern</span>
+      <span class="chip">Same webhook bus as notification-otp-reply</span>
+      <span class="chip">Battery budget ~7 mAh/hour</span>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2><span class="num">01</span>Overview</h2>
+    <p class="section-sub">Key numbers and architectural shape at a glance.</p>
+
+    <div class="grid g4">
+      <div class="card outline-primary">
+        <span class="label">Wake-word latency</span>
+        <span class="value">~180 ms</span>
+        <span class="note">From "hermes" phoneme to capture-service start, on Pixel-class hardware with Porcupine.</span>
+      </div>
+      <div class="card outline-accent">
+        <span class="label">TTS engines</span>
+        <span class="value">2</span>
+        <span class="note">Android TextToSpeech (default, free, on-device) + MiniMax TTS (opt-in, already pooled) + Grok TTS (fallback) + ElevenLabs (premium).</span>
+      </div>
+      <div class="card">
+        <span class="label">STT engines</span>
+        <span class="value">2</span>
+        <span class="note">Android SpeechRecognizer (default) + Whisper-tiny on-device (opt-in).</span>
+      </div>
+      <div class="card">
+        <span class="label">Privacy tier</span>
+        <span class="value">Local-first</span>
+        <span class="note">Wake-word detection, raw audio, and idle state never leave the device.</span>
+      </div>
+    </div>
+
+    <div class="call" style="margin-top:22px">
+      <strong>Constraint, hard.</strong> Wake-word spotting is on-device only (Porcupine or openwakeword). No cloud round-trip. STT/TTS may route via the gateway for the reply side, but the mic path itself is local.
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section id="arch">
+    <h2><span class="num">02</span>Architecture</h2>
+    <p class="section-sub">Single end-to-end path. The wake-word service and the capture service are separate Android foreground services that hand the mic between each other. Everything after STT funnels through the gateway proxy into upstream Hermes.</p>
+
+    <div class="diagram">
+      <svg viewBox="0 0 980 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Voice pipeline diagram">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#7DD3FC"/>
+          </marker>
+          <marker id="arrDim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#6B6B78"/>
+          </marker>
+        </defs>
+        <rect x="0" y="0" width="980" height="360" fill="#16161A" rx="10"/>
+        <text x="20" y="26" fill="#9A9AA8" font-family="ui-monospace,monospace" font-size="12">Voice pipeline · Android → gateway → upstream Hermes</text>
+
+        <!-- Android boundary -->
+        <rect x="14" y="42" width="430" height="300" rx="8" fill="none" stroke="#33333D" stroke-dasharray="4 4"/>
+        <text x="28" y="62" fill="#7DD3FC" font-family="ui-monospace,monospace" font-size="11">ANDROID (Hermes Companion)</text>
+
+        <!-- Boxes -->
+        <g font-family="system-ui,sans-serif" font-size="12">
+          <!-- Mic -->
+          <rect x="32" y="80" width="100" height="44" rx="6" fill="#1C1C22" stroke="#2C7EF8"/>
+          <text x="82" y="98" fill="#E6E6EA" text-anchor="middle">Mic</text>
+          <text x="82" y="114" fill="#9A9AA8" text-anchor="middle" font-size="10">16kHz mono</text>
+
+          <!-- Wake-word service -->
+          <rect x="160" y="80" width="140" height="44" rx="6" fill="#1C1C22" stroke="#2C7EF8"/>
+          <text x="230" y="98" fill="#E6E6EA" text-anchor="middle">WakeWordService</text>
+          <text x="230" y="114" fill="#9A9AA8" text-anchor="middle" font-size="10">Porcupine on-device</text>
+
+          <!-- Capture service -->
+          <rect x="160" y="148" width="140" height="44" rx="6" fill="#1C1C22" stroke="#2C7EF8"/>
+          <text x="230" y="166" fill="#E6E6EA" text-anchor="middle">CaptureService</text>
+          <text x="230" y="182" fill="#9A9AA8" text-anchor="middle" font-size="10">STT + wake-lock</text>
+
+          <!-- VoiceForwarder -->
+          <rect x="328" y="148" width="100" height="44" rx="6" fill="#1C1C22" stroke="#2C7EF8"/>
+          <text x="378" y="166" fill="#E6E6EA" text-anchor="middle">VoiceForwarder</text>
+          <text x="378" y="182" fill="#9A9AA8" text-anchor="middle" font-size="10">HTTP / WS</text>
+
+          <!-- TTS player -->
+          <rect x="328" y="220" width="100" height="44" rx="6" fill="#1C1C22" stroke="#2C7EF8"/>
+          <text x="378" y="238" fill="#E6E6EA" text-anchor="middle">TtsPlayer</text>
+          <text x="378" y="254" fill="#9A9AA8" text-anchor="middle" font-size="10">Android / 11Labs</text>
+
+          <!-- Speaker -->
+          <rect x="456" y="220" width="100" height="44" rx="6" fill="#1C1C22" stroke="#2C7EF8"/>
+          <text x="506" y="238" fill="#E6E6EA" text-anchor="middle">Speaker</text>
+
+          <!-- Gateway -->
+          <rect x="540" y="120" width="180" height="100" rx="6" fill="#1C1C22" stroke="#7DD3FC"/>
+          <text x="630" y="140" fill="#E6E6EA" text-anchor="middle">companion-gateway</text>
+          <text x="630" y="158" fill="#9A9AA8" text-anchor="middle" font-size="10">:9120 aiohttp</text>
+          <text x="630" y="176" fill="#9A9AA8" text-anchor="middle" font-size="10">/v1/voice/transcript</text>
+          <text x="630" y="192" fill="#9A9AA8" text-anchor="middle" font-size="10">/v1/voice/synthesize</text>
+          <text x="630" y="208" fill="#9A9AA8" text-anchor="middle" font-size="10">voice_bus</text>
+
+          <!-- Upstream -->
+          <rect x="780" y="120" width="180" height="100" rx="6" fill="#1C1C22" stroke="#F59E0B"/>
+          <text x="870" y="140" fill="#E6E6EA" text-anchor="middle">upstream Hermes</text>
+          <text x="870" y="158" fill="#9A9AA8" text-anchor="middle" font-size="10">webhook: voice.transcript</text>
+          <text x="870" y="176" fill="#9A9AA8" text-anchor="middle" font-size="10">agent session</text>
+          <text x="870" y="194" fill="#9A9AA8" text-anchor="middle" font-size="10">companion-voice skill</text>
+          <text x="870" y="210" fill="#9A9AA8" text-anchor="middle" font-size="10">reply → TTS path</text>
+
+          <!-- Active gateway config note -->
+          <text x="160" y="252" fill="#6B6B78" font-family="ui-monospace,monospace" font-size="10">/data/data/&lt;pkg&gt;/files/voice.json</text>
+          <text x="160" y="266" fill="#6B6B78" font-family="ui-monospace,monospace" font-size="10">/data/data/&lt;pkg&gt;/files/active_gateway.json</text>
+          <line x1="160" y1="200" x2="230" y2="192" stroke="#6B6B78" stroke-dasharray="3 3" marker-end="url(#arrDim)"/>
+
+          <!-- Arrows -->
+          <line x1="132" y1="102" x2="158" y2="102" stroke="#7DD3FC" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="300" y1="124" x2="230" y2="146" stroke="#7DD3FC" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="300" y1="170" x2="326" y2="170" stroke="#7DD3FC" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="428" y1="170" x2="538" y2="160" stroke="#7DD3FC" stroke-width="1.5" marker-end="url(#arr)"/>
+          <line x1="720" y1="160" x2="778" y2="160" stroke="#7DD3FC" stroke-width="1.5" marker-end="url(#arr)"/>
+          <path d="M 870 222 Q 870 280 506 250" stroke="#7DD3FC" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+          <path d="M 870 232 Q 870 320 378 266" stroke="#7DD3FC" stroke-width="1.5" fill="none" marker-end="url(#arr)"/>
+        </g>
+
+        <!-- Labels on arrows -->
+        <text x="145" y="96" fill="#9A9AA8" font-family="ui-monospace,monospace" font-size="9">PCM</text>
+        <text x="262" y="138" fill="#9A9AA8" font-family="ui-monospace,monospace" font-size="9">detect</text>
+        <text x="313" y="164" fill="#9A9AA8" font-family="ui-monospace,monospace" font-size="9">text</text>
+        <text x="475" y="156" fill="#9A9AA8" font-family="ui-monospace,monospace" font-size="9">POST transcript</text>
+        <text x="745" y="156" fill="#9A9AA8" font-family="ui-monospace,monospace" font-size="9">webhook</text>
+        <text x="600" y="316" fill="#9A9AA8" font-family="ui-monospace,monospace" font-size="9">audio URL</text>
+        <text x="420" y="316" fill="#9A9AA8" font-family="ui-monospace,monospace" font-size="9">audio URL</text>
+      </svg>
+      <div class="diagram-caption">Solid cyan arrows are data flow. Dashed grey arrows are file/config reads.</div>
+    </div>
+
+    <div class="grid g3" style="margin-top:22px">
+      <div class="card">
+        <span class="label">:node</span>
+        <span class="value small" style="font-weight:500">Two foreground services</span>
+        <span class="note">WakeWordService owns idle mic. CaptureService owns active capture. They handoff via internal start commands — never both running.</span>
+      </div>
+      <div class="card">
+        <span class="label">gateway</span>
+        <span class="value small" style="font-weight:500">Proxy, no business logic</span>
+        <span class="note">Routes transcripts to upstream webhook, fans replies back to the correct companion session via <span class="mono">voice_bus</span>.</span>
+      </div>
+      <div class="card">
+        <span class="label">upstream</span>
+        <span class="value small" style="font-weight:500">Skill, not a route</span>
+        <span class="note">Same <span class="mono">hermes webhook subscribe</span> pattern as <span class="mono">notification-otp-reply</span>. Topic: <span class="mono">voice.transcript</span>.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODES -->
+  <section id="modes">
+    <h2><span class="num">03</span>Two modes</h2>
+    <p class="section-sub">Always-listen and push-to-talk share the back half (STT → gateway → upstream → TTS). They differ in how capture is triggered.</p>
+
+    <div class="grid g2">
+      <div class="mode-card">
+        <h3><span class="dot"></span>Always-listen ("hey hermes")</h3>
+        <p>WakeWordService holds the mic with partial wake-lock. On detection it spawns CaptureService and hands off the mic. Re-acquires idle listening after the reply is spoken.</p>
+        <div class="diagram" style="padding:14px">
+          <svg viewBox="0 0 520 70" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Always-listen state machine">
+            <defs>
+              <marker id="arrS1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#7DD3FC"/></marker>
+            </defs>
+            <g font-family="system-ui,sans-serif" font-size="10" fill="#E6E6EA">
+              <g>
+                <rect x="0" y="20" width="56" height="28" rx="14" fill="none" stroke="#2C7EF8"/>
+                <text x="28" y="38" text-anchor="middle">idle</text>
+              </g>
+              <g>
+                <rect x="78" y="20" width="68" height="28" rx="14" fill="none" stroke="#2C7EF8"/>
+                <text x="112" y="38" text-anchor="middle">listen</text>
+              </g>
+              <g>
+                <rect x="168" y="20" width="68" height="28" rx="14" fill="none" stroke="#7DD3FC"/>
+                <text x="202" y="38" text-anchor="middle">detect</text>
+              </g>
+              <g>
+                <rect x="258" y="20" width="68" height="28" rx="14" fill="none" stroke="#7DD3FC"/>
+                <text x="292" y="38" text-anchor="middle">capture</text>
+              </g>
+              <g>
+                <rect x="348" y="20" width="68" height="28" rx="14" fill="none" stroke="#2C7EF8"/>
+                <text x="382" y="38" text-anchor="middle">reply</text>
+              </g>
+              <g>
+                <rect x="438" y="20" width="68" height="28" rx="14" fill="none" stroke="#2C7EF8"/>
+                <text x="472" y="38" text-anchor="middle">speak</text>
+              </g>
+            </g>
+            <g stroke="#7DD3FC" stroke-width="1.2" fill="none">
+              <line x1="56" y1="34" x2="76" y2="34" marker-end="url(#arrS1)"/>
+              <line x1="146" y1="34" x2="166" y2="34" marker-end="url(#arrS1)"/>
+              <line x1="236" y1="34" x2="256" y2="34" marker-end="url(#arrS1)"/>
+              <line x1="326" y1="34" x2="346" y2="34" marker-end="url(#arrS1)"/>
+              <line x1="416" y1="34" x2="436" y2="34" marker-end="url(#arrS1)"/>
+              <path d="M 506 34 Q 520 34 520 14 L 28 14 Q 28 34 0 34" marker-end="url(#arrS1)"/>
+            </g>
+          </svg>
+        </div>
+        <ul class="tight small">
+          <li>Trigger: wake-word acoustic match</li>
+          <li>Audio source: <span class="mono">VOICE_RECOGNITION</span></li>
+          <li>CPU idle: ~3 mA on Pixel-class</li>
+          <li>False-positive brake: 5 hits in 10s → sleep 60s</li>
+        </ul>
+      </div>
+
+      <div class="mode-card alt">
+        <h3><span class="dot"></span>Push-to-talk</h3>
+        <p>CaptureService is started directly by the UI button (or a Bluetooth media-button intent). No wake-word loop runs. Capture ends when the user releases or silence is detected for 1.5s.</p>
+        <div class="diagram" style="padding:14px">
+          <svg viewBox="0 0 520 70" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Push-to-talk state machine">
+            <defs>
+              <marker id="arrS2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#7DD3FC"/></marker>
+            </defs>
+            <g font-family="system-ui,sans-serif" font-size="10" fill="#E6E6EA">
+              <g>
+                <rect x="0" y="20" width="56" height="28" rx="14" fill="none" stroke="#7DD3FC"/>
+                <text x="28" y="38" text-anchor="middle">idle</text>
+              </g>
+              <g>
+                <rect x="78" y="20" width="68" height="28" rx="14" fill="none" stroke="#7DD3FC"/>
+                <text x="112" y="38" text-anchor="middle">pressed</text>
+              </g>
+              <g>
+                <rect x="168" y="20" width="78" height="28" rx="14" fill="none" stroke="#7DD3FC"/>
+                <text x="207" y="38" text-anchor="middle">capture</text>
+              </g>
+              <g>
+                <rect x="268" y="20" width="68" height="28" rx="14" fill="none" stroke="#2C7EF8"/>
+                <text x="302" y="38" text-anchor="middle">transcr.</text>
+              </g>
+              <g>
+                <rect x="358" y="20" width="68" height="28" rx="14" fill="none" stroke="#2C7EF8"/>
+                <text x="392" y="38" text-anchor="middle">intent</text>
+              </g>
+              <g>
+                <rect x="438" y="20" width="68" height="28" rx="14" fill="none" stroke="#2C7EF8"/>
+                <text x="472" y="38" text-anchor="middle">speak</text>
+              </g>
+            </g>
+            <g stroke="#7DD3FC" stroke-width="1.2" fill="none">
+              <line x1="56" y1="34" x2="76" y2="34" marker-end="url(#arrS2)"/>
+              <line x1="146" y1="34" x2="166" y2="34" marker-end="url(#arrS2)"/>
+              <line x1="246" y1="34" x2="266" y2="34" marker-end="url(#arrS2)"/>
+              <line x1="336" y1="34" x2="356" y2="34" marker-end="url(#arrS2)"/>
+              <line x1="426" y1="34" x2="436" y2="34" marker-end="url(#arrS2)"/>
+              <path d="M 506 34 Q 520 34 520 14 L 28 14 Q 28 34 0 34" marker-end="url(#arrS2)"/>
+            </g>
+          </svg>
+        </div>
+        <ul class="tight small">
+          <li>Trigger: hold FAB or BT media button</li>
+          <li>Capture ends on release or 1.5s silence</li>
+          <li>No persistent CPU cost</li>
+          <li>Default mode until wake-word is enabled</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="call warn" style="margin-top:18px">
+      <strong>Mic handoff.</strong> Only one service holds <span class="mono">AudioRecord</span> at a time. WakeWordService releases the record before signaling CaptureService. WakeWordService resumes idle listen after <span class="mono">TtsPlayer.onDone()</span>.
+    </div>
+  </section>
+
+  <!-- BACKEND -->
+  <section id="backend">
+    <h2><span class="num">04</span>Backend plan</h2>
+    <p class="section-sub">Five pieces, each with a clear recommendation. Engine selection is one choice per piece — not a menu.</p>
+
+    <div class="tabs" role="tablist">
+      <div class="tab active" data-tab="ww" role="tab">Wake-word</div>
+      <div class="tab" data-tab="stt" role="tab">STT</div>
+      <div class="tab" data-tab="tts" role="tab">TTS</div>
+      <div class="tab" data-tab="gw" role="tab">Gateway</div>
+      <div class="tab" data-tab="sk" role="tab">Hermes skill</div>
+    </div>
+
+    <div class="tab-panel active" data-panel="ww">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Option</th><th>CPU idle</th><th>Model size</th><th>License</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Picovoice Porcupine</strong></td><td>~3 mA</td><td>&lt;1 MB</td><td>Commercial (~$0.10/device/yr)</td><td><span class="pill primary">Primary</span></td></tr>
+            <tr><td>openwakeword</td><td>~6 mA</td><td>~5 MB</td><td>Apache 2.0</td><td><span class="pill warn">Free fallback</span></td></tr>
+            <tr><td>Vosk (full STT)</td><td>~30 mA</td><td>~50 MB</td><td>Apache 2.0</td><td><span class="pill no">Rejected</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="dim small" style="margin-top:10px">Both engines sit behind a <span class="mono">WakeWordModel</span> Kotlin interface. Swapping is a config flag, not a code change.</p>
+    </div>
+
+    <div class="tab-panel" data-panel="stt">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Option</th><th>Latency</th><th>Quality</th><th>On-device</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Android SpeechRecognizer</strong></td><td>&lt;500 ms</td><td>OEM-dependent</td><td>Yes for short, cloud for long</td><td><span class="pill primary">Primary</span></td></tr>
+            <tr><td>Whisper-tiny (whisper.cpp)</td><td>~2.5 s for 5 s audio</td><td>Excellent</td><td>Always</td><td><span class="pill warn">Opt-in</span></td></tr>
+            <tr><td>Stream upstream via gateway</td><td>Network-bound</td><td>Depends on upstream</td><td>No</td><td><span class="pill no">Failover only</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="tts">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Option</th><th>Latency</th><th>Quality</th><th>Cost</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Android TextToSpeech</strong></td><td>&lt;100 ms</td><td>OEM-dependent</td><td>Free, on-device</td><td><span class="pill primary">Default</span></td></tr>
+            <tr><td><strong>MiniMax TTS (via gateway)</strong></td><td>~1.2 s</td><td>Neural, multilingual, voice picker</td><td>Per-character (already pooled)</td><td><span class="pill primary">Opt-in #1</span></td></tr>
+            <tr><td>Grok TTS (xAI, via gateway)</td><td>~1.4 s</td><td>Neural, OpenAI-compatible voices</td><td>Per-character (Grok credits)</td><td><span class="pill warn">Opt-in #2</span></td></tr>
+            <tr><td>ElevenLabs (via gateway)</td><td>~1.5 s</td><td>Premium, voice cloning</td><td>Per-character, separate API key</td><td><span class="pill warn">Premium</span></td></tr>
+            <tr><td>Piper (local)</td><td>~300 ms</td><td>Good</td><td>Free, ~50 MB/voice</td><td><span class="pill warn">Future</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-panel" data-panel="gw">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Endpoint</th><th>Method</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><span class="mono">/v1/voice/transcript</span></td><td>POST</td><td>Finalized transcript from companion. Returns reply text or audio URL.</td></tr>
+            <tr><td><span class="mono">/v1/voice/synthesize</span></td><td>POST</td><td>Accepts reply text + provider (minimax / grok / elevenlabs / android), returns MP3. Default provider = MiniMax (already pooled on upstream Hermes).</td></tr>
+            <tr><td><span class="mono">/v1/voice/stream</span></td><td>WS</td><td>Streaming partial transcripts + replies, lower latency back-and-forth.</td></tr>
+            <tr><td><span class="mono">/v1/voice/voice-webhook</span></td><td>POST</td><td>Receives upstream skill events bound to a companion session.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="dim small" style="margin-top:10px">Mirrors the OTP pipeline: gateway is a thin proxy with no business logic. <span class="mono">voice_bus</span> is the in-process pub/sub that maps session ids to upstream webhook subscriptions.</p>
+    </div>
+
+    <div class="tab-panel" data-panel="sk">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Property</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Skill name</td><td><span class="mono">companion-voice</span></td></tr>
+            <tr><td>Subscription topic</td><td><span class="mono">voice.transcript</span></td></tr>
+            <tr><td>Pattern</td><td>Same as <span class="mono">notification-otp-reply</span></td></tr>
+            <tr><td>Reply path</td><td><span class="mono">voice.reply</span> event back through gateway</td></tr>
+            <tr><td>State</td><td>Stateless; routes to active Hermes agent session</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="dim small" style="margin-top:10px">Lives at <span class="mono">~/.hermes/skills/companion-voice/SKILL.md</span>. Subscribed with <span class="mono">hermes webhook subscribe companion-voice --events voice.transcript</span>.</p>
+    </div>
+  </section>
+
+  <!-- PERMISSIONS -->
+  <section id="perms">
+    <h2><span class="num">05</span>Permission flow</h2>
+    <p class="section-sub">All gating happens in <span class="mono">VoiceSettingsScreen</span> on first toggle. Nothing is requested at install time.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Permission</th><th>When asked</th><th>Hard-block?</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">RECORD_AUDIO</span></td><td>First wake-word toggle</td><td><span class="pill no">Yes</span></td><td>Cannot capture mic without.</td></tr>
+          <tr><td><span class="mono">POST_NOTIFICATIONS</span></td><td>Same time, with rationale</td><td><span class="pill no">Yes (13+)</span></td><td>Persistent wake-word notification (Android 13+).</td></tr>
+          <tr><td><span class="mono">FOREGROUND_SERVICE_MICROPHONE</span></td><td>Manifest</td><td><span class="pill ok">No</span></td><td>Auto-granted; required for Android 14+ foreground mic services.</td></tr>
+          <tr><td><span class="mono">REQUEST_IGNORE_BATTERY_OPTIMIZATIONS</span></td><td>After first successful wake-word detection</td><td><span class="pill warn">Degrades</span></td><td>Improves reliability on aggressive OEMs. App works without it.</td></tr>
+          <tr><td>Accessibility service</td><td>Optional, "headset button remap" toggle</td><td><span class="pill warn">No</span></td><td>Only for Bluetooth media-button push-to-talk. Disabled by default.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="call" style="margin-top:16px">
+      <strong>Rationale copy.</strong> The settings screen shows: <em>"Hermes needs the mic to hear 'hey hermes' even when the screen is off. Audio stays on this device unless you explicitly send a voice message."</em>
+    </div>
+  </section>
+
+  <!-- AUDIO FOCUS -->
+  <section id="focus">
+    <h2><span class="num">06</span>Audio focus strategy</h2>
+    <p class="section-sub">Wake-word uses <span class="mono">MediaRecorder.AudioSource.VOICE_RECOGNITION</span> so Android's AEC and AGC are bypassed. TTS uses transient focus with may-duck.</p>
+
+    <div class="grid g2">
+      <div class="card">
+        <span class="label">Phone call</span>
+        <span class="value small" style="font-weight:500">Yield mic</span>
+        <span class="note">Audio focus loss stops capture immediately. Wake-word resumes when call ends.</span>
+      </div>
+      <div class="card">
+        <span class="label">Music playback</span>
+        <span class="value small" style="font-weight:500">Duck to 20%</span>
+        <span class="note">TTS ducked during reply; restored after. Wake-word capture unaffected.</span>
+      </div>
+      <div class="card">
+        <span class="label">Navigation prompt</span>
+        <span class="value small" style="font-weight:500">Queue TTS 1.5s</span>
+        <span class="note">Short delay then duck. Capture still works (mic is independent).</span>
+      </div>
+      <div class="card">
+        <span class="label">Other assistant active</span>
+        <span class="value small" style="font-weight:500">Accept ambiguity</span>
+        <span class="note">If "hey hermes" fires while Google Assistant is hot-worded, both respond. Documented behavior.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- BATTERY -->
+  <section id="battery">
+    <h2><span class="num">07</span>Battery budget</h2>
+    <p class="section-sub">Target: under 5% extra drain per hour of always-listening. Numbers below are estimated for a Pixel 6 (4500 mAh).</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Phase</th><th>Current draw</th><th>Time / hour</th><th>mAh / hour</th></tr></thead>
+        <tbody>
+          <tr><td>Wake-word idle (Porcupine)</td><td>3 mA</td><td>60 min</td><td>3.0</td></tr>
+          <tr><td>Active capture (5s after wake)</td><td>80 mA</td><td>30 s</td><td>0.7</td></tr>
+          <tr><td>TTS playback (Android TTS)</td><td>120 mA</td><td>60 s</td><td>2.0</td></tr>
+          <tr><td>Network (gateway round-trip)</td><td>200 mA</td><td>30 s</td><td>1.7</td></tr>
+          <tr style="background:var(--bg-elev-2)"><td><strong>Estimated total</strong></td><td></td><td></td><td><strong>~7.4 mAh / hour</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid g3" style="margin-top:18px">
+      <div class="card">
+        <span class="label">Hermes (planned)</span>
+        <span class="value">7.4 mAh/h</span>
+        <span class="note">This design.</span>
+      </div>
+      <div class="card">
+        <span class="label">Google Assistant</span>
+        <span class="value">10-15 mAh/h</span>
+        <span class="note">Reference. Hot-word detection + active use.</span>
+      </div>
+      <div class="card">
+        <span class="label">Alexa app</span>
+        <span class="value">~12 mAh/h</span>
+        <span class="note">Reference. Always-listening with cloud round-trip.</span>
+      </div>
+    </div>
+
+    <div class="call ok" style="margin-top:16px">
+      <strong>Real-world estimate.</strong> ~24 hours of standby with wake-word on, including OS overhead and radio. Aggressive battery savers (Xiaomi, Huawei) may reduce this to 6-8 hours; we recommend users disable battery optimization on those OEMs.
+    </div>
+  </section>
+
+  <!-- FAILURES -->
+  <section id="fail">
+    <h2><span class="num">08</span>Failure modes + recovery</h2>
+    <p class="section-sub">Every external dependency can fail. Each one has a defined recovery path that doesn't require a human in the loop.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Failure</th><th>Detection</th><th>Recovery</th></tr></thead>
+        <tbody>
+          <tr><td>Wake-word model fails to load</td><td><span class="mono">WakeWordModel.load()</span> throws</td><td>Restart service; after 3 fails, fall back to openwakeword; if still failing, disable wake-word + notify user.</td></tr>
+          <tr><td>Mic permission revoked</td><td><span class="mono">SecurityException</span> on <span class="mono">AudioRecord.start</span></td><td>Stop service, deep-link to settings.</td></tr>
+          <tr><td>STT timeout (5s no speech)</td><td>No final transcript emitted</td><td>Send empty final; upstream replies "did you want to say something?"</td></tr>
+          <tr><td>Gateway offline</td><td>HTTP timeout or 5xx</td><td>Queue transcript locally, retry with exponential backoff; surface "offline — saved" toast.</td></tr>
+          <tr><td>TTS engine crashes</td><td><span class="mono">TextToSpeech.onError</span></td><td>Fall back to next provider in priority list: Android -> MiniMax -> Grok -> ElevenLabs. If all fail, show reply as on-screen text.</td></tr>
+          <tr><td>Wake-word false-positive storm</td><td>5+ detections in 10s</td><td>Pause detector for 60s, log, alert user.</td></tr>
+          <tr><td>Battery critical (&lt;15%)</td><td>BatteryManager broadcast</td><td>Disable wake-word automatically, notify user, restore when charged.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section id="privacy">
+    <h2><span class="num">09</span>Privacy posture</h2>
+    <p class="section-sub">Raw audio never leaves the device. The mic path is local; only transcripts cross the gateway boundary.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data</th><th>On device</th><th>Via gateway</th><th>Upstream Hermes</th></tr></thead>
+        <tbody>
+          <tr><td>Raw mic PCM during wake-word</td><td><span class="pill ok">yes</span></td><td><span class="pill no">no</span></td><td><span class="pill no">no</span></td></tr>
+          <tr><td>Raw mic PCM during capture</td><td><span class="pill ok">deleted after STT</span></td><td><span class="pill no">no</span></td><td><span class="pill no">no</span></td></tr>
+          <tr><td>Recognized transcript text</td><td><span class="pill no">no</span></td><td><span class="pill ok">yes</span></td><td><span class="pill ok">yes</span></td></tr>
+          <tr><td>Detection events (count, no audio)</td><td><span class="pill ok">local log</span></td><td><span class="pill warn">opt metrics</span></td><td><span class="pill no">no</span></td></tr>
+          <tr><td>Hermes reply text</td><td><span class="pill ok">yes</span></td><td><span class="pill ok">yes</span></td><td><span class="pill ok">originates</span></td></tr>
+          <tr><td>TTS audio (MiniMax / Grok / ElevenLabs)</td><td><span class="pill ok">cached</span></td><td><span class="pill ok">yes</span></td><td><span class="pill ok">originates</span></td></tr>
+          <tr><td>Voice config (engines, phrase)</td><td><span class="pill ok">yes</span></td><td><span class="pill no">no</span></td><td><span class="pill no">no</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="call" style="margin-top:16px">
+      <strong>Hard rule.</strong> Raw audio never leaves the device. The only thing that crosses the network is text (transcript → upstream, reply → downstream) or already-cached audio URLs (ElevenLabs replies). The companion app's NLS does not receive any audio; it only handles notifications.
+    </div>
+  </section>
+
+  <!-- PHASES -->
+  <section id="phases">
+    <h2><span class="num">10</span>Implementation phases</h2>
+    <p class="section-sub">Three weeks core, plus a stretch week for Whisper-tiny. Phases can run in parallel after Phase 1 lands.</p>
+
+    <div class="timeline">
+      <div class="phase">
+        <div class="step">Phase 1 · week 1</div>
+        <h4>STT + TTS via Android APIs</h4>
+        <div class="time">Push-to-talk only</div>
+        <ul>
+          <li>CaptureService + VoiceForwarder</li>
+          <li>TtsPlayer</li>
+          <li>Gateway <span class="mono">/v1/voice/transcript</span></li>
+          <li>PushToTalkButton UI</li>
+          <li>Stub companion-voice skill</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="step">Phase 2 · week 2</div>
+        <h4>Wake-word detector</h4>
+        <div class="time">Always-listen service</div>
+        <ul>
+          <li>WakeWordService + Porcupine</li>
+          <li><span class="mono">voice.json</span> file bridge</li>
+          <li>VoiceConfig + repo</li>
+          <li>VoiceSettingsScreen</li>
+          <li>Permissions flow</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="step">Phase 3 · 3 days</div>
+        <h4>Hermes voice skill</h4>
+        <div class="time">Upstream routing</div>
+        <ul>
+          <li><span class="mono">companion-voice</span> skill</li>
+          <li><span class="mono">voice_bus</span> pub/sub</li>
+          <li>WS <span class="mono">/v1/voice/stream</span></li>
+          <li>Partial transcripts</li>
+        </ul>
+      </div>
+      <div class="phase">
+        <div class="step">Phase 4 · 2 days</div>
+        <h4>Gateway voice endpoints</h4>
+        <div class="time">Premium TTS path</div>
+        <ul>
+          <li><span class="mono">/v1/voice/synthesize</span></li>
+          <li>tts_proxy with cache</li>
+          <li>Offline queue</li>
+          <li>Error codes</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="call ok" style="margin-top:18px">
+      <strong>Total: ~3 weeks core. +1 week stretch (Whisper-tiny on-device STT).</strong> Phase 5 ships only if users complain about SpeechRecognizer quality.
+    </div>
+  </section>
+
+  <!-- RISKS -->
+  <section id="risks">
+    <h2><span class="num">11</span>Risks + open questions</h2>
+    <p class="section-sub">What could derail this; questions to resolve before kicking off Phase 1.</p>
+
+    <div class="grid g2">
+      <div>
+        <h3 class="small" style="margin:0 0 10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mute)">Risks</h3>
+        <div class="risk"><span class="marker">▲</span><div><strong>Porcupine license cost at scale</strong><span>openwakeword fallback ready behind same interface.</span></div></div>
+        <div class="risk"><span class="marker">▲</span><div><strong>Battery drain on low-end devices</strong><span>Disable wake-word by default on devices below threshold; push-to-talk only.</span></div></div>
+        <div class="risk"><span class="marker">▲</span><div><strong>Android 14 FOREGROUND_SERVICE_MICROPHONE enforcement</strong><span>Graceful degradation to push-to-talk only on laggard OEMs.</span></div></div>
+        <div class="risk"><span class="marker">▲</span><div><strong>Wake-word false positives during music</strong><span>VOICE_RECOGNITION source + energy gate; user can pause wake-word during media.</span></div></div>
+        <div class="risk"><span class="marker">▲</span><div><strong>Hermes webhook delivery latency</strong><span>Local "thinking…" chime; show partial transcripts as they stream.</span></div></div>
+        <div class="risk"><span class="marker">▲</span><div><strong>TTS voice consistency across OEMs</strong><span>Android TextToSpeech + MiniMax neural as escape hatch.</span></div></div>
+      </div>
+
+      <div>
+        <h3 class="small" style="margin:0 0 10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-mute)">Open questions</h3>
+        <div class="risk"><span class="marker">?</span><div><strong>Porcupine license model</strong><span>Per-device vs per-app-volume. Affects unit economics at scale.</span></div></div>
+        <div class="risk"><span class="marker">?</span><div><strong>Whisper-tiny download policy</strong><span>Wi-Fi only, or also cellular? Affects first-run UX.</span></div></div>
+        <div class="risk"><span class="marker">?</span><div><strong>Multi-user voice profiles</strong><span>Or single voice per install? Affects settings UI scope.</span></div></div>
+        <div class="risk"><span class="marker">?</span><div><strong>Survive Doze?</strong><span>Partial wake-lock only; full wake-lock is battery-hostile.</span></div></div>
+        <div class="risk"><span class="marker">?</span><div><strong>Default TTS voice for the cloud tier</strong><span>MiniMax voice picker has ~30 options. Ship with a curated 5 or let user pick on first opt-in?</span></div></div>
+        <div class="risk"><span class="marker">?</span><div><strong>BT headset button scope</strong><span>All headsets, or HFP/AVRCP only?</span></div></div>
+      </div>
+    </div>
+
+    <div class="call" style="margin-top:18px">
+      <strong>Decision needed before Phase 1:</strong> Porcupine license model. That single answer determines whether we ship commercial or openwakeword-only build flavor in Phase 2.
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Hermes Companion — Voice control + wake word — Design v1 — August 2026<br>
+  Companion repo: <span class="mono">coding-nyx/hermes-companion</span> · Branch: <span class="mono">feat/completion</span> (v0.2)
+</footer>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      var key = tab.getAttribute('data-tab');
+      document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('active', t===tab)});
+      document.querySelectorAll('.tab-panel').forEach(function(p){
+        p.classList.toggle('active', p.getAttribute('data-panel')===key);
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
