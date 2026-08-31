@@ -1,0 +1,260 @@
+<!doctype html>
+<!--
+  ChatSurface.dc.html
+  Phase A · default primary view
+  Renders the center column of the new shell: chat thread + composer.
+  Phone canvas (390 × 844). On tablet the same surface sits between
+  LeftRail (320dp) and ContextPanel (320dp).
+
+  Hermes theme: Indigo80/40/20 + Teal80/40/20 + Sand80/40/20 + Coral80/40/20
+  Surfaces: NightBg #15151A, NightSurfaceContainer #1C1C22, NightSurfaceContainerHigh #24242C
+  Fonts: Figtree (UI), InstrumentSerif (display), PlexMono (code/handles)
+  HermesComponents reused as visual reference: HermesMark, StatusBadge,
+  SurfaceCard, HermesButton, HermesField, Chip, ToggleRow (mental model only).
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Chat surface — Phase A</title>
+  <script src="./support.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      /* Brand accents */
+      --indigo-90: #E0E1FB;
+      --indigo-80: #B3B6F2;
+      --indigo-40: #3F51B5;
+      --indigo-20: #2A2C57;
+      --teal-80:  #80CBC4;
+      --teal-40:  #00897B;
+      --sand-80:  #FFCC80;
+      --sand-40:  #EF6C00;
+      --coral-80: #F2B8B5;
+      --coral-40: #BA1A1A;
+      /* Night surfaces (M3) */
+      --night-bg:              #15151A;
+      --night-surface:         #15151A;
+      --night-surface-low:     #1A1A20;
+      --night-surface-cont:    #1C1C22;
+      --night-surface-high:    #24242C;
+      --night-surface-highest: #2E2E36;
+      --night-on-surface:      #E8E8EC;
+      --night-on-surface-var:  #B6B6C2;
+      --night-outline:         #47474F;
+      --night-outline-var:     #33333B;
+      /* Status */
+      --status-ok:    var(--teal-80);
+      --status-warn:  var(--sand-80);
+      --status-error: var(--coral-80);
+      --status-dim:   #8A8A96;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--night-bg); color: var(--night-on-surface); font-family: 'Figtree', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+    .serif { font-family: 'Instrument Serif', serif; font-weight: 400; }
+    .kicker { font-family: 'IBM Plex Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 1.2px; font-size: 10px; }
+    @keyframes blink { 50% { opacity: 0.15; } }
+    @keyframes shimmer { 0% { opacity: 0.55; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
+  </style>
+</head>
+<body>
+<x-dc>
+<div style="width: 390px; height: 844px; background: var(--night-bg); display: flex; flex-direction: column; overflow: hidden">
+
+  <!-- Status bar spacer -->
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <!-- Top bar: hamburger / profile chip / activity -->
+  <div style="height: 56px; flex-shrink: 0; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--night-outline-var)">
+    <!-- hamburger opens LeftRail on phone -->
+    <button aria-label="Open threads"
+            style="width: 44px; height: 44px; border-radius: 12px; background: transparent; border: 0; display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round">
+        <path d="M4 7h16M4 12h16M4 17h16"/>
+      </svg>
+    </button>
+
+    <!-- Route capsule: gateway › @profile › thread -->
+    <div class="mono"
+         style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
+                background: var(--night-surface-cont); border: 1px solid rgba(179,182,242,0.35);
+                border-radius: 999px; padding: 8px 12px; font-size: 12px;">
+      <span style="width: 7px; height: 7px; border-radius: 999px; background: var(--status-ok); flex-shrink: 0"></span>
+      <span style="color: var(--night-on-surface-var)">gw-home</span>
+      <span style="color: rgba(232,232,236,0.3)">›</span>
+      <span style="color: var(--indigo-80)">@ash</span>
+      <span style="color: rgba(232,232,236,0.3)">›</span>
+      <span style="color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1">
+        Deploy check
+      </span>
+      <span style="color: rgba(232,232,236,0.4)">⌄</span>
+    </div>
+
+    <!-- Activity inbox indicator -->
+    <button aria-label="Activity inbox, 3 new"
+            style="position: relative; width: 44px; height: 44px; border-radius: 12px; background: transparent; border: 0; display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
+        <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+      </svg>
+      <span style="position: absolute; top: 8px; right: 8px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
+                   background: var(--indigo-80); color: var(--night-bg); font-size: 10px; font-weight: 700;
+                   display: flex; align-items: center; justify-content: center">3</span>
+    </button>
+  </div>
+
+  <!-- Empty state OR transcript -->
+  <sc-if value="{{ empty }}" hint-placeholder-val="{{ true }}">
+    <!-- Empty / hero state -->
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 24px 32px; text-align: center">
+      <!-- Hero mark (HermesMark reference) -->
+      <div style="width: 72px; height: 72px; border-radius: 20px; background: var(--night-surface-high); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center; margin-bottom: 18px">
+        <svg width="36" height="36" viewBox="0 0 32 32" fill="none" stroke="#E8E8EC" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 4v22"/>
+          <circle cx="16" cy="4.6" r="1.8"/>
+          <path d="M10 8.5c3.2-2.4 8.8-2.4 12 0"/>
+          <path d="M9 11.5c4-3 10 3 14 0"/>
+          <path d="M9 16.5c4-3 10 3 14 0"/>
+          <path d="M12.5 26.5L16 23.5l3.5 3"/>
+        </svg>
+      </div>
+      <div class="serif" style="font-size: 30px; line-height: 34px; color: var(--night-on-surface); margin-bottom: 8px">Good morning, Nyx.</div>
+      <div style="font-size: 14px; line-height: 20px; color: var(--night-on-surface-var); max-width: 320px">
+        You routed here from gw-home · @ash. Start a thread, drop in a file, or hand me a task.
+      </div>
+      <!-- Suggested prompt tiles -->
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 22px; max-width: 340px">
+        <div style="min-height: 36px; padding: 8px 14px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 999px; font-size: 12px; color: var(--night-on-surface-var); cursor: pointer">Triage my morning inbox</div>
+        <div style="min-height: 36px; padding: 8px 14px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 999px; font-size: 12px; color: var(--night-on-surface-var); cursor: pointer">Draft standup</div>
+        <div style="min-height: 36px; padding: 8px 14px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 999px; font-size: 12px; color: var(--night-on-surface-var); cursor: pointer">Review PR #482</div>
+        <div style="min-height: 36px; padding: 8px 14px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 999px; font-size: 12px; color: var(--night-on-surface-var); cursor: pointer">Plan my trip</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ transcript }}" hint-placeholder-val="{{ true }}">
+    <!-- Active transcript -->
+    <div style="flex: 1; overflow-y: auto; padding: 14px 12px 6px; display: flex; flex-direction: column; gap: 10px">
+      <!-- Date divider -->
+      <div style="display: flex; align-items: center; gap: 10px; padding: 4px 0">
+        <div style="flex: 1; height: 1px; background: var(--night-outline-var)"></div>
+        <div class="kicker" style="color: var(--night-on-surface-var)">Today · 09:42</div>
+        <div style="flex: 1; height: 1px; background: var(--night-outline-var)"></div>
+      </div>
+
+      <!-- User bubble -->
+      <div style="display: flex; justify-content: flex-end">
+        <div style="max-width: 78%; background: var(--indigo-80); color: var(--night-bg); border-radius: 16px 16px 4px 16px; padding: 10px 14px; font-size: 15px; line-height: 21px">
+          Read <span class="mono" style="font-size: 13px">HermesComponents.kt</span> and tell me which composables are reusable for the new shell.
+        </div>
+      </div>
+
+      <!-- Assistant: prose + tool-run card + code block -->
+      <div style="display: flex; justify-content: flex-start">
+        <div style="max-width: 88%; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 16px 16px 16px 4px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+          <div style="font-size: 15px; line-height: 22px">
+            HermesComponents already covers the building blocks we need. The seven new screens can lean on:
+          </div>
+
+          <!-- Tool-run card: file.read -->
+          <div style="background: rgba(128,203,196,0.08); border: 1px solid rgba(128,203,196,0.30); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; align-items: center; gap: 8px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--status-ok)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 13l4.5 4.5L19 7"/>
+              </svg>
+              <span class="mono" style="font-size: 13px; color: var(--status-ok); font-weight: 600">file.read</span>
+              <span style="flex: 1"></span>
+              <span class="mono" style="font-size: 11px; color: var(--night-on-surface-var)">42 ms · 2.1 KB</span>
+            </div>
+            <div class="mono" style="font-size: 11px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
+              app/src/main/java/com/hermes/companion/ui/components/HermesComponents.kt
+            </div>
+          </div>
+
+          <!-- Code block -->
+          <div style="background: var(--night-surface-low); border: 1px solid var(--night-outline); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 12px; line-height: 18px; color: var(--night-on-surface-var); overflow-x: auto">
+            <div style="display: flex; gap: 12px"><span style="color: rgba(232,232,236,0.4); width: 18px; flex-shrink: 0">1</span><span><span style="color: var(--indigo-80)">fun</span> <span style="color: var(--teal-80)">SurfaceCard</span>(modifier: Modifier, radius: Dp, content: …)</span></div>
+            <div style="display: flex; gap: 12px"><span style="color: rgba(232,232,236,0.4); width: 18px; flex-shrink: 0">2</span><span><span style="color: var(--indigo-80)">fun</span> <span style="color: var(--teal-80)">StatusBadge</span>(text: String, tone: BadgeTone)</span></div>
+            <div style="display: flex; gap: 12px"><span style="color: rgba(232,232,236,0.4); width: 18px; flex-shrink: 0">3</span><span><span style="color: var(--indigo-80)">fun</span> <span style="color: var(--teal-80)">HermesButton</span>(label, onClick, filled = <span style="color: var(--sand-80)">true</span>)</span></div>
+            <div style="display: flex; gap: 12px"><span style="color: rgba(232,232,236,0.4); width: 18px; flex-shrink: 0">4</span><span><span style="color: var(--indigo-80)">fun</span> <span style="color: var(--teal-80)">HermesField</span>(value, onValueChange, placeholder)</span></div>
+          </div>
+
+          <!-- Prose tail -->
+          <div style="font-size: 15px; line-height: 22px">
+            I'll also need <span class="mono" style="font-size: 13px">Chip</span> for the activity filters and a fresh <span class="mono" style="font-size: 13px">Composer</span> wrapper that pulls a route capsule above the field.<span style="animation: blink 1s step-end infinite; color: var(--indigo-80)">▌</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Follow-up user bubble -->
+      <div style="display: flex; justify-content: flex-end">
+        <div style="max-width: 78%; background: var(--indigo-80); color: var(--night-bg); border-radius: 16px 16px 4px 16px; padding: 10px 14px; font-size: 15px; line-height: 21px">
+          Show me how the composer wraps the route capsule.
+        </div>
+      </div>
+
+      <!-- Steer chips (only while streaming) -->
+      <div style="display: flex; gap: 6px; padding: 6px 0 2px">
+        <div style="background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 999px; padding: 6px 12px; font-size: 11px; color: var(--night-on-surface-var); cursor: pointer">show code</div>
+        <div style="background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 999px; padding: 6px 12px; font-size: 11px; color: var(--night-on-surface-var); cursor: pointer">use Sand, not Indigo</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- Composer (always present) -->
+  <div style="flex-shrink: 0; border-top: 1px solid var(--night-outline-var); padding: 10px 12px 22px; display: flex; flex-direction: column; gap: 8px; background: var(--night-bg)">
+    <div style="display: flex; align-items: center; gap: 8px">
+      <!-- + (new thread) -->
+      <button aria-label="New thread"
+              style="width: 44px; height: 44px; border-radius: 999px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.8" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </button>
+
+      <!-- Field -->
+      <div style="flex: 1; min-height: 44px; background: var(--night-surface-cont); border: 1px solid var(--indigo-40); border-radius: 22px; padding: 0 16px; display: flex; align-items: center; font-size: 15px; color: var(--night-on-surface-var)">
+        Send to @ash
+      </div>
+
+      <!-- Mic -->
+      <button aria-label="Voice input"
+              style="width: 44px; height: 44px; border-radius: 999px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="3" width="6" height="11" rx="3"/>
+          <path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>
+        </svg>
+      </button>
+
+      <!-- Send / stop -->
+      <button aria-label="Send"
+              style="width: 44px; height: 44px; border-radius: 999px; background: var(--indigo-80); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15151A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    // Default to the rich transcript so this mock shows real content.
+    this.state = { mode: 'transcript' };
+  }
+  renderVals() {
+    return {
+      empty: this.state.mode === 'empty',
+      transcript: this.state.mode === 'transcript',
+    };
+  }
+}
+</script>
+</body>
+</html>

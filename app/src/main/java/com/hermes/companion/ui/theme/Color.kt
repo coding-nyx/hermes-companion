@@ -21,6 +21,15 @@ val Coral40 = Color(0xFFBA1A1A)
 val CoralContainerDark = Color(0xFF5C1D1B)
 val CoralContainerLight = Color(0xFFFFDAD6)
 
+// ── Profile accent palette (Phase B) ────────────────────────────────────
+// Per-profile handoff accents that aren't already in the main Brand ramp.
+val Magenta80 = Color(0xFFF8BBD0)
+val Magenta40 = Color(0xFFC2185B)
+val Cyan80 = Color(0xFF80DEEA)
+val Cyan40 = Color(0xFF00838F)
+val Lime80 = Color(0xFFDCE775)
+val Lime40 = Color(0xFF827717)
+
 // ── Dark (primary look) neutrals ─────────────────────────────────────────
 val NightBg = Color(0xFF15151A)
 val NightSurface = Color(0xFF15151A)

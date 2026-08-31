@@ -10,6 +10,7 @@ import com.hermes.companion.domain.GatewayConnection
 import com.hermes.companion.domain.GatewayHealth
 import com.hermes.companion.net.httpHermesBackend
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -22,7 +23,9 @@ class CompanionData(
     private val scope: CoroutineScope,
     private val gate: com.hermes.companion.common.BiometricGate = com.hermes.companion.common.AllowAllGate,
 ) {
-    private val store = openCompanionStore(context)
+    private val store = com.hermes.companion.data.db.openCompanionStore(context.also {
+        Log.i("BootSequence", "openCompanionStore: building Room database (this is the first store access)")
+    })
     private val adapters = com.hermes.companion.node.defaultAdapterRegistry(context)
     val nodeConnections = NodeConnectionManager(store, adapters)
 
@@ -61,6 +64,16 @@ class CompanionData(
         // refreshGateway() short-circuits on `registry.backendFor(id) ?: return`,
         // so the /api/profiles HTTP call never fires and the profiles table
         // stays empty. The hook must register the backend BEFORE refreshing.
+        //
+        // CRITICAL (T2fix2): the gateways row is written inside the pair()
+        // coroutine just before invoke() runs. A subsequent store.gateways.find()
+        // on the same coroutine that just wrote the row can, in rare race
+        // conditions (e.g. write-ahead log not yet checkpointed, Room
+        // invalidation tracker lag, or a separate dispatcher), return null
+        // and short-circuit the refresh. The hook therefore retries find()
+        // with a short bounded backoff so the post-pair refresh survives
+        // the visible-row race without the user having to manually hit
+        // "Refresh" on the Gateways tab.
         nodeConnections.setRefreshHook { gatewayId ->
             scope.launch {
                 val repo = fleet as? DefaultFleetRepository
@@ -68,15 +81,29 @@ class CompanionData(
                     Log.w("PairFlow", "POST-PAIR: fleet is not DefaultFleetRepository (${fleet::class.java.name}); skipping refresh")
                     return@launch
                 }
+                // Wait for the gateway row to be visible. We just wrote it
+                // ourselves in NodeConnection.pair(), but Room reads from a
+                // separate connection and the WAL might not be visible to a
+                // second reader immediately. Bounded retry (5 × 200ms = 1s
+                // budget) is plenty: the row was written microseconds ago
+                // on the same process.
+                val row = waitForGatewayRow(gatewayId)
+                if (row == null) {
+                    Log.e(
+                        "PairFlow",
+                        "POST-PAIR: gateway row never landed in DB after 1s for $gatewayId; skipping refresh. " +
+                            "Operator: check Database Inspector for the gateways table.",
+                    )
+                    return@launch
+                }
                 // Register the backend if this is a freshly-paired gateway
                 // that bootstrap() has not seen yet. Idempotent: addGateway
                 // overwrites the existing entry for the same id.
-                val existing = store.gateways.find(gatewayId)
-                if (existing != null && registry.backendFor(gatewayId) == null) {
-                    Log.d("PairFlow", "POST-PAIR: registering backend for $gatewayId (${existing.url})")
-                    registry.addGateway(httpHermesBackend(existing.toDomain()))
+                if (registry.backendFor(gatewayId) == null) {
+                    Log.d("PairFlow", "POST-PAIR: registering backend for $gatewayId (${row.url})")
+                    registry.addGateway(httpHermesBackend(row.toDomain()))
                 } else {
-                    Log.d("PairFlow", "POST-PAIR: backend already registered for $gatewayId (${existing?.url ?: "row-missing"})")
+                    Log.d("PairFlow", "POST-PAIR: backend already registered for $gatewayId (${row.url})")
                 }
                 Log.d("PairFlow", "POST-PAIR: firing refreshGatewayFor($gatewayId)")
                 try {
@@ -90,16 +117,42 @@ class CompanionData(
     }
 
     /**
+     * Poll [store.gateways.find] for up to ~1s waiting for the row to be
+     * visible. Returns null only if the row never lands within the budget.
+     *
+     * Each attempt is a real Room SELECT, so Room's invalidation tracker
+     * sees the row the instant the writer's transaction commits and the
+     * retry loop terminates on attempt 1 in the common case.
+     */
+    private suspend fun waitForGatewayRow(gatewayId: String): com.hermes.companion.data.db.GatewayEntity? {
+        repeat(MAX_REFRESH_WAIT_ATTEMPTS) { attempt ->
+            val row = store.gateways.find(gatewayId)
+            if (row != null) {
+                if (attempt > 0) {
+                    Log.d("PairFlow", "POST-PAIR: gateway row visible on attempt ${attempt + 1}/$MAX_REFRESH_WAIT_ATTEMPTS")
+                }
+                return row
+            }
+            Log.d("PairFlow", "POST-PAIR: gateway row not yet visible (attempt ${attempt + 1}/$MAX_REFRESH_WAIT_ATTEMPTS)")
+            delay(REFRESH_WAIT_INTERVAL_MS)
+        }
+        return null
+    }
+
+    /**
      * Hydrates transport from what is already stored, seeding the registry on
      * first run, then resumes any run that was open when we last stopped.
      */
     suspend fun bootstrap(seed: List<GatewayConnection>) {
+        Log.i("BootSequence", "bootstrap: first DAO access (store.gateways.all())")
         // Seed only on a truly empty store, so user deletions and gateways added
         // through Discovery/Settings are never resurrected on the next launch.
-        if (store.gateways.all().isEmpty()) {
+        val existing = store.gateways.all()
+        Log.i("BootSequence", "bootstrap: store.gateways.all() returned ${existing.size} rows")
+        if (existing.isEmpty()) {
             seed.forEach { g -> store.gateways.upsert(g.toEntity(health = g.health)) }
         }
-        store.gateways.all().forEach { row ->
+        existing.forEach { row ->
             if (registry.backendFor(row.id) == null) {
                 registry.addGateway(backendFor(row.toDomain()))
             }
@@ -107,6 +160,7 @@ class CompanionData(
         store.runs.openRuns().forEach { run ->
             tracker.observe(ConversationRoute(run.gatewayId, run.profileId, run.sessionId), run.runId)
         }
+        Log.i("BootSequence", "bootstrap: ${existing.size} backend(s) registered from store")
     }
 
     /**
@@ -128,4 +182,9 @@ class CompanionData(
         } else {
             httpHermesBackend(g)
         }
+
+    private companion object {
+        const val MAX_REFRESH_WAIT_ATTEMPTS = 5
+        const val REFRESH_WAIT_INTERVAL_MS = 200L
+    }
 }

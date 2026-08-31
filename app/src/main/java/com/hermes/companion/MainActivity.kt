@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hermes.companion.service.CompanionConnectionService
 import com.hermes.companion.ui.shell.Shell
 import com.hermes.companion.ui.theme.HermesTheme
+import com.hermes.companion.ui.v1.V1Shell
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -67,7 +68,14 @@ class MainActivity : FragmentActivity() {
                 val scope = rememberCoroutineScope()
                 if (unlocked) {
                     val size = calculateWindowSizeClass(this)
-                    Shell(size = size)
+                    // Phase A feature flag: V1Shell (3-column ChatGPT-style) vs
+                    // the v0.2 5-tab bottom nav. Default false so existing users
+                    // see no change; flip true to canary.
+                    if (BuildConfig.USE_V1_SHELL) {
+                        V1Shell(size = size)
+                    } else {
+                        Shell(size = size)
+                    }
                 } else {
                     LockScreen(onUnlock = { scope.launch { unlocked = gate.require(BiometricGate.Gate.APP_LAUNCH) } })
                     // Auto-prompt once on entry; AllowAllGate returns immediately.

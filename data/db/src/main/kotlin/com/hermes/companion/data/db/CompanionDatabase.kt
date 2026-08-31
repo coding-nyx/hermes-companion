@@ -1,9 +1,11 @@
 package com.hermes.companion.data.db
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [
@@ -59,11 +61,42 @@ class CompanionStore(
 )
 
 fun openCompanionStore(context: Context): CompanionStore {
+    Log.i("BootSequence", "openCompanionStore: Room.databaseBuilder(\"companion.db\").addMigrations(ALL_MIGRATIONS).build()")
     // No fallbackToDestructiveMigration: losing an operator's transcript to a
     // schema bump is not an acceptable default. Every version bump adds a tested
     // migration to ALL_MIGRATIONS.
     val db = Room.databaseBuilder(context, CompanionDatabase::class.java, "companion.db")
         .addMigrations(*ALL_MIGRATIONS)
+        // Log every Room callback so a cold-boot migration failure or a v8->v9
+        // migration mismatch is observable from logcat without a debug build
+        // attached to Android Studio.
+        .addCallback(object : RoomDatabase.Callback() {
+            override fun onCreate(db: SupportSQLiteDatabase) {
+                Log.i("BootSequence", "Room: onCreate (fresh DB; schema written for v9)")
+            }
+
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                val v = db.version
+                Log.i("BootSequence", "Room: onOpen (user_version=$v, all migrations up-to-date)")
+            }
+
+            override fun onDestructiveMigration(db: SupportSQLiteDatabase) {
+                Log.w("BootSequence", "Room: onDestructiveMigration (this should NEVER fire; ALL_MIGRATIONS is exhaustive)")
+            }
+        })
         .build()
-    return CompanionStore(db.gateways(), db.profiles(), db.sessions(), db.messages(), db.runs(), db.outbound(), db.nodeIdentity(), db.grants(), db.leases(), db.streamRules(), db.activeGateway())
+    Log.i("BootSequence", "openCompanionStore: Room database built; DAOs wired")
+    return CompanionStore(
+        db.gateways(),
+        db.profiles(),
+        db.sessions(),
+        db.messages(),
+        db.runs(),
+        db.outbound(),
+        db.nodeIdentity(),
+        db.grants(),
+        db.leases(),
+        db.streamRules(),
+        db.activeGateway(),
+    )
 }

@@ -1,0 +1,280 @@
+<!doctype html>
+<!--
+  PairAsNodeFlow.dc.html
+  Phase A · SettingsSheet → Pair as Node.
+  Two-mode flow: Discover nearby / Manual entry.
+
+  Visual structure:
+    - Header (Back / title / step indicator)
+    - Mode toggle (segmented control: Discover / Manual)
+    - Body (depends on mode)
+        Discover: scanning dot, candidate cards (with "scanning…"
+                  placeholders while busy), and a "Where it looks"
+                  explanation card.
+        Manual:   URL field + setup code field + Pair button +
+                  an info panel on what gets exchanged.
+
+  Visual reuse: HermesField (the input), StatusBadge (Warn / Live),
+  HermesButton (filled). Mirrors the existing design/PairNode.dc.html
+  + design/Discover.dc.html conventions.
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Pair as node — Phase A</title>
+  <script src="./support.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --indigo-90:#E0E1FB; --indigo-80:#B3B6F2; --indigo-40:#3F51B5; --indigo-20:#2A2C57;
+      --teal-80:#80CBC4; --teal-40:#00897B;
+      --sand-80:#FFCC80; --sand-40:#EF6C00;
+      --coral-80:#F2B8B5; --coral-40:#BA1A1A;
+      --night-bg:#15151A; --night-surface-cont:#1C1C22;
+      --night-surface-high:#24242C; --night-surface-highest:#2E2E36;
+      --night-on-surface:#E8E8EC; --night-on-surface-var:#B6B6C2;
+      --night-outline:#47474F; --night-outline-var:#33333B;
+      --status-ok:var(--teal-80); --status-warn:var(--sand-80);
+      --status-error:var(--coral-80); --status-dim:#8A8A96;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--night-bg); color: var(--night-on-surface); font-family: 'Figtree', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+    .kicker { font-family: 'IBM Plex Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 1.2px; font-size: 10px; }
+    @keyframes pulse { 50% { opacity: 0.35; } }
+    @keyframes scan-skeleton { 0% { opacity: 0.4; } 50% { opacity: 0.9; } 100% { opacity: 0.4; } }
+  </style>
+</head>
+<body>
+<x-dc>
+<div style="width: 390px; height: 844px; background: var(--night-bg); display: flex; flex-direction: column; overflow: hidden">
+
+  <!-- Status bar spacer -->
+  <div style="height: 44px; flex-shrink: 0"></div>
+
+  <!-- Header -->
+  <div style="padding: 4px 12px 10px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; border-bottom: 1px solid var(--night-outline-var)">
+    <button aria-label="Back to Settings"
+            style="width: 44px; height: 44px; border-radius: 12px; background: transparent; border: 0; display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M11 6l-6 6 6 6"/>
+      </svg>
+    </button>
+    <div style="display: flex; flex-direction: column; gap: 1px; flex: 1">
+      <div class="serif" style="font-size: 22px; line-height: 26px">Pair as a node</div>
+      <div style="font-size: 11px; color: var(--night-on-surface-var)">on gw-home</div>
+    </div>
+    <div class="kicker" style="color: var(--night-on-surface-var)">1/2</div>
+  </div>
+
+  <!-- Segmented control: Discover / Manual -->
+  <div style="padding: 14px 12px 4px; display: flex">
+    <div style="flex: 1; display: flex; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 12px; padding: 3px; gap: 3px">
+      <button onClick="{{ toggleDiscover }}"
+              style="flex: 1; min-height: 36px; padding: 0 12px; border-radius: 9px; border: 0; cursor: pointer; font-size: 13px; font-weight: 600;
+                     background: {{ discBg }}; color: {{ discFg }}">
+        Discover nearby
+      </button>
+      <button onClick="{{ toggleManual }}"
+              style="flex: 1; min-height: 36px; padding: 0 12px; border-radius: 9px; border: 0; cursor: pointer; font-size: 13px; font-weight: 600;
+                     background: {{ manBg }}; color: {{ manFg }}">
+        Manual entry
+      </button>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div style="flex: 1; overflow-y: auto; padding: 12px 12px 24px; display: flex; flex-direction: column; gap: 14px">
+
+    <sc-if value="{{ discover }}" hint-placeholder-val="{{ true }}">
+
+      <!-- Scan status row -->
+      <div style="display: flex; align-items: center; gap: 9px; padding: 8px 4px">
+        <span style="width: 8px; height: 8px; border-radius: 999px; background: {{ scanDotColor }}; animation: {{ scanAnim }}"></span>
+        <div style="font-size: 13px; line-height: 18px; color: var(--night-on-surface-var); flex: 1">{{ scanLabel }}</div>
+        <button onClick="{{ rescan }}"
+                style="min-height: 36px; display: flex; align-items: center; padding: 0 12px; border-radius: 999px;
+                       border: 1px solid rgba(232,232,236,0.16); color: var(--night-on-surface-var); font-size: 12px; font-weight: 500; cursor: pointer; background: transparent">
+          {{ scanBtn }}
+        </button>
+      </div>
+
+      <!-- Candidate cards -->
+      <sc-if value="{{ scanning }}" hint-placeholder-val="{{ true }}">
+        <!-- Skeleton / "scanning…" placeholder -->
+        <div style="background: var(--night-surface-cont); border: 1px dashed var(--night-outline); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 7px; min-height: 76px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div style="width: 90px; height: 12px; background: var(--night-surface-high); border-radius: 4px; animation: scan-skeleton 1.2s ease-in-out infinite"></div>
+            <div style="flex: 1"></div>
+            <div style="width: 50px; height: 16px; background: var(--night-surface-high); border-radius: 999px; animation: scan-skeleton 1.2s ease-in-out infinite"></div>
+          </div>
+          <div style="width: 70%; height: 10px; background: var(--night-surface-high); border-radius: 4px; animation: scan-skeleton 1.2s ease-in-out infinite"></div>
+          <div style="font-size: 11px; color: var(--night-on-surface-var)">scanning…</div>
+        </div>
+        <div style="background: var(--night-surface-cont); border: 1px dashed var(--night-outline); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 7px; min-height: 76px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div style="width: 110px; height: 12px; background: var(--night-surface-high); border-radius: 4px; animation: scan-skeleton 1.2s ease-in-out infinite"></div>
+            <div style="flex: 1"></div>
+            <div style="width: 60px; height: 16px; background: var(--night-surface-high); border-radius: 999px; animation: scan-skeleton 1.2s ease-in-out infinite"></div>
+          </div>
+          <div style="width: 50%; height: 10px; background: var(--night-surface-high); border-radius: 4px; animation: scan-skeleton 1.2s ease-in-out infinite"></div>
+          <div style="font-size: 11px; color: var(--night-on-surface-var)">scanning…</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ !scanning }}" hint-placeholder-val="{{ true }}">
+        <!-- mac-studio -->
+        <div style="background: var(--night-surface-cont); border: 1px solid rgba(128,203,196,0.40); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 7px; cursor: pointer; min-height: 76px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div style="font-size: 15px; line-height: 20px; font-weight: 600; flex: 1; min-width: 0">mac-studio</div>
+            <span class="mono" style="font-size: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(128,203,196,0.14); color: var(--status-ok); font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px">wss</span>
+          </div>
+          <div class="mono" style="font-size: 12px; color: var(--night-on-surface-var)">mac-studio.local:7800</div>
+          <div style="font-size: 11px; color: rgba(232,232,236,0.42)">This Wi-Fi, over mDNS · _hermes._tcp.local</div>
+        </div>
+
+        <!-- studio-cloud (tailnet) -->
+        <div style="background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 7px; cursor: pointer; min-height: 76px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div style="font-size: 15px; line-height: 20px; font-weight: 600; flex: 1; min-width: 0">studio-cloud</div>
+            <span class="mono" style="font-size: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(128,203,196,0.14); color: var(--status-ok); font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px">wss</span>
+          </div>
+          <div class="mono" style="font-size: 12px; color: var(--night-on-surface-var)">mac-studio.tail9f2c.ts.net:7800</div>
+          <div style="font-size: 11px; color: rgba(232,232,236,0.42)">Your tailnet, over wide-area DNS-SD</div>
+        </div>
+
+        <!-- pi-shed (warn) -->
+        <div style="background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 7px; cursor: pointer; min-height: 76px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <div style="font-size: 15px; line-height: 20px; font-weight: 600; flex: 1; min-width: 0; color: var(--night-on-surface-var)">pi-shed</div>
+            <span class="mono" style="font-size: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(255,204,128,0.14); color: var(--status-warn); font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px">ws · limited</span>
+          </div>
+          <div class="mono" style="font-size: 12px; color: var(--night-on-surface-var)">pi-shed.local:7800</div>
+          <div style="font-size: 11px; color: rgba(232,232,236,0.42)">This Wi-Fi, cleartext only — chat, never a node</div>
+        </div>
+      </sc-if>
+
+      <!-- Where it looks -->
+      <div style="background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+        <div class="kicker" style="color: var(--night-on-surface-var)">Where it looks</div>
+        <div style="display: flex; gap: 9px; align-items: flex-start">
+          <div class="mono" style="font-size: 11px; color: var(--indigo-80); width: 74px; flex-shrink: 0">mDNS</div>
+          <div style="font-size: 11px; color: rgba(232,232,236,0.55); flex: 1">Same Wi-Fi, no configuration</div>
+        </div>
+        <div style="display: flex; gap: 9px; align-items: flex-start">
+          <div class="mono" style="font-size: 11px; color: var(--indigo-80); width: 74px; flex-shrink: 0">DNS-SD</div>
+          <div style="font-size: 11px; color: rgba(232,232,236,0.55); flex: 1">Across your tailnet, wherever the phone is</div>
+        </div>
+        <div style="display: flex; gap: 9px; align-items: flex-start">
+          <div class="mono" style="font-size: 11px; color: var(--indigo-80); width: 74px; flex-shrink: 0">manual</div>
+          <div style="font-size: 11px; color: rgba(232,232,236,0.55); flex: 1">Anything reachable — SSH tunnels, Cloud, odd ports</div>
+        </div>
+      </div>
+
+      <!-- Trust note -->
+      <div style="border-left: 2px solid var(--status-warn); padding-left: 10px">
+        <div style="font-size: 12px; line-height: 17px; color: var(--night-on-surface-var)">
+          Discovery only proves something answered on that address. Nothing is trusted until you check its fingerprint on the next screen.
+        </div>
+      </div>
+
+    </sc-if>
+
+    <sc-if value="{{ manual }}" hint-placeholder-val="{{ true }}">
+
+      <!-- URL field -->
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div class="kicker" style="color: var(--night-on-surface-var)">Gateway URL</div>
+        <div style="display: flex; align-items: center; height: 48px; padding: 0 14px; gap: 8px;
+                    background: var(--night-surface-cont); border: 1px solid var(--indigo-40); border-radius: 12px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--night-on-surface-var)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          <span class="mono" style="font-size: 14px; color: var(--night-on-surface); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">wss://mac-studio.local:7800</span>
+        </div>
+        <div style="font-size: 11px; color: var(--night-on-surface-var); padding: 0 4px">wss:// for a trusted network node; ws:// is chat-only.</div>
+      </div>
+
+      <!-- Setup code field -->
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div class="kicker" style="color: var(--night-on-surface-var)">Setup code</div>
+        <div style="display: flex; align-items: center; height: 48px; padding: 0 14px; gap: 10px;
+                    background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 12px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--night-on-surface-var)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span class="mono" style="font-size: 14px; letter-spacing: 1.5px; color: var(--night-on-surface); flex: 1">amber-lattice-9042</span>
+          <button aria-label="Paste" style="min-height: 32px; padding: 0 10px; border-radius: 8px; background: transparent; border: 1px solid rgba(232,232,236,0.16); color: var(--night-on-surface-var); cursor: pointer; font-size: 11px; font-weight: 500">Paste</button>
+        </div>
+        <div style="font-size: 11px; color: var(--night-on-surface-var); padding: 0 4px">Single-use · expires in 4 minutes · generated on the gateway.</div>
+      </div>
+
+      <!-- Info panel -->
+      <div style="background: rgba(128,203,196,0.08); border: 1px solid rgba(128,203,196,0.30); border-radius: 12px; padding: 12px; display: flex; gap: 10px; align-items: flex-start">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--status-ok)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px">
+          <circle cx="8.5" cy="14.5" r="4"/>
+          <path d="M11.4 11.6L19 4M16.2 6.8l2.1 2.1M18.4 4.6l2 2"/>
+        </svg>
+        <div style="display: flex; flex-direction: column; gap: 3px">
+          <div style="font-size: 13px; font-weight: 600">What gets exchanged</div>
+          <div style="font-size: 12px; line-height: 17px; color: var(--night-on-surface-var)">
+            Ed25519 device key (created inside Android Keystore), the setup code, and the gateway's server fingerprint. The bearer token never travels in this exchange.
+          </div>
+        </div>
+      </div>
+
+      <!-- Pair button -->
+      <button style="min-height: 48px; padding: 0 14px; border-radius: 999px; background: var(--indigo-80); color: var(--night-bg);
+                     border: 0; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+                     font-size: 15px; font-weight: 600">
+        Pair this phone
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </button>
+
+    </sc-if>
+
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mode: 'discover', scanning: true };
+  }
+  renderVals() {
+    const mode = this.state.mode;
+    const disc = mode === 'discover';
+    const scanning = this.state.scanning;
+    return {
+      discover: disc,
+      manual: !disc,
+      discBg: disc ? 'var(--indigo-80)' : 'transparent',
+      discFg: disc ? 'var(--night-bg)' : 'var(--night-on-surface-var)',
+      manBg: !disc ? 'var(--indigo-80)' : 'transparent',
+      manFg: !disc ? 'var(--night-bg)' : 'var(--night-on-surface-var)',
+      scanning: scanning,
+      scanColor: scanning ? 'var(--indigo-80)' : 'var(--status-ok)',
+      scanDotColor: scanning ? 'var(--indigo-80)' : 'var(--status-ok)',
+      scanAnim: scanning ? 'pulse 1.1s ease-in-out infinite' : 'none',
+      scanLabel: scanning
+        ? 'Looking on this Wi-Fi and your tailnet…'
+        : '3 gateways answered',
+      scanBtn: scanning ? 'Stop' : 'Scan again',
+      toggleDiscover: () => this.setState({ mode: 'discover' }),
+      toggleManual: () => this.setState({ mode: 'manual' }),
+      rescan: () => this.setState({ scanning: !this.state.scanning }),
+    };
+  }
+}
+</script>
+</body>
+</html>

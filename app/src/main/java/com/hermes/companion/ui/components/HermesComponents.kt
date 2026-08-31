@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -46,7 +47,12 @@ import com.hermes.companion.ui.theme.HermesColors
 import com.hermes.companion.ui.theme.HermesType
 import com.hermes.companion.ui.theme.HermesTypography
 
-enum class BadgeTone { Muted, Live, Warn, Danger, Solid }
+/**
+ * Phase B update — added `Indigo` so streaming / "Live" cards can
+ * opt into the Indigo (Brand) tone independently of the Teal Ok
+ * status used by `Live` in the v0.2 keyboard.
+ */
+enum class BadgeTone { Muted, Live, Indigo, Warn, Danger, Solid }
 
 @Composable
 fun Caduceus(modifier: Modifier = Modifier, color: Color = HermesColors.Fg) {
@@ -103,7 +109,12 @@ fun HermesMark(size: Dp = 32.dp) {
 fun StatusBadge(text: String, tone: BadgeTone, modifier: Modifier = Modifier) {
     val (bg, fg) = when (tone) {
         BadgeTone.Muted -> HermesColors.Elevated to HermesColors.Muted
+        // Original `Live` — kept Teal for backwards compatibility with
+        // call screens that already use Ok-as-live.
         BadgeTone.Live -> HermesColors.Ok.copy(alpha = 0.15f) to HermesColors.Ok
+        // Phase B · Indigo "Live" — used by tool-card headers and the
+        // background-work bar to mean "actively producing output".
+        BadgeTone.Indigo -> HermesColors.Primary.copy(alpha = 0.18f) to HermesColors.Primary
         BadgeTone.Warn -> HermesColors.Warn.copy(alpha = 0.15f) to HermesColors.Warn
         BadgeTone.Danger -> HermesColors.Danger.copy(alpha = 0.15f) to HermesColors.Danger
         BadgeTone.Solid -> HermesColors.Fg to HermesColors.OnPrimary
@@ -124,23 +135,92 @@ fun StatusBadge(text: String, tone: BadgeTone, modifier: Modifier = Modifier) {
 fun SurfaceCard(
     modifier: Modifier = Modifier,
     radius: Dp = 16.dp,
+    /**
+     * Phase B · collapsible enhancement. When true the card renders a
+     * chevron in the top-right that fires [onToggleExpand]; when
+     * [expanded] is true the optional [expandedContent] slot is shown
+     * below [content]. Defaults to false so existing callers are
+     * unaffected.
+     */
+    collapsible: Boolean = false,
+    expanded: Boolean = false,
+    onToggleExpand: (() -> Unit)? = null,
+    expandedContent: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    Box(
+    Column(
         modifier
             .clip(RoundedCornerShape(radius))
             .background(HermesColors.Surface)
             .border(1.dp, HermesColors.Border, RoundedCornerShape(radius)),
-    ) { content() }
+    ) {
+        Box {
+            content()
+            if (collapsible && onToggleExpand != null) {
+                Box(
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(6.dp)
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .border(1.dp, HermesColors.Border, CircleShape)
+                        .clickable(onClick = onToggleExpand),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    // Chevron: down when collapsed, up when expanded
+                    Canvas(Modifier.size(12.dp)) {
+                        val mid = size.width / 2f
+                        val yTop = if (expanded) size.height * 0.30f else size.height * 0.55f
+                        val yBot = if (expanded) size.height * 0.55f else size.height * 0.30f
+                        val yMid = if (expanded) yBot else yTop
+                        val arm = size.width * 0.36f
+                        drawLine(
+                            color = HermesColors.Fg,
+                            start = androidx.compose.ui.geometry.Offset(mid - arm, yTop),
+                            end = androidx.compose.ui.geometry.Offset(mid, yMid),
+                            strokeWidth = 1.6f,
+                            cap = StrokeCap.Round,
+                        )
+                        drawLine(
+                            color = HermesColors.Fg,
+                            start = androidx.compose.ui.geometry.Offset(mid, yMid),
+                            end = androidx.compose.ui.geometry.Offset(mid + arm, yTop),
+                            strokeWidth = 1.6f,
+                            cap = StrokeCap.Round,
+                        )
+                    }
+                }
+            }
+        }
+        if (expanded && expandedContent != null) {
+            expandedContent()
+        }
+    }
 }
 
 @Composable
-fun SectionLabel(text: String, modifier: Modifier = Modifier, action: @Composable (() -> Unit)? = null) {
+fun SectionLabel(
+    text: String,
+    modifier: Modifier = Modifier,
+    /**
+     * Phase B enhancement — small numeric badge rendered inline after
+     * the label, e.g. "Approvals (3)". Null omits the badge.
+     */
+    count: Int? = null,
+    action: @Composable (() -> Unit)? = null,
+) {
     Row(
         modifier.fillMaxWidth().padding(bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text.uppercase(), style = HermesType.kickerSubtle)
+        if (count != null) {
+            Spacer(Modifier.size(6.dp))
+            Text(
+                "($count)",
+                style = HermesType.kickerSubtle.copy(color = HermesColors.Muted),
+            )
+        }
         Spacer(Modifier.weight(1f))
         action?.invoke()
     }
@@ -154,14 +234,28 @@ fun HermesButton(
     filled: Boolean = true,
     enabled: Boolean = true,
     large: Boolean = false,
+    /**
+     * Phase B enhancement — destructive variant (Coral outline + Coral
+     * label) used for "Delete", "Deny", and other irreversibly negative
+     * actions. Implies `filled = false`.
+     */
+    destructive: Boolean = false,
 ) {
     val shape = RoundedCornerShape(12.dp)
+    val effectiveFilled = filled && !destructive
     val bg = when {
         !enabled -> HermesColors.Elevated
+        destructive -> Color.Transparent
         filled -> HermesColors.Primary
         else -> Color.Transparent
     }
+    val borderColor = when {
+        !enabled -> HermesColors.Border
+        destructive -> HermesColors.Danger
+        else -> HermesColors.Border
+    }
     val fg = when {
+        destructive -> HermesColors.Danger
         filled -> HermesColors.OnPrimary
         else -> HermesColors.Fg
     }
@@ -170,11 +264,17 @@ fun HermesButton(
             .height(if (large) 48.dp else 44.dp)
             .clip(shape)
             .background(bg)
-            .then(if (!filled) Modifier.border(1.dp, HermesColors.Border, shape) else Modifier)
+            .border(1.dp, borderColor, shape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, style = HermesTypography.labelLarge.copy(color = fg.copy(alpha = if (enabled) 1f else 0.4f)))
+        Text(
+            label,
+            style = HermesTypography.labelLarge.copy(
+                color = fg.copy(alpha = if (enabled) 1f else 0.4f),
+                fontWeight = if (destructive) androidx.compose.ui.text.font.FontWeight.SemiBold else null,
+            ),
+        )
     }
 }
 
@@ -185,16 +285,33 @@ fun HermesField(
     modifier: Modifier = Modifier,
     placeholder: String = "",
     singleLine: Boolean = true,
+    /**
+     * Phase B enhancement — max height the field can grow to when
+     * [singleLine] is false. Null means unlimited.
+     */
+    maxHeight: Dp? = null,
+    /**
+     * Phase B enhancement — when true the field grows vertically with
+     * content (up to [maxHeight]) instead of scrolling within a fixed
+     * 48dp box. Equivalent to `singleLine = false` plus explicit height
+     * policy.
+     */
+    multiLine: Boolean = false,
 ) {
+    val effectiveSingleLine = singleLine && !multiLine
     val shape = RoundedCornerShape(12.dp)
+    val modifierWithHeight = when {
+        effectiveSingleLine -> modifier.height(48.dp)
+        maxHeight != null -> modifier.heightIn(min = 48.dp, max = maxHeight)
+        else -> modifier.heightIn(min = 48.dp)
+    }
     Box(
-        modifier
-            .height(48.dp)
+        modifierWithHeight
             .clip(shape)
             .background(HermesColors.Surface)
             .border(1.dp, HermesColors.Border, shape)
-            .padding(horizontal = 14.dp),
-        contentAlignment = Alignment.CenterStart,
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        contentAlignment = Alignment.TopStart,
     ) {
         if (value.isEmpty()) {
             Text(placeholder, style = HermesTypography.bodyMedium.copy(color = HermesColors.Subtle))
@@ -202,7 +319,7 @@ fun HermesField(
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            singleLine = singleLine,
+            singleLine = effectiveSingleLine,
             textStyle = TextStyle(
                 fontFamily = Figtree,
                 fontSize = 14.sp,
@@ -316,19 +433,44 @@ fun QuickTile(
 }
 
 @Composable
-fun Chip(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun Chip(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    /**
+     * Phase B enhancement — when true the chip renders with a tinted
+     * background and a bolder Primary border. Used by the lock-in grill
+     * (Once / Session / Always for verb / Always deny) and by the
+     * QuickProfilePalette to highlight the focused entry.
+     */
+    selected: Boolean = false,
+) {
     val shape = RoundedCornerShape(999.dp)
+    val bg = if (selected) HermesColors.Primary.copy(alpha = 0.18f) else HermesColors.Surface
+    val borderColor = if (selected) HermesColors.Primary else HermesColors.Border
+    val fg = if (selected) HermesColors.Primary else HermesColors.Fg
     Box(
         modifier
-            .height(44.dp)
+            .height(36.dp)
             .clip(shape)
-            .background(HermesColors.Surface)
-            .border(1.dp, HermesColors.Border, shape)
+            .background(bg)
+            .border(
+                width = if (selected) 1.5.dp else 1.dp,
+                color = borderColor,
+                shape = shape,
+            )
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, style = HermesTypography.bodyLarge.copy(fontSize = 14.sp, color = HermesColors.Fg))
+        Text(
+            label,
+            style = HermesTypography.bodyLarge.copy(
+                fontSize = 13.sp,
+                color = fg,
+                fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.SemiBold else null,
+            ),
+        )
     }
 }
 

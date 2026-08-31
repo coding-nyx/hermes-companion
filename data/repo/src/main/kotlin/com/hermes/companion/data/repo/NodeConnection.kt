@@ -194,6 +194,19 @@ class NodeConnectionManager internal constructor(
     val connections: StateFlow<Map<String, BrokerConnectionState>> = _connections.asStateFlow()
 
     fun start(scope: CoroutineScope): Job = scope.launch {
+        // Clear any stale entries from a prior (now-dead) service instance.
+        // The manager is a Hilt @Singleton; its `live` map survives across
+        // service restarts (the previous launch's sockets and jobs are dead
+        // but the slots remain). Without this, the containsKey guard below
+        // skips reconnection after a force-stop + relaunch — `live` still
+        // claims those gateway IDs even though their WS brokers died with
+        // the old process.
+        //
+        // Done before observeAll() so the first emission finds an empty
+        // map and reconnects every wanted node. `.toList()` is required:
+        // `stop` mutates `live` via `live.remove`.
+        live.keys.toList().forEach { stop(it) }
+
         store.nodeIdentity.observeAll().collect { rows ->
             val wanted = rows.associateBy { it.gatewayId }
             // Drop nodes whose row disappeared.
@@ -221,7 +234,12 @@ class NodeConnectionManager internal constructor(
         live[row.gatewayId] = Live(broker, jobs)
     }
 
-    private fun stop(gatewayId: String) {
+    /**
+     * Internal so [NodeConnectionManagerTest] can drive teardown directly.
+     * Production callers go through `start()` (which handles adds + removes)
+     * or `unpair()` (which also wipes the database row).
+     */
+    internal fun stop(gatewayId: String) {
         live.remove(gatewayId)?.let { l ->
             l.jobs.forEach { it.cancel() }
             l.broker.stop()

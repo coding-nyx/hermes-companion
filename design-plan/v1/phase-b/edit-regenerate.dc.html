@@ -1,0 +1,201 @@
+<!doctype html>
+<!--
+  edit-regenerate.dc.html
+  Phase B · spec 4/7 — Edit / Regenerate / Branch / Copy any user message.
+
+  Panel A: long-press on a user bubble → action sheet (Edit, Copy,
+  Branch from here, Delete).
+
+  Panel B: edit mode active — bubble becomes a TextField with Save /
+  Cancel, with a "Re-running from here…" ghost overlay on the
+  transcript below. Branched-thread pill in the route capsule.
+
+  HermesComponents referenced: HermesField, SurfaceCard, Chip. New
+  composable target: MessageActionSheet (long-press triggered) and
+  MessageEditField (re-uses HermesField with an inline Save action).
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Edit & regenerate — Phase B</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --indigo-90: #E0E1FB;
+      --indigo-80: #B3B6F2;
+      --indigo-40: #3F51B5;
+      --indigo-20: #2A2C57;
+      --teal-80:  #80CBC4;
+      --teal-40:  #00897B;
+      --sand-80:  #FFCC80;
+      --sand-40:  #EF6C00;
+      --coral-80: #F2B8B5;
+      --coral-40: #BA1A1A;
+      --night-bg:              #15151A;
+      --night-surface-low:     #1A1A20;
+      --night-surface-cont:    #1C1C22;
+      --night-surface-high:    #24242C;
+      --night-surface-highest: #2E2E36;
+      --night-on-surface:      #E8E8EC;
+      --night-on-surface-var:  #B6B6C2;
+      --night-outline:         #47474F;
+      --night-outline-var:     #33333B;
+      --status-ok:    var(--teal-80);
+      --status-warn:  var(--sand-80);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #0A0A0E; color: var(--night-on-surface); font-family: 'Figtree', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+    .kicker { font-family: 'IBM Plex Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 1.2px; font-size: 10px; color: var(--night-on-surface-var); }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+<x-dc>
+<div style="display: flex; flex-direction: column; gap: 28px; padding: 24px;">
+
+  <!-- ─────────────── Panel A · long-press action sheet ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">A · long-press a user bubble</span>
+    </div>
+
+    <div style="height: 360px; position: relative; display: flex; flex-direction: column;">
+      <div style="height: 56px; flex-shrink: 0; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--night-outline-var)">
+        <div class="mono" style="flex: 1; display: flex; align-items: center; gap: 6px; background: var(--night-surface-cont); border: 1px solid rgba(179,182,242,0.35); border-radius: 999px; padding: 8px 12px; font-size: 12px;">
+          <span style="width: 7px; height: 7px; border-radius: 999px; background: var(--status-ok)"></span>
+          <span style="color: var(--night-on-surface-var)">gw-home</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--indigo-80)">@ash</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--night-on-surface-var)">Triage</span>
+        </div>
+      </div>
+
+      <!-- Transcript under scrim -->
+      <div style="flex: 1; padding: 14px 12px 6px; opacity: 0.32;">
+        <div style="display: flex; justify-content: flex-end;">
+          <div style="max-width: 78%; background: var(--indigo-80); color: var(--night-bg); border-radius: 16px 16px 4px 16px; padding: 10px 14px; font-size: 15px; line-height: 21px;">Triage my morning inbox</div>
+        </div>
+        <div style="display: flex; justify-content: flex-start; margin-top: 10px;">
+          <div style="max-width: 88%; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 16px 16px 16px 4px; padding: 14px; font-size: 15px; line-height: 22px;">Pulling notifications from whatsapp, signal, slack…</div>
+        </div>
+      </div>
+
+      <!-- Action sheet (popover above the user bubble) -->
+      <div style="position: absolute; right: 12px; top: 100px; width: 220px; background: var(--night-surface-highest); border: 1px solid var(--night-outline); border-radius: 14px; padding: 6px; box-shadow: 0 8px 28px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 2px;">
+        <div class="kicker" style="padding: 8px 12px 4px;">Message actions</div>
+
+        <button style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: transparent; border: 0; color: var(--night-on-surface); font-size: 14px; cursor: pointer; text-align: left;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+          Edit & rerun
+          <span style="flex: 1"></span>
+          <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var);">⏎</span>
+        </button>
+        <button style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: transparent; border: 0; color: var(--night-on-surface); font-size: 14px; cursor: pointer; text-align: left;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          Copy
+        </button>
+        <button style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: transparent; border: 0; color: var(--night-on-surface); font-size: 14px; cursor: pointer; text-align: left;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M6 8.5v7M8 6h6a4 4 0 0 1 4 4v4.5"/></svg>
+          Branch from here
+        </button>
+        <button style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: transparent; border: 0; color: var(--night-on-surface); font-size: 14px; cursor: pointer; text-align: left;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+          Regenerate reply
+        </button>
+        <div style="height: 1px; background: var(--night-outline-var); margin: 4px 8px;"></div>
+        <button style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: transparent; border: 0; color: var(--coral-80); font-size: 14px; cursor: pointer; text-align: left;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F2B8B5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          Delete
+        </button>
+      </div>
+
+      <!-- Anchor pointer (caret above the user bubble) -->
+      <div style="position: absolute; right: 32px; top: 92px; width: 14px; height: 14px; background: var(--night-surface-highest); border-right: 1px solid var(--night-outline); border-top: 1px solid var(--night-outline); transform: rotate(-45deg);"></div>
+
+      <!-- Composer -->
+      <div style="flex-shrink: 0; border-top: 1px solid var(--night-outline-var); padding: 10px 12px 22px; background: var(--night-bg);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="flex: 1; min-height: 44px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 22px; padding: 0 16px; display: flex; align-items: center; font-size: 14px; color: rgba(232,232,236,0.35);">Send to @ash</div>
+          <button style="width: 44px; height: 44px; border-radius: 999px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────── Panel B · edit mode + branch ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">B · edit mode (top) and branched thread pill (bottom)</span>
+    </div>
+
+    <div style="padding: 14px 12px; display: flex; flex-direction: column; gap: 14px;">
+
+      <!-- Edit-in-place example -->
+      <div style="display: flex; flex-direction: column; gap: 6px; max-width: 92%; align-self: flex-end;">
+        <div class="mono" style="font-size: 10px; color: var(--indigo-90); display: flex; align-items: center; gap: 6px;">
+          <span style="width: 6px; height: 6px; border-radius: 999px; background: var(--indigo-80);"></span>
+          Editing · original will be truncated below
+        </div>
+        <!-- The editable field replaces the bubble -->
+        <div style="background: var(--night-surface-high); border: 1.5px solid var(--indigo-80); border-radius: 16px 16px 4px 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
+          <textarea style="background: transparent; border: 0; outline: 0; resize: none; color: var(--night-on-surface); font-family: 'Figtree', system-ui, sans-serif; font-size: 15px; line-height: 21px; width: 100%; min-height: 60px;" rows="3">Triage my morning inbox — skip the team channel and anything from Priya</textarea>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var);">⌘⏎ save · esc cancel</span>
+            <span style="flex: 1"></span>
+            <button style="height: 32px; padding: 0 14px; border-radius: 999px; background: transparent; border: 1px solid var(--night-outline); color: var(--night-on-surface-var); font-size: 12px;">Cancel</button>
+            <button style="height: 32px; padding: 0 14px; border-radius: 999px; background: var(--indigo-80); color: var(--night-bg); font-size: 12px; font-weight: 600; border: 0; display: flex; align-items: center; gap: 6px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#15151A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+              Save & rerun
+            </button>
+          </div>
+        </div>
+        <!-- Ghost preview of the original (struck through) -->
+        <div style="max-width: 92%; align-self: flex-end; opacity: 0.45; margin-top: 4px; padding: 0 4px;">
+          <div style="font-size: 13px; line-height: 18px; color: var(--night-on-surface-var); text-decoration: line-through;">Triage my morning inbox</div>
+        </div>
+        <!-- Truncation marker -->
+        <div style="display: flex; align-items: center; gap: 8px; padding: 4px 0;">
+          <div style="flex: 1; height: 1px; background: var(--coral-40); opacity: 0.6;"></div>
+          <span class="mono" style="font-size: 10px; color: var(--coral-80); text-transform: uppercase; letter-spacing: 1.2px;">truncated below</span>
+          <div style="flex: 1; height: 1px; background: var(--coral-40); opacity: 0.6;"></div>
+        </div>
+      </div>
+
+      <!-- Branched-thread route capsule preview -->
+      <div style="background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div class="kicker">Route after Branch from here</div>
+        <div class="mono" style="display: flex; align-items: center; gap: 6px; background: var(--night-surface-high); border: 1px solid rgba(179,182,242,0.35); border-radius: 999px; padding: 8px 12px; font-size: 12px;">
+          <span style="width: 7px; height: 7px; border-radius: 999px; background: var(--status-ok)"></span>
+          <span style="color: var(--night-on-surface-var)">gw-home</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--indigo-80)">@ash</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--night-on-surface-var)">Triage</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <!-- Branch chip -->
+          <span style="display: flex; align-items: center; gap: 4px; padding: 2px 8px; background: rgba(255,204,128,0.18); border: 1px solid rgba(255,204,128,0.45); border-radius: 999px; color: var(--sand-80); font-size: 11px;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M6 8v8M8 6h6a4 4 0 0 1 4 4v4.5"/></svg>
+            branch · v2
+          </span>
+        </div>
+        <div style="font-size: 12px; color: var(--night-on-surface-var); line-height: 17px;">
+          Original thread kept under <span class="mono" style="font-size: 11px;">Triage · v1</span>. The fork inherits the message prefix but starts a fresh run with the same profile (or the one you pick from ProfileSwitcher).
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":446,"height":900}}'>
+class Component extends DCLogic { constructor(props) { super(props); } }
+</script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!doctype html>
+<!--
+  streaming-text.dc.html
+  Phase B · spec 1/7 — Token-by-token streaming text in the chat surface.
+  Three panels stacked vertically on the same canvas so the build
+  subagent can compare live stream / mid-stream cancel / scroll-away
+  pill on a single sheet. Each panel is 390 × 360 so the file still
+  reads at 390 × 844 when one panel is the primary render.
+
+  Hermes theme (matches v1/ChatSurface.dc.html). HermesComponents
+  referenced as visual notes: HermesMark (top-bar), Chip (route),
+  SurfaceCard (message bubble), StatusBadge (status row).
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Streaming text — Phase B</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --indigo-90: #E0E1FB;
+      --indigo-80: #B3B6F2;
+      --indigo-40: #3F51B5;
+      --indigo-20: #2A2C57;
+      --teal-80:  #80CBC4;
+      --teal-40:  #00897B;
+      --sand-80:  #FFCC80;
+      --sand-40:  #EF6C00;
+      --coral-80: #F2B8B5;
+      --coral-40: #BA1A1A;
+      --night-bg:              #15151A;
+      --night-surface-low:     #1A1A20;
+      --night-surface-cont:    #1C1C22;
+      --night-surface-high:    #24242C;
+      --night-surface-highest: #2E2E36;
+      --night-on-surface:      #E8E8EC;
+      --night-on-surface-var:  #B6B6C2;
+      --night-outline:         #47474F;
+      --night-outline-var:     #33333B;
+      --status-ok:    var(--teal-80);
+      --status-warn:  var(--sand-80);
+      --status-error: var(--coral-80);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #0A0A0E; color: var(--night-on-surface); font-family: 'Figtree', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+    .serif { font-family: 'Instrument Serif', serif; font-weight: 400; }
+    .kicker { font-family: 'IBM Plex Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 1.2px; font-size: 10px; color: var(--night-on-surface-var); }
+    @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0.12; } }
+    @keyframes caret-slide { from { transform: translateX(-2px); opacity: 0.4; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes shimmer { 0% { opacity: 0.55; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
+    @keyframes token-pulse { 0% { background: rgba(179,182,242,0.18); } 100% { background: transparent; } }
+  </style>
+</head>
+<body>
+<x-dc>
+<div style="display: flex; flex-direction: column; gap: 28px; padding: 24px;">
+
+  <!-- ─────────────── Panel A · live token stream ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">A · live token stream</span>
+      <span style="flex: 1"></span>
+      <span class="mono" style="font-size: 10px; color: var(--status-ok); animation: shimmer 1.6s ease-in-out infinite">● streaming</span>
+    </div>
+    <div style="height: 360px; display: flex; flex-direction: column;">
+
+      <!-- Top bar reference -->
+      <div style="height: 56px; flex-shrink: 0; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--night-outline-var)">
+        <button aria-label="Open threads" style="width: 44px; height: 44px; border-radius: 12px; background: transparent; border: 0; display: flex; align-items: center; justify-content: center;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="mono" style="flex: 1; display: flex; align-items: center; gap: 6px; background: var(--night-surface-cont); border: 1px solid rgba(179,182,242,0.35); border-radius: 999px; padding: 8px 12px; font-size: 12px;">
+          <span style="width: 7px; height: 7px; border-radius: 999px; background: var(--status-ok)"></span>
+          <span style="color: var(--night-on-surface-var)">gw-home</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--indigo-80)">@ash</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--night-on-surface-var)">Phase B spec</span>
+        </div>
+      </div>
+
+      <!-- Transcript -->
+      <div style="flex: 1; overflow-y: auto; padding: 14px 12px 6px; display: flex; flex-direction: column; gap: 10px;">
+
+        <!-- User -->
+        <div style="display: flex; justify-content: flex-end;">
+          <div style="max-width: 78%; background: var(--indigo-80); color: var(--night-bg); border-radius: 16px 16px 4px 16px; padding: 10px 14px; font-size: 15px; line-height: 21px;">
+            What does streaming-first chat actually mean?
+          </div>
+        </div>
+
+        <!-- Assistant bubble: streaming -->
+        <div style="display: flex; justify-content: flex-start;">
+          <div style="max-width: 88%; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 16px 16px 16px 4px; padding: 14px; display: flex; flex-direction: column; gap: 12px;">
+
+            <!-- Para 1 already committed (full opacity, no caret) -->
+            <div style="font-size: 15px; line-height: 22px;">
+              Streaming-first means the chat surface behaves like a real channel —
+              tokens land as the model produces them, not as a single block when the
+              run finishes.
+            </div>
+
+            <!-- Para 2 just appeared (fade-in animation) -->
+            <div style="font-size: 15px; line-height: 22px; animation: fade-in 220ms ease-out;">
+              Concretely that gives us three things Telegram can't:
+            </div>
+
+            <!-- Para 3 actively streaming (last few tokens with highlight + caret) -->
+            <div style="font-size: 15px; line-height: 22px;">
+              <span style="animation: token-pulse 600ms ease-out;">1. Sub-second feedback</span> so you know
+              the agent is alive before the first paragraph<span style="display: inline-block; width: 1px; height: 16px; background: var(--indigo-80); vertical-align: -3px; margin-left: 1px; animation: blink 1s step-end infinite"></span>
+            </div>
+
+            <!-- Live elapsed-time caption (mono, muted) -->
+            <div class="mono" style="font-size: 10px; color: var(--night-on-surface-var); display: flex; align-items: center; gap: 6px;">
+              <span style="width: 6px; height: 6px; border-radius: 999px; background: var(--indigo-80); animation: shimmer 1.4s ease-in-out infinite"></span>
+              drafting · 1.4s · 312 tokens
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composer -->
+      <div style="flex-shrink: 0; border-top: 1px solid var(--night-outline-var); padding: 10px 12px 22px; background: var(--night-bg);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button aria-label="Attach" style="width: 44px; height: 44px; border-radius: 999px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <div style="flex: 1; min-height: 44px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 22px; padding: 0 16px; display: flex; align-items: center; font-size: 14px; color: rgba(232,232,236,0.35);">Send to @ash</div>
+          <!-- Stop button replaces send while streaming -->
+          <button aria-label="Stop generating" style="width: 44px; height: 44px; border-radius: 999px; background: var(--coral-40); display: flex; align-items: center; justify-content: center; border: 0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#15151A"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────── Panel B · long-press "Stop generating" overlay ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">B · long-press the streaming message</span>
+    </div>
+    <div style="height: 360px; position: relative; display: flex; flex-direction: column;">
+
+      <!-- Top bar (identical reference) -->
+      <div style="height: 56px; flex-shrink: 0; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--night-outline-var)">
+        <div class="mono" style="flex: 1; display: flex; align-items: center; gap: 6px; background: var(--night-surface-cont); border: 1px solid rgba(179,182,242,0.35); border-radius: 999px; padding: 8px 12px; font-size: 12px;">
+          <span style="width: 7px; height: 7px; border-radius: 999px; background: var(--status-ok)"></span>
+          <span style="color: var(--night-on-surface-var)">gw-home</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--indigo-80)">@ash</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--night-on-surface-var)">Phase B spec</span>
+        </div>
+      </div>
+
+      <!-- Transcript under scrim -->
+      <div style="flex: 1; padding: 14px 12px 6px; opacity: 0.32;">
+        <div style="display: flex; justify-content: flex-start;">
+          <div style="max-width: 88%; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 16px 16px 16px 4px; padding: 14px; display: flex; flex-direction: column; gap: 12px;">
+            <div style="font-size: 15px; line-height: 22px;">Streaming-first means the chat surface behaves like a real channel — tokens land as the model produces them…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stop overlay -->
+      <div style="position: absolute; left: 12px; right: 12px; top: 90px; background: var(--night-surface-highest); border: 1px solid var(--coral-40); border-radius: 14px; padding: 14px; box-shadow: 0 8px 28px rgba(0,0,0,0.55); display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="width: 32px; height: 32px; border-radius: 999px; background: rgba(186,26,26,0.18); display: flex; align-items: center; justify-content: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F2B8B5"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+          </span>
+          <div style="display: flex; flex-direction: column;">
+            <div style="font-size: 14px; line-height: 18px; font-weight: 600;">Stop generating?</div>
+            <div class="mono" style="font-size: 11px; color: var(--night-on-surface-var);">@ash · 1.4s · 312 tokens streamed</div>
+          </div>
+        </div>
+        <div style="font-size: 12px; color: var(--night-on-surface-var); line-height: 18px;">
+          Cancels at the next token boundary. Already-streamed text is kept and the thread stays usable.
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button style="flex: 1; height: 44px; border-radius: 999px; background: transparent; border: 1px solid var(--night-outline); color: var(--night-on-surface); font-size: 14px; font-weight: 600;">Keep streaming</button>
+          <button style="flex: 1; height: 44px; border-radius: 999px; background: var(--coral-40); color: var(--night-bg); font-size: 14px; font-weight: 600; border: 0;">Stop</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────── Panel C · scrolled-away "↓ new messages" pill ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">C · user has scrolled up</span>
+      <span style="flex: 1"></span>
+      <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var)">scroll Y = 240</span>
+    </div>
+    <div style="height: 360px; position: relative; display: flex; flex-direction: column;">
+
+      <!-- Top bar -->
+      <div style="height: 56px; flex-shrink: 0; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--night-outline-var)">
+        <div class="mono" style="flex: 1; display: flex; align-items: center; gap: 6px; background: var(--night-surface-cont); border: 1px solid rgba(179,182,242,0.35); border-radius: 999px; padding: 8px 12px; font-size: 12px;">
+          <span style="width: 7px; height: 7px; border-radius: 999px; background: var(--status-ok)"></span>
+          <span style="color: var(--night-on-surface-var)">gw-home</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--indigo-80)">@ash</span>
+        </div>
+      </div>
+
+      <!-- Transcript (visibly scrolled — top of older context shows) -->
+      <div style="flex: 1; overflow-y: auto; padding: 14px 12px 6px; display: flex; flex-direction: column; gap: 10px;">
+        <div class="kicker" style="text-align: center; padding: 4px 0;">Earlier · 09:12</div>
+        <div style="display: flex; justify-content: flex-end;">
+          <div style="max-width: 78%; background: var(--indigo-80); color: var(--night-bg); border-radius: 16px 16px 4px 16px; padding: 10px 14px; font-size: 15px; line-height: 21px;">Read HermesComponents and tell me what's reusable.</div>
+        </div>
+        <div style="display: flex; justify-content: flex-start;">
+          <div style="max-width: 88%; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 16px 16px 16px 4px; padding: 14px; font-size: 15px; line-height: 22px;">Already covers SurfaceCard, HermesButton, HermesField, Chip, StatusBadge…</div>
+        </div>
+        <div style="display: flex; justify-content: flex-end;">
+          <div style="max-width: 78%; background: var(--indigo-80); color: var(--night-bg); border-radius: 16px 16px 4px 16px; padding: 10px 14px; font-size: 15px; line-height: 21px;">What about the route capsule above the composer?</div>
+        </div>
+      </div>
+
+      <!-- ↓ new messages pill (anchored above composer) -->
+      <div style="position: absolute; left: 0; right: 0; bottom: 92px; display: flex; justify-content: center; pointer-events: none;">
+        <button aria-label="3 new messages, jump to bottom" style="pointer-events: auto; display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: var(--indigo-80); color: var(--night-bg); border: 0; font-size: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.4); cursor: pointer;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#15151A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          3 new
+        </button>
+      </div>
+
+      <!-- Composer -->
+      <div style="flex-shrink: 0; border-top: 1px solid var(--night-outline-var); padding: 10px 12px 22px; background: var(--night-bg);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button aria-label="Attach" style="width: 44px; height: 44px; border-radius: 999px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <div style="flex: 1; min-height: 44px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 22px; padding: 0 16px; display: flex; align-items: center; font-size: 14px; color: rgba(232,232,236,0.35);">Send to @ash</div>
+          <button aria-label="Voice input" style="width: 44px; height: 44px; border-radius: 999px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":446,"height":1240}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); }
+}
+</script>
+</body>
+</html>

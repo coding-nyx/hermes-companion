@@ -1,0 +1,222 @@
+<!doctype html>
+<!--
+  agent-handoff.dc.html
+  Phase B · spec 5/7 — Handoff between agents inside one thread.
+
+  Panel A: a transcript where the user types "@knight …" mid-thread.
+  The user bubble carries an @knight recipient chip, the assistant
+  reply shows a Knight-coloured profile chip, and the next user turn
+  hands back to ash.
+
+  Panel B: the HandoffChain visualization — a horizontal strip in the
+  chat top bar (or ContextPanel) showing coder → knight → coder →
+  research so the user can scan the cast at a glance.
+
+  HermesComponents referenced: Chip, SurfaceCard. New composable
+  target: ProfileChip(handle, accent) and HandoffChainChip (a
+  horizontally-scrolling row of ProfileChips joined by › glyphs).
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Agent handoff — Phase B</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --indigo-90: #E0E1FB;
+      --indigo-80: #B3B6F2;
+      --indigo-40: #3F51B5;
+      --indigo-20: #2A2C57;
+      --teal-80:  #80CBC4;
+      --teal-40:  #00897B;
+      --sand-80:  #FFCC80;
+      --sand-40:  #EF6C00;
+      --coral-80: #F2B8B5;
+      --coral-40: #BA1A1A;
+      --magenta-80:#F8BBD0;
+      --magenta-40:#C2185B;
+      --cyan-80:  #80DEEA;
+      --cyan-40:  #00838F;
+      --lime-80:  #DCE775;
+      --lime-40:  #827717;
+      --night-bg:              #15151A;
+      --night-surface-low:     #1A1A20;
+      --night-surface-cont:    #1C1C22;
+      --night-surface-high:    #24242C;
+      --night-surface-highest: #2E2E36;
+      --night-on-surface:      #E8E8EC;
+      --night-on-surface-var:  #B6B6C2;
+      --night-outline:         #47474F;
+      --night-outline-var:     #33333B;
+      --status-ok:    var(--teal-80);
+      --status-warn:  var(--sand-80);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #0A0A0E; color: var(--night-on-surface); font-family: 'Figtree', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+    .kicker { font-family: 'IBM Plex Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 1.2px; font-size: 10px; color: var(--night-on-surface-var); }
+
+    /* Per-profile accent tokens — derived from the profile's gateway color */
+    .pf-ash     { --pf-accent: var(--indigo-80);  --pf-bg: rgba(179,182,242,0.14); --pf-border: rgba(179,182,242,0.45); }
+    .pf-knight  { --pf-accent: var(--magenta-80);--pf-bg: rgba(248,187,208,0.14); --pf-border: rgba(248,187,208,0.45); }
+    .pf-coder   { --pf-accent: var(--cyan-80);   --pf-bg: rgba(128,222,234,0.14); --pf-border: rgba(128,222,234,0.45); }
+    .pf-research{ --pf-accent: var(--lime-80);   --pf-bg: rgba(220,231,117,0.12); --pf-border: rgba(220,231,117,0.45); }
+  </style>
+</head>
+<body>
+<x-dc>
+<div style="display: flex; flex-direction: column; gap: 28px; padding: 24px;">
+
+  <!-- ─────────────── Panel A · @knight mid-thread handoff ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">A · @knight hand-off mid-thread</span>
+    </div>
+
+    <div style="padding: 14px 12px; display: flex; flex-direction: column; gap: 10px;">
+
+      <!-- User: hands off to knight -->
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+        <!-- Recipient chip (the @knight the user addressed) -->
+        <div class="pf-knight mono" style="display: flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--pf-bg); border: 1px solid var(--pf-border); color: var(--pf-accent); font-size: 10px; align-self: flex-end;">
+          <span style="width: 6px; height: 6px; border-radius: 999px; background: var(--pf-accent)"></span>
+          to @knight
+        </div>
+        <div style="max-width: 78%; background: var(--indigo-80); color: var(--night-bg); border-radius: 16px 16px 4px 16px; padding: 10px 14px; font-size: 15px; line-height: 21px;">
+          <span class="mono" style="font-size: 13px; color: var(--magenta-80); background: rgba(248,187,208,0.18); padding: 1px 4px; border-radius: 4px;">@knight</span> can you take over the deployment diff? @ash flagged an NPE on the route handler.
+        </div>
+      </div>
+
+      <!-- Knight reply (different bubble background tint, profile chip on top) -->
+      <div style="display: flex; justify-content: flex-start;">
+        <div class="pf-knight" style="max-width: 88%; background: var(--pf-bg); border: 1px solid var(--pf-border); border-radius: 16px 16px 16px 4px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+          <div class="mono" style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--pf-accent);">
+            <span style="width: 8px; height: 8px; border-radius: 999px; background: var(--pf-accent)"></span>
+            @knight · knight-7b · on gw-prod
+            <span style="flex: 1"></span>
+            <span style="color: var(--night-on-surface-var);">4.1s</span>
+          </div>
+          <div style="font-size: 15px; line-height: 22px;">
+            Pulled the stack. The NPE is in <span class="mono" style="font-size: 13px;">ChatRouteHandler.handle()</span> when <span class="mono" style="font-size: 13px;">route.profile</span> is null on a handoff message — same bug @ash hit last week. Patching now.
+          </div>
+        </div>
+      </div>
+
+      <!-- Knight tool card (Knight-accent) -->
+      <div class="pf-knight" style="display: flex; flex-direction: column; gap: 6px; background: var(--pf-bg); border: 1px solid var(--pf-border); border-radius: 10px; padding: 10px 12px; max-width: 88%; align-self: flex-start;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--pf-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <span class="mono" style="font-size: 13px; color: var(--pf-accent); font-weight: 600;">search.query</span>
+          <span style="flex: 1"></span>
+          <span class="mono" style="font-size: 11px; color: var(--night-on-surface-var);">180 ms · 6 hits</span>
+        </div>
+        <div class="mono" style="font-size: 11px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">grep "route.profile" app/src/main/java/.../ChatRouteHandler.kt</div>
+      </div>
+
+      <!-- User: hands back to ash -->
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+        <div class="pf-ash mono" style="display: flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--pf-bg); border: 1px solid var(--pf-border); color: var(--pf-accent); font-size: 10px; align-self: flex-end;">
+          <span style="width: 6px; height: 6px; border-radius: 999px; background: var(--pf-accent)"></span>
+          to @ash
+        </div>
+        <div style="max-width: 78%; background: var(--indigo-80); color: var(--night-bg); border-radius: 16px 16px 4px 16px; padding: 10px 14px; font-size: 15px; line-height: 21px;">
+          <span class="mono" style="font-size: 13px; color: var(--indigo-90); background: rgba(179,182,242,0.30); padding: 1px 4px; border-radius: 4px;">@ash</span> land the fix when knight's patch is up.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─────────────── Panel B · handoff chain visualization ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">B · handoff chain · where it lives</span>
+    </div>
+
+    <div style="padding: 14px 12px; display: flex; flex-direction: column; gap: 14px;">
+
+      <!-- Top: in the route capsule row -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="kicker">In route capsule (chat top bar)</div>
+        <div class="mono" style="display: flex; align-items: center; gap: 6px; background: var(--night-surface-cont); border: 1px solid rgba(179,182,242,0.35); border-radius: 999px; padding: 8px 12px; font-size: 12px; overflow: hidden;">
+          <span style="width: 7px; height: 7px; border-radius: 999px; background: var(--status-ok)"></span>
+          <span style="color: var(--night-on-surface-var)">gw-prod</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--indigo-80)">@ash</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--night-on-surface-var); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Deploy NPE patch</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="display: flex; align-items: center; gap: 3px;">
+            <span class="pf-ash" style="display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 999px; background: var(--pf-bg); color: var(--pf-accent); font-size: 10px;">@ash</span>
+            <span style="color: rgba(232,232,236,0.3)">›</span>
+            <span class="pf-knight" style="display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 999px; background: var(--pf-bg); color: var(--pf-accent); font-size: 10px;">@knight</span>
+            <span style="color: rgba(232,232,236,0.3)">›</span>
+            <span class="pf-coder" style="display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 999px; background: var(--pf-bg); color: var(--pf-accent); font-size: 10px;">@coder</span>
+            <span style="color: rgba(232,232,236,0.3)">›</span>
+            <span class="pf-research" style="display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 999px; background: var(--pf-bg); color: var(--pf-accent); font-size: 10px;">@research</span>
+          </span>
+          <span style="color: rgba(232,232,236,0.4)">⌄</span>
+        </div>
+      </div>
+
+      <!-- Bottom: standalone "Cast" card in the right panel -->
+      <div style="background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="kicker">Cast</span>
+          <span style="flex: 1"></span>
+          <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var);">4 profiles · 7 turns</span>
+        </div>
+
+        <!-- The cast strip (horizontally scrollable) -->
+        <div style="display: flex; align-items: center; gap: 6px; overflow-x: auto; padding-bottom: 4px;">
+          <div class="pf-ash" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; padding: 8px 6px; border-radius: 10px; background: var(--pf-bg); border: 1px solid var(--pf-border);">
+            <span style="width: 24px; height: 24px; border-radius: 999px; background: rgba(179,182,242,0.25); display: flex; align-items: center; justify-content: center;">
+              <span class="mono" style="font-size: 10px; color: var(--pf-accent); font-weight: 600;">ash</span>
+            </span>
+            <span class="mono" style="font-size: 10px; color: var(--pf-accent);">@ash</span>
+            <span class="mono" style="font-size: 9px; color: var(--night-on-surface-var);">3 turns</span>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.3)" stroke-width="1.6" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <div class="pf-knight" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; padding: 8px 6px; border-radius: 10px; background: var(--pf-bg); border: 1px solid var(--pf-border);">
+            <span style="width: 24px; height: 24px; border-radius: 999px; background: rgba(248,187,208,0.25); display: flex; align-items: center; justify-content: center;">
+              <span class="mono" style="font-size: 10px; color: var(--pf-accent); font-weight: 600;">kn</span>
+            </span>
+            <span class="mono" style="font-size: 10px; color: var(--pf-accent);">@knight</span>
+            <span class="mono" style="font-size: 9px; color: var(--night-on-surface-var);">2 turns</span>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.3)" stroke-width="1.6" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <div class="pf-coder" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; padding: 8px 6px; border-radius: 10px; background: var(--pf-bg); border: 1px solid var(--pf-border);">
+            <span style="width: 24px; height: 24px; border-radius: 999px; background: rgba(128,222,234,0.25); display: flex; align-items: center; justify-content: center;">
+              <span class="mono" style="font-size: 10px; color: var(--pf-accent); font-weight: 600;">co</span>
+            </span>
+            <span class="mono" style="font-size: 10px; color: var(--pf-accent);">@coder</span>
+            <span class="mono" style="font-size: 9px; color: var(--night-on-surface-var);">1 turn</span>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(232,232,236,0.3)" stroke-width="1.6" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <div class="pf-research" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; padding: 8px 6px; border-radius: 10px; background: var(--pf-bg); border: 1px solid var(--pf-border);">
+            <span style="width: 24px; height: 24px; border-radius: 999px; background: rgba(220,231,117,0.25); display: flex; align-items: center; justify-content: center;">
+              <span class="mono" style="font-size: 10px; color: var(--pf-accent); font-weight: 600;">rs</span>
+            </span>
+            <span class="mono" style="font-size: 10px; color: var(--pf-accent);">@research</span>
+            <span class="mono" style="font-size: 9px; color: var(--night-on-surface-var);">1 turn</span>
+          </div>
+        </div>
+
+        <!-- Cast caption -->
+        <div style="font-size: 12px; color: var(--night-on-surface-var); line-height: 17px;">
+          This conversation went: <span class="mono pf-ash" style="color: var(--pf-accent);">coder</span> → <span class="mono pf-knight" style="color: var(--pf-accent);">knight</span> → <span class="mono pf-ash" style="color: var(--pf-accent);">coder</span> → <span class="mono pf-research" style="color: var(--pf-accent);">research</span>. Tap any chip to filter the transcript to that profile's turns.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":446,"height":900}}'>
+class Component extends DCLogic { constructor(props) { super(props); } }
+</script>
+</body>
+</html>

@@ -206,4 +206,7 @@ private class FakeFleetRepository : FleetRepository {
         active.value = gatewayId
         return Result.success(Unit)
     }
+    override suspend fun observeActiveProfileId(gatewayId: String): String? = null
+    override suspend fun setActiveProfile(gatewayId: String, profileId: String): Result<Unit> =
+        Result.success(Unit)
 }

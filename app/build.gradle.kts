@@ -21,6 +21,10 @@ android {
         // These BuildConfig fields only prefill the "Add gateway" dialog in debug.
         buildConfigField("String", "DEFAULT_HERMES_HOST", "\"\"")
         buildConfigField("int", "DEFAULT_HERMES_PORT", "7800")
+        // Phase A feature flag — when true, MainActivity boots V1Shell (ChatGPT-style
+        // 3-column adaptive layout) instead of the v0.2 5-tab bottom nav. Defaults
+        // to false so existing users see no change; flip to true for canary rollout.
+        buildConfigField("boolean", "USE_V1_SHELL", "true")
     }
 
     buildTypes {

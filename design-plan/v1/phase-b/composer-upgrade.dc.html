@@ -1,0 +1,247 @@
+<!doctype html>
+<!--
+  composer-upgrade.dc.html
+  Phase B · spec 6/7 — Composer upgrade.
+
+  Panel A: morph states — empty (mic) → has-text (arrow) → recording
+  (live waveform + stop). The "press-and-hold the mic" gesture is
+  shown mid-press.
+
+  Panel B: "+" attachment sheet (file, photo, camera, location) +
+  Cmd+K quick profile switcher palette that surfaces above the
+  composer.
+
+  HermesComponents referenced: HermesField. New composable target:
+  Composer (replaces the inline row from Phase A), AttachmentSheet,
+  VoiceRecordingOverlay, QuickProfilePalette.
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Composer upgrade — Phase B</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --indigo-90: #E0E1FB;
+      --indigo-80: #B3B6F2;
+      --indigo-40: #3F51B5;
+      --indigo-20: #2A2C57;
+      --teal-80:  #80CBC4;
+      --teal-40:  #00897B;
+      --sand-80:  #FFCC80;
+      --sand-40:  #EF6C00;
+      --coral-80: #F2B8B5;
+      --coral-40: #BA1A1A;
+      --magenta-80:#F8BBD0;
+      --cyan-80:  #80DEEA;
+      --lime-80:  #DCE775;
+      --night-bg:              #15151A;
+      --night-surface-low:     #1A1A20;
+      --night-surface-cont:    #1C1C22;
+      --night-surface-high:    #24242C;
+      --night-surface-highest: #2E2E36;
+      --night-on-surface:      #E8E8EC;
+      --night-on-surface-var:  #B6B6C2;
+      --night-outline:         #47474F;
+      --night-outline-var:     #33333B;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #0A0A0E; color: var(--night-on-surface); font-family: 'Figtree', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+    .kicker { font-family: 'IBM Plex Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 1.2px; font-size: 10px; color: var(--night-on-surface-var); }
+    @keyframes wave { 0%, 100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.15); opacity: 0.7; } }
+  </style>
+</head>
+<body>
+<x-dc>
+<div style="display: flex; flex-direction: column; gap: 28px; padding: 24px;">
+
+  <!-- ─────────────── Panel A · composer morph states ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">A · composer morph · empty → text → recording</span>
+    </div>
+
+    <div style="padding: 0 12px 12px; display: flex; flex-direction: column; gap: 18px;">
+
+      <!-- State 1 · empty -->
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div class="kicker">Empty · send button is the mic</div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button aria-label="Attach" style="width: 44px; height: 44px; border-radius: 999px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <div style="flex: 1; min-height: 44px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 22px; padding: 0 16px; display: flex; align-items: center; font-size: 14px; color: rgba(232,232,236,0.35);">Send to @ash</div>
+          <button aria-label="Voice input" style="width: 44px; height: 44px; border-radius: 999px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- State 2 · has text (multi-line, send arrow) -->
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div class="kicker">Has text · multi-line grows · arrow appears</div>
+        <div style="display: flex; align-items: flex-end; gap: 8px;">
+          <button aria-label="Attach" style="width: 44px; height: 44px; border-radius: 999px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <div style="flex: 1; min-height: 44px; max-height: 160px; background: var(--night-surface-cont); border: 1px solid var(--indigo-40); border-radius: 22px; padding: 10px 16px; display: flex; flex-direction: column; gap: 4px;">
+            <div style="font-size: 14px; line-height: 20px; color: var(--night-on-surface);">@knight take a look at the NPE on <span class="mono" style="font-size: 13px;">ChatRouteHandler.kt</span> — same stack we saw last week.</div>
+            <div style="font-size: 14px; line-height: 20px; color: rgba(232,232,236,0.30);">|</div>
+          </div>
+          <!-- Send arrow -->
+          <button aria-label="Send" style="width: 44px; height: 44px; border-radius: 999px; background: var(--indigo-80); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15151A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- State 3 · recording (press-and-hold the mic) -->
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div class="kicker">Recording · press-and-hold the mic · live waveform</div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button aria-label="Attach" style="width: 44px; height: 44px; border-radius: 999px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <div style="flex: 1; min-height: 44px; background: rgba(186,26,26,0.10); border: 1px solid rgba(186,26,26,0.45); border-radius: 22px; padding: 0 16px; display: flex; align-items: center; gap: 10px;">
+            <span style="width: 8px; height: 8px; border-radius: 999px; background: var(--coral-40); animation: pulse 1.2s ease-in-out infinite;"></span>
+            <!-- Live waveform (12 bars at random-ish heights) -->
+            <div style="display: flex; align-items: center; gap: 2px; height: 22px; flex: 1;">
+              <span style="width: 2px; height: 8px; background: var(--coral-80); border-radius: 2px; animation: wave 0.7s ease-in-out infinite;"></span>
+              <span style="width: 2px; height: 16px; background: var(--coral-80); border-radius: 2px; animation: wave 0.8s ease-in-out infinite;"></span>
+              <span style="width: 2px; height: 11px; background: var(--coral-80); border-radius: 2px; animation: wave 0.6s ease-in-out infinite;"></span>
+              <span style="width: 2px; height: 20px; background: var(--coral-80); border-radius: 2px; animation: wave 0.9s ease-in-out infinite;"></span>
+              <span style="width: 2px; height: 7px; background: var(--coral-80); border-radius: 2px; animation: wave 0.7s ease-in-out infinite;"></span>
+              <span style="width: 2px; height: 14px; background: var(--coral-80); border-radius: 2px; animation: wave 0.8s ease-in-out infinite;"></span>
+              <span style="width: 2px; height: 18px; background: var(--coral-80); border-radius: 2px; animation: wave 0.65s ease-in-out infinite;"></span>
+              <span style="width: 2px; height: 9px; background: var(--coral-80); border-radius: 2px; animation: wave 0.75s ease-in-out infinite;"></span>
+              <span style="width: 2px; height: 22px; background: var(--coral-80); border-radius: 2px; animation: wave 0.85s ease-in-out infinite;"></span>
+              <span style="width: 2px; height: 12px; background: var(--coral-80); border-radius: 2px; animation: wave 0.6s ease-in-out infinite;"></span>
+              <span style="width: 2px; height: 17px; background: var(--coral-80); border-radius: 2px; animation: wave 0.8s ease-in-out infinite;"></span>
+              <span style="width: 2px; height: 6px; background: var(--coral-80); border-radius: 2px; animation: wave 0.7s ease-in-out infinite;"></span>
+            </div>
+            <span class="mono" style="font-size: 12px; color: var(--coral-80);">0:04</span>
+          </div>
+          <!-- Stop button -->
+          <button aria-label="Stop recording" style="width: 44px; height: 44px; border-radius: 999px; background: var(--coral-40); display: flex; align-items: center; justify-content: center; border: 0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#15151A"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+          </button>
+        </div>
+        <div class="mono" style="font-size: 10px; color: var(--night-on-surface-var); text-align: center; padding-top: 2px;">Release to attach · slide up to cancel</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─────────────── Panel B · attachment sheet + Cmd+K palette ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">B · "+" attachment sheet (left) · Cmd+K quick profile (right)</span>
+    </div>
+
+    <div style="padding: 14px 12px; display: flex; flex-direction: column; gap: 18px;">
+
+      <!-- "+" sheet -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="kicker">"+" tap · attachment sheet rises above composer</div>
+        <div style="position: relative; height: 220px; background: var(--night-bg); border: 1px solid var(--night-outline-var); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 12px;">
+          <!-- Composer still visible at bottom -->
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: auto;">
+            <button aria-label="Attach" style="width: 44px; height: 44px; border-radius: 999px; background: var(--indigo-80); border: 0; display: flex; align-items: center; justify-content: center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15151A" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+            </button>
+            <div style="flex: 1; min-height: 44px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 22px; padding: 0 16px; display: flex; align-items: center; font-size: 14px; color: rgba(232,232,236,0.35);">Send to @ash</div>
+          </div>
+
+          <!-- Sheet rising -->
+          <div style="position: absolute; left: 12px; right: 12px; bottom: 70px; background: var(--night-surface-highest); border: 1px solid var(--night-outline); border-radius: 14px; padding: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <span class="kicker">Attach</span>
+              <span style="flex: 1"></span>
+              <button aria-label="Close" style="width: 28px; height: 28px; border-radius: 999px; background: transparent; border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.8" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+              <button style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border-radius: 12px; background: var(--night-surface-high); border: 1px solid var(--night-outline); color: var(--night-on-surface); cursor: pointer;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B3B6F2" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>
+                <span style="font-size: 11px;">File</span>
+              </button>
+              <button style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border-radius: 12px; background: var(--night-surface-high); border: 1px solid var(--night-outline); color: var(--night-on-surface); cursor: pointer;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#80CBC4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M7 5v14M17 5v14"/></svg>
+                <span style="font-size: 11px;">Photo</span>
+              </button>
+              <button style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border-radius: 12px; background: var(--night-surface-high); border: 1px solid var(--night-outline); color: var(--night-on-surface); cursor: pointer;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFCC80" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h3l2-2h4l2 2h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                <span style="font-size: 11px;">Camera</span>
+              </button>
+              <button style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border-radius: 12px; background: var(--night-surface-high); border: 1px solid var(--night-outline); color: var(--night-on-surface); cursor: pointer;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F2B8B5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-7.5 7-13a7 7 0 0 0-14 0c0 5.5 7 13 7 13z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                <span style="font-size: 11px;">Location</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cmd+K palette -->
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="kicker">⌘K / Ctrl+K · quick profile palette</div>
+        <div style="background: var(--night-surface-highest); border: 1px solid var(--indigo-80); border-radius: 14px; padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 2px;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--night-surface-high); border: 1px solid var(--night-outline); border-radius: 10px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--night-on-surface-var)" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <span style="font-size: 14px; color: var(--night-on-surface);">knight</span>
+            <span style="flex: 1"></span>
+            <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var); background: var(--night-surface-cont); padding: 2px 6px; border-radius: 4px;">⌘K</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 1px;">
+            <div class="pf-knight" style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: rgba(179,182,242,0.10); border: 1px solid rgba(179,182,242,0.30); cursor: pointer;">
+              <span style="width: 26px; height: 26px; border-radius: 999px; background: rgba(248,187,208,0.25); display: flex; align-items: center; justify-content: center;">
+                <span class="mono" style="font-size: 10px; color: var(--magenta-80); font-weight: 600;">kn</span>
+              </span>
+              <div style="display: flex; flex-direction: column; gap: 1px;">
+                <span style="font-size: 13px; color: var(--night-on-surface); font-weight: 500;">@knight</span>
+                <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var);">knight-7b · on gw-prod</span>
+              </div>
+              <span style="flex: 1"></span>
+              <span class="mono" style="font-size: 10px; color: var(--indigo-80);">⏎</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer;">
+              <span style="width: 26px; height: 26px; border-radius: 999px; background: rgba(179,182,242,0.25); display: flex; align-items: center; justify-content: center;">
+                <span class="mono" style="font-size: 10px; color: var(--indigo-80); font-weight: 600;">as</span>
+              </span>
+              <div style="display: flex; flex-direction: column; gap: 1px;">
+                <span style="font-size: 13px; color: var(--night-on-surface);">@ash</span>
+                <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var);">ash-30b · on gw-home</span>
+              </div>
+              <span style="flex: 1"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer;">
+              <span style="width: 26px; height: 26px; border-radius: 999px; background: rgba(128,222,234,0.25); display: flex; align-items: center; justify-content: center;">
+                <span class="mono" style="font-size: 10px; color: var(--cyan-80); font-weight: 600;">co</span>
+              </span>
+              <div style="display: flex; flex-direction: column; gap: 1px;">
+                <span style="font-size: 13px; color: var(--night-on-surface);">@coder</span>
+                <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var);">coder-3.5 · on gw-prod</span>
+              </div>
+              <span style="flex: 1"></span>
+            </div>
+          </div>
+          <div class="mono" style="font-size: 10px; color: var(--night-on-surface-var); padding: 6px 10px 4px;">↑↓ navigate · ⏎ switch · esc close</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":446,"height":900}}'>
+class Component extends DCLogic { constructor(props) { super(props); } }
+</script>
+</body>
+</html>

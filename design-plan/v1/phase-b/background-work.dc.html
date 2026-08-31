@@ -1,0 +1,193 @@
+<!doctype html>
+<!--
+  background-work.dc.html
+  Phase B · spec 3/7 — Background work indicator.
+
+  Panel A: persistent status bar above the route capsule showing
+  shimmer + phase label + elapsed. Three sub-states shown side-by-side
+  (drafting / calling tools / awaiting approval).
+
+  Panel B: when the user has scrolled up, the status bar collapses
+  into a floating "● agent working" pill at the bottom of the chat,
+  tap → expands ContextPanel.
+
+  HermesComponents referenced: StatusBadge, Chip. New composable
+  target: BackgroundWorkBar (sits in the chat shell scaffold above
+  the route capsule row).
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Background work indicator — Phase B</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --indigo-90: #E0E1FB;
+      --indigo-80: #B3B6F2;
+      --indigo-40: #3F51B5;
+      --indigo-20: #2A2C57;
+      --teal-80:  #80CBC4;
+      --teal-40:  #00897B;
+      --sand-80:  #FFCC80;
+      --sand-40:  #EF6C00;
+      --coral-80: #F2B8B5;
+      --coral-40: #BA1A1A;
+      --night-bg:              #15151A;
+      --night-surface-low:     #1A1A20;
+      --night-surface-cont:    #1C1C22;
+      --night-surface-high:    #24242C;
+      --night-surface-highest: #2E2E36;
+      --night-on-surface:      #E8E8EC;
+      --night-on-surface-var:  #B6B6C2;
+      --night-outline:         #47474F;
+      --night-outline-var:     #33333B;
+      --status-ok:    var(--teal-80);
+      --status-warn:  var(--sand-80);
+      --status-live:  var(--indigo-80);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #0A0A0E; color: var(--night-on-surface); font-family: 'Figtree', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+    .kicker { font-family: 'IBM Plex Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 1.2px; font-size: 10px; color: var(--night-on-surface-var); }
+
+    @keyframes shimmer { 0% { opacity: 0.55; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
+    @keyframes bar-pulse { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    @keyframes dot-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.55; } }
+  </style>
+</head>
+<body>
+<x-dc>
+<div style="display: flex; flex-direction: column; gap: 28px; padding: 24px;">
+
+  <!-- ─────────────── Panel A · status bar above the route capsule ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">A · persistent status bar · three sub-states</span>
+    </div>
+
+    <div style="padding: 0;">
+
+      <!-- Sub-state 1 · drafting -->
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(179,182,242,0.10); border-bottom: 1px solid rgba(179,182,242,0.20); height: 36px;">
+          <span style="width: 8px; height: 8px; border-radius: 999px; background: var(--status-live); animation: dot-pulse 1.2s ease-in-out infinite;"></span>
+          <span class="mono" style="font-size: 12px; color: var(--indigo-90); font-weight: 500;">drafting</span>
+          <span class="mono" style="font-size: 11px; color: var(--night-on-surface-var);">4.2s · 612 tokens</span>
+          <span style="flex: 1"></span>
+          <button class="mono" style="font-size: 11px; color: var(--coral-80); background: transparent; border: 0; cursor: pointer;">Stop</button>
+        </div>
+        <div style="position: relative; height: 2px; background: var(--night-surface-high); overflow: hidden;">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 50%; background: var(--indigo-80);"></div>
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 100%; background: linear-gradient(90deg, transparent, rgba(179,182,242,0.55), transparent); animation: bar-pulse 1.6s ease-in-out infinite;"></div>
+        </div>
+        <!-- route capsule row underneath -->
+        <div style="height: 56px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--night-outline-var)">
+          <button aria-label="Open threads" style="width: 44px; height: 44px; border-radius: 12px; background: transparent; border: 0; display: flex; align-items: center; justify-content: center;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <div class="mono" style="flex: 1; display: flex; align-items: center; gap: 6px; background: var(--night-surface-cont); border: 1px solid rgba(179,182,242,0.35); border-radius: 999px; padding: 8px 12px; font-size: 12px;">
+            <span style="width: 7px; height: 7px; border-radius: 999px; background: var(--status-ok)"></span>
+            <span style="color: var(--night-on-surface-var)">gw-home</span>
+            <span style="color: rgba(232,232,236,0.3)">›</span>
+            <span style="color: var(--indigo-80)">@ash</span>
+            <span style="color: rgba(232,232,236,0.3)">›</span>
+            <span style="color: var(--night-on-surface-var)">Phase B spec</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-state 2 · calling tools -->
+      <div style="border-top: 1px solid var(--night-outline-var);">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(128,203,196,0.08); border-bottom: 1px solid rgba(128,203,196,0.20); height: 36px;">
+          <span style="width: 8px; height: 8px; border-radius: 999px; background: var(--status-ok); animation: dot-pulse 1.2s ease-in-out infinite;"></span>
+          <span class="mono" style="font-size: 12px; color: var(--teal-80); font-weight: 500;">calling tools</span>
+          <span class="mono" style="font-size: 11px; color: var(--night-on-surface-var);">3 / 4 · 6.1s</span>
+          <!-- inline tool queue pill -->
+          <span style="display: flex; align-items: center; gap: 4px; padding: 2px 8px; background: rgba(0,0,0,0.25); border-radius: 999px;">
+            <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var);">search.query ✓</span>
+            <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var);">file.read ✓</span>
+            <span class="mono" style="font-size: 10px; color: var(--teal-80); font-weight: 600;">bash.exec ⏵</span>
+          </span>
+          <span style="flex: 1"></span>
+          <button class="mono" style="font-size: 11px; color: var(--coral-80); background: transparent; border: 0; cursor: pointer;">Stop</button>
+        </div>
+      </div>
+
+      <!-- Sub-state 3 · awaiting approval -->
+      <div style="border-top: 1px solid var(--night-outline-var);">
+        <div style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: rgba(255,204,128,0.10); border-bottom: 1px solid rgba(255,204,128,0.30); height: 36px;">
+          <span style="width: 8px; height: 8px; border-radius: 999px; background: var(--status-warn); animation: dot-pulse 1.2s ease-in-out infinite;"></span>
+          <span class="mono" style="font-size: 12px; color: var(--sand-80); font-weight: 500;">awaiting approval</span>
+          <span class="mono" style="font-size: 11px; color: var(--night-on-surface-var);">git.push · 12s</span>
+          <span style="flex: 1"></span>
+          <button class="mono" style="font-size: 11px; color: var(--indigo-90); background: var(--indigo-40); border: 0; padding: 4px 12px; border-radius: 999px; cursor: pointer;">Review →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─────────────── Panel B · scrolled-away pill ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">B · user scrolled up · bar collapses to floating pill</span>
+    </div>
+
+    <div style="height: 360px; position: relative; display: flex; flex-direction: column;">
+      <!-- top bar (status bar hidden because user scrolled) -->
+      <div style="height: 56px; flex-shrink: 0; padding: 8px 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--night-outline-var)">
+        <div class="mono" style="flex: 1; display: flex; align-items: center; gap: 6px; background: var(--night-surface-cont); border: 1px solid rgba(179,182,242,0.35); border-radius: 999px; padding: 8px 12px; font-size: 12px;">
+          <span style="width: 7px; height: 7px; border-radius: 999px; background: var(--status-ok)"></span>
+          <span style="color: var(--night-on-surface-var)">gw-home</span>
+          <span style="color: rgba(232,232,236,0.3)">›</span>
+          <span style="color: var(--indigo-80)">@ash</span>
+        </div>
+      </div>
+
+      <!-- Transcript (visibly scrolled up — older context visible) -->
+      <div style="flex: 1; padding: 14px 12px 6px; display: flex; flex-direction: column; gap: 10px;">
+        <div class="kicker" style="text-align: center; padding: 4px 0;">Earlier · 09:08</div>
+        <div style="display: flex; justify-content: flex-end;">
+          <div style="max-width: 78%; background: var(--indigo-80); color: var(--night-bg); border-radius: 16px 16px 4px 16px; padding: 10px 14px; font-size: 15px; line-height: 21px;">Triage my morning inbox.</div>
+        </div>
+        <div style="display: flex; justify-content: flex-start;">
+          <div style="max-width: 88%; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 16px 16px 16px 4px; padding: 14px; font-size: 15px; line-height: 22px;">Pulling notifications from whatsapp, signal, slack…</div>
+        </div>
+        <div style="display: flex; justify-content: flex-end;">
+          <div style="max-width: 78%; background: var(--indigo-80); color: var(--night-bg); border-radius: 16px 16px 4px 16px; padding: 10px 14px; font-size: 15px; line-height: 21px;">Skip the ones from the team channel.</div>
+        </div>
+      </div>
+
+      <!-- Floating pill above composer -->
+      <div style="position: absolute; left: 12px; right: 12px; bottom: 92px;">
+        <button aria-label="Agent working, tap to expand context panel" style="width: 100%; height: 44px; border-radius: 999px; background: var(--night-surface-highest); border: 1px solid rgba(179,182,242,0.45); display: flex; align-items: center; gap: 10px; padding: 0 16px; cursor: pointer;">
+          <span style="width: 10px; height: 10px; border-radius: 999px; background: var(--status-live); animation: dot-pulse 1.2s ease-in-out infinite;"></span>
+          <span style="font-size: 13px; font-weight: 500;">Agent working</span>
+          <span class="mono" style="font-size: 11px; color: var(--night-on-surface-var);">drafting · 4.2s</span>
+          <span style="flex: 1"></span>
+          <span class="mono" style="font-size: 11px; color: var(--indigo-80);">⊕ expand</span>
+        </button>
+      </div>
+
+      <!-- Composer -->
+      <div style="flex-shrink: 0; border-top: 1px solid var(--night-outline-var); padding: 10px 12px 22px; background: var(--night-bg);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="flex: 1; min-height: 44px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 22px; padding: 0 16px; display: flex; align-items: center; font-size: 14px; color: rgba(232,232,236,0.35);">Send to @ash</div>
+          <button style="width: 44px; height: 44px; border-radius: 999px; background: var(--coral-40); display: flex; align-items: center; justify-content: center; border: 0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#15151A"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":446,"height":900}}'>
+class Component extends DCLogic { constructor(props) { super(props); } }
+</script>
+</body>
+</html>

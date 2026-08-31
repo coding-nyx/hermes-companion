@@ -1,6 +1,7 @@
 package com.hermes.companion.data.db
 
 import androidx.room.migration.Migration
+import android.util.Log
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
@@ -13,6 +14,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 /** v2: the durable outbound outbox. */
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.i("Migrations", "MIGRATION_1_2: migrate() (target user_version=2)")
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `outbound` (
@@ -42,6 +44,7 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
 /** v3: paired-node identity + broker credential (kept out of the gateway row). */
 val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.i("Migrations", "MIGRATION_2_3: migrate() (target user_version=3)")
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `node_identity` (
@@ -62,6 +65,7 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
 /** v4: capability grants + exclusive leases. */
 val MIGRATION_3_4 = object : Migration(3, 4) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.i("Migrations", "MIGRATION_3_4: migrate() (target user_version=4)")
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `grants` (
@@ -96,6 +100,7 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
 /** v5: seal the node token at rest (plaintext token -> sealedToken). Forces re-pair. */
 val MIGRATION_4_5 = object : Migration(4, 5) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.i("Migrations", "MIGRATION_4_5: migrate() (target user_version=5)")
         // Plaintext tokens must not persist post-hardening and cannot be sealed
         // on the migration thread (no Keystore). Recreate the table; re-pair once.
         db.execSQL("DROP TABLE IF EXISTS `node_identity`")
@@ -119,6 +124,7 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
 /** v6: per-source stream rules (on-device redaction / consent). */
 val MIGRATION_5_6 = object : Migration(5, 6) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.i("Migrations", "MIGRATION_5_6: migrate() (target user_version=6)")
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `stream_rules` (
@@ -137,6 +143,7 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
 /** v7: active-gateway singleton row (T3A). */
 val MIGRATION_6_7 = object : Migration(6, 7) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.i("Migrations", "MIGRATION_6_7: migrate() (target user_version=7)")
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS `active_gateway` (
@@ -155,6 +162,7 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
  * to NULL, falls back to "first profile for the gateway" on read. */
 val MIGRATION_8_9 = object : Migration(8, 9) {
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.i("Migrations", "MIGRATION_8_9: migrate() (target user_version=9)")
         db.execSQL("ALTER TABLE `active_gateway` ADD COLUMN `activeProfileId` TEXT")
     }
 }

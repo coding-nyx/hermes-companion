@@ -1,0 +1,242 @@
+<!doctype html>
+<!--
+  LeftRail.dc.html
+  Phase A · left rail — tablet persistent (320 × 844).
+  On phone this becomes a drawer (see LeftRail-phone.dc.html).
+
+  Structure:
+    - Header (HermesMark + activity inbox indicator "● 3 new")
+    - "New chat" CTA
+    - Search filter
+    - Thread list grouped by time:
+        Today · Yesterday · Previous 7 days · Earlier
+      Each row: profile chip + thread title + unread badge + last message preview
+    - Footer: profile switcher chip + Settings gear
+
+  Reused HermesComponents: HermesMark, Chip, SectionLabel, SurfaceCard,
+  StatusBadge (tones), HermesButton (filled). No new composables invented.
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Left rail — Phase A (tablet)</title>
+  <script src="./support.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --indigo-90:#E0E1FB; --indigo-80:#B3B6F2; --indigo-40:#3F51B5; --indigo-20:#2A2C57;
+      --teal-80:#80CBC4; --teal-40:#00897B;
+      --sand-80:#FFCC80; --sand-40:#EF6C00;
+      --coral-80:#F2B8B5; --coral-40:#BA1A1A;
+      --night-bg:#15151A; --night-surface-cont:#1C1C22;
+      --night-surface-high:#24242C; --night-surface-highest:#2E2E36;
+      --night-on-surface:#E8E8EC; --night-on-surface-var:#B6B6C2;
+      --night-outline:#47474F; --night-outline-var:#33333B;
+      --status-ok:var(--teal-80); --status-warn:var(--sand-80);
+      --status-error:var(--coral-80); --status-dim:#8A8A96;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--night-bg); color: var(--night-on-surface); font-family: 'Figtree', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+    .kicker { font-family: 'IBM Plex Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 1.2px; font-size: 10px; }
+  </style>
+</head>
+<body>
+<x-dc>
+<div style="width: 320px; height: 844px; background: var(--night-bg); display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid var(--night-outline-var)">
+
+  <!-- Header -->
+  <div style="padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--night-outline-var)">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <!-- HermesMark -->
+      <div style="width: 32px; height: 32px; border-radius: 10px; background: var(--night-surface-high); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+        <svg width="18" height="18" viewBox="0 0 32 32" fill="none" stroke="#E8E8EC" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 4v22"/>
+          <circle cx="16" cy="4.6" r="1.8"/>
+          <path d="M10 8.5c3.2-2.4 8.8-2.4 12 0"/>
+          <path d="M9 11.5c4-3 10 3 14 0"/>
+          <path d="M9 16.5c4-3 10 3 14 0"/>
+          <path d="M12.5 26.5L16 23.5l3.5 3"/>
+        </svg>
+      </div>
+      <div style="display: flex; flex-direction: column; flex: 1; min-width: 0">
+        <div style="font-size: 15px; font-weight: 600; line-height: 20px">Hermes</div>
+        <div style="font-size: 11px; color: var(--night-on-surface-var); line-height: 14px">Companion</div>
+      </div>
+      <!-- Activity inbox indicator -->
+      <button aria-label="Activity inbox, 3 new"
+              style="position: relative; width: 36px; height: 36px; border-radius: 10px; background: transparent; border: 0; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <span style="width: 10px; height: 10px; border-radius: 999px; background: var(--status-ok); animation: pulse 1.6s ease-in-out infinite"></span>
+        <span style="position: absolute; top: 4px; right: 4px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
+                     background: var(--indigo-80); color: var(--night-bg); font-size: 10px; font-weight: 700;
+                     display: flex; align-items: center; justify-content: center">3</span>
+      </button>
+    </div>
+
+    <!-- New chat CTA -->
+    <button style="min-height: 40px; padding: 0 14px; border-radius: 12px; background: var(--indigo-80); color: var(--night-bg);
+                   border: 0; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+                   font-size: 13px; font-weight: 600">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15151A" stroke-width="2.2" stroke-linecap="round">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      New chat
+    </button>
+
+    <!-- Search field -->
+    <div style="display: flex; align-items: center; gap: 8px; padding: 0 12px; height: 36px;
+                background: var(--night-surface-cont); border: 1px solid var(--night-outline); border-radius: 10px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--night-on-surface-var)" stroke-width="1.7" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+      </svg>
+      <span style="font-size: 12px; color: var(--night-on-surface-var)">Search threads</span>
+      <span style="flex: 1"></span>
+      <span class="mono" style="font-size: 10px; color: rgba(232,232,236,0.4); background: var(--night-surface-high); border-radius: 4px; padding: 2px 5px">⌘K</span>
+    </div>
+  </div>
+
+  <!-- Thread list (scrollable) -->
+  <div style="flex: 1; overflow-y: auto; padding: 8px 8px 12px; display: flex; flex-direction: column; gap: 14px">
+
+    <!-- TODAY -->
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <div class="kicker" style="color: var(--night-on-surface-var); padding: 4px 8px">Today</div>
+
+      <!-- Row: active -->
+      <div style="background: rgba(179,182,242,0.10); border: 1px solid rgba(179,182,242,0.45);
+                  border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <div class="mono" style="font-size: 11px; font-weight: 600; color: var(--indigo-80); background: rgba(179,182,242,0.18); border-radius: 6px; padding: 2px 6px">@ash</div>
+          <div style="font-size: 13px; line-height: 18px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Deploy check</div>
+          <span style="font-size: 11px; color: var(--night-on-surface-var); flex-shrink: 0">09:42</span>
+        </div>
+        <div style="font-size: 12px; line-height: 16px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
+          Streaming · <span style="color: var(--indigo-80)">file.read</span> on HermesComponents.kt…
+        </div>
+      </div>
+
+      <!-- Row: unread -->
+      <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer; min-height: 44px">
+        <div class="mono" style="font-size: 11px; font-weight: 600; color: var(--night-on-surface-var); background: var(--night-surface-high); border-radius: 6px; padding: 2px 6px">@ash</div>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+          <div style="font-size: 13px; line-height: 18px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Morning triage</div>
+          <div style="font-size: 12px; line-height: 16px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Priya confirmed 7pm · 1 approval pending</div>
+        </div>
+        <span style="min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--indigo-80); color: var(--night-bg); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0">2</span>
+      </div>
+
+      <!-- Row: voice thread indicator -->
+      <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer; min-height: 44px">
+        <div class="mono" style="font-size: 11px; font-weight: 600; color: var(--night-on-surface-var); background: var(--night-surface-high); border-radius: 6px; padding: 2px 6px">@misty</div>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+          <div style="display: flex; align-items: center; gap: 6px">
+            <div style="font-size: 13px; line-height: 18px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Trip planning</div>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--status-ok)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="3" width="6" height="11" rx="3"/>
+              <path d="M5 11a7 7 0 0 0 14 0"/>
+            </svg>
+          </div>
+          <div style="font-size: 12px; line-height: 16px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Voice note · 0:24</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- YESTERDAY -->
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <div class="kicker" style="color: var(--night-on-surface-var); padding: 4px 8px">Yesterday</div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer; min-height: 44px">
+        <div class="mono" style="font-size: 11px; font-weight: 600; color: var(--night-on-surface-var); background: var(--night-surface-high); border-radius: 6px; padding: 2px 6px">@ash</div>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+          <div style="font-size: 13px; line-height: 18px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Refactor notifications module</div>
+          <div style="font-size: 12px; line-height: 16px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Approval · package override added</div>
+        </div>
+        <span style="font-size: 11px; color: var(--night-on-surface-var); flex-shrink: 0">21:08</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer; min-height: 44px">
+        <div class="mono" style="font-size: 11px; font-weight: 600; color: var(--night-on-surface-var); background: var(--night-surface-high); border-radius: 6px; padding: 2px 6px">@ash-cloud</div>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+          <div style="font-size: 13px; line-height: 18px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Standup notes</div>
+          <div style="font-size: 12px; line-height: 16px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Synced 18:02 · 3 commits</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREVIOUS 7 DAYS -->
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <div class="kicker" style="color: var(--night-on-surface-var); padding: 4px 8px">Previous 7 days</div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer; min-height: 44px">
+        <div class="mono" style="font-size: 11px; font-weight: 600; color: var(--night-on-surface-var); background: var(--night-surface-high); border-radius: 6px; padding: 2px 6px">@misty</div>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+          <div style="font-size: 13px; line-height: 18px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Reading list</div>
+          <div style="font-size: 12px; line-height: 16px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Idle · last touched 3d ago</div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer; min-height: 44px">
+        <div class="mono" style="font-size: 11px; font-weight: 600; color: var(--night-on-surface-var); background: var(--night-surface-high); border-radius: 6px; padding: 2px 6px">@work</div>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+          <div style="font-size: 13px; line-height: 18px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">PR review: queue dispatcher</div>
+          <div style="font-size: 12px; line-height: 16px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Closed · approved +1</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EARLIER -->
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <div class="kicker" style="color: var(--night-on-surface-var); padding: 4px 8px">Earlier</div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer; min-height: 44px">
+        <div class="mono" style="font-size: 11px; font-weight: 600; color: var(--night-on-surface-var); background: var(--night-surface-high); border-radius: 6px; padding: 2px 6px">@ash</div>
+        <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0">
+          <div style="font-size: 13px; line-height: 18px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Reading: Karpathy LLM wiki</div>
+          <div style="font-size: 12px; line-height: 16px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Archived · 12 days</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer: profile switcher chip + settings gear -->
+  <div style="flex-shrink: 0; border-top: 1px solid var(--night-outline-var); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; align-items: center; gap: 8px">
+      <!-- Profile chip (tappable → ProfileSwitcher) -->
+      <button style="flex: 1; min-height: 44px; padding: 0 10px; background: var(--night-surface-cont); border: 1px solid var(--night-outline);
+                     border-radius: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer">
+        <div style="width: 28px; height: 28px; border-radius: 999px; background: var(--indigo-20); border: 1px solid var(--indigo-40);
+                    display: flex; align-items: center; justify-content: center;
+                    font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: var(--indigo-80)">A</div>
+        <div style="display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; text-align: left">
+          <div style="font-size: 13px; font-weight: 600; line-height: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">@ash · coder-lab</div>
+          <div style="display: flex; align-items: center; gap: 5px">
+            <span style="width: 6px; height: 6px; border-radius: 999px; background: var(--status-ok)"></span>
+            <span style="font-size: 11px; color: var(--night-on-surface-var); line-height: 14px">gw-home · streaming</span>
+          </div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--night-on-surface-var)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 17L17 7M9 7h8v8"/>
+        </svg>
+      </button>
+      <!-- Settings gear -->
+      <button aria-label="Settings"
+              style="width: 44px; height: 44px; border-radius: 12px; background: var(--night-surface-cont); border: 1px solid var(--night-outline); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8E8EC" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<style>
+  @keyframes pulse { 50% { opacity: 0.35; } }
+</style>
+</body>
+</html>

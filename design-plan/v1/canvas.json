@@ -1,0 +1,17 @@
+{
+  "artboards": [
+    { "file": "ChatSurface.dc.html",     "x": 0,    "y": 0,    "w": 390, "h": 844, "title": "Chat surface (phone)" },
+    { "file": "LeftRail.dc.html",        "x": 460,  "y": 0,    "w": 320, "h": 844, "title": "Left rail (tablet, persistent)" },
+    { "file": "LeftRail-phone.dc.html",  "x": 820,  "y": 0,    "w": 390, "h": 844, "title": "Left rail (phone drawer)" },
+    { "file": "ContextPanel.dc.html",    "x": 1250, "y": 0,    "w": 320, "h": 844, "title": "Context panel (tablet)" },
+    { "file": "ProfileSwitcher.dc.html", "x": 1610, "y": 0,    "w": 390, "h": 844, "title": "Profile switcher (sheet)" },
+    { "file": "SettingsSheet.dc.html",   "x": 0,    "y": 920,  "w": 390, "h": 844, "title": "Settings sheet (phase A)" },
+    { "file": "PairAsNodeFlow.dc.html",  "x": 460,  "y": 920,  "w": 390, "h": 844, "title": "Pair as node flow" },
+    { "file": "NewThreadDialog.dc.html", "x": 920,  "y": 920,  "w": 390, "h": 844, "title": "New thread dialog" }
+  ],
+  "annotations": [
+    { "id": "note-phase-a", "x": 0, "y": -132, "w": 620, "text": "Phase A shell — ChatGPT-style. Center column is the chat surface; left rail collapses on phone, persists on tablet; right context panel shows live tool runs, files, and agent status." },
+    { "id": "note-tablet",  "x": 1250, "y": -132, "w": 540, "text": "Tablet (≥840dp) keeps LeftRail + ContextPanel persistent at 320dp each; ChatSurface fills the remainder. Below 840dp the panels collapse to a drawer + a right-side peek." }
+  ],
+  "launch": { "view": "canvas" }
+}

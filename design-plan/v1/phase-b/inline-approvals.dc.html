@@ -1,0 +1,224 @@
+<!doctype html>
+<!--
+  inline-approvals.dc.html
+  Phase B · spec 7/7 — Inline approvals (replaces the modal Approval
+  sheet in design/Approval.dc.html).
+
+  Panel A: an inline approval card inside the chat thread, with the
+  four-option lock-in strip (Once · Session · Always · Deny). The
+  card is the *same* surface as a tool-run card; only the right-side
+  action changes from "chevron" to "Approve / Deny" + lock-in chips.
+
+  Panel B: the Approvals queue in the right ContextPanel — pending
+  items stacked oldest-first, each with an inline mini-Approve/Deny
+  pair so the user can clear the queue without scrolling the chat.
+
+  HermesComponents referenced: SurfaceCard, StatusBadge. New
+  composable target: ApprovalCard (collapsible, wraps ToolRunCard).
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Inline approvals — Phase B</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    :root {
+      --indigo-90: #E0E1FB;
+      --indigo-80: #B3B6F2;
+      --indigo-40: #3F51B5;
+      --indigo-20: #2A2C57;
+      --teal-80:  #80CBC4;
+      --teal-40:  #00897B;
+      --sand-80:  #FFCC80;
+      --sand-40:  #EF6C00;
+      --coral-80: #F2B8B5;
+      --coral-40: #BA1A1A;
+      --night-bg:              #15151A;
+      --night-surface-low:     #1A1A20;
+      --night-surface-cont:    #1C1C22;
+      --night-surface-high:    #24242C;
+      --night-surface-highest: #2E2E36;
+      --night-on-surface:      #E8E8EC;
+      --night-on-surface-var:  #B6B6C2;
+      --night-outline:         #47474F;
+      --night-outline-var:     #33333B;
+      --status-ok:    var(--teal-80);
+      --status-warn:  var(--sand-80);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #0A0A0E; color: var(--night-on-surface); font-family: 'Figtree', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+    .kicker { font-family: 'IBM Plex Mono', ui-monospace, monospace; text-transform: uppercase; letter-spacing: 1.2px; font-size: 10px; color: var(--night-on-surface-var); }
+    @keyframes shimmer { 0% { opacity: 0.55; } 50% { opacity: 1; } 100% { opacity: 0.55; } }
+  </style>
+</head>
+<body>
+<x-dc>
+<div style="display: flex; flex-direction: column; gap: 28px; padding: 24px;">
+
+  <!-- ─────────────── Panel A · inline approval card ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">A · inline approval card · lives in the chat thread</span>
+    </div>
+
+    <div style="padding: 14px 12px; display: flex; flex-direction: column; gap: 12px;">
+
+      <!-- Approval card (sand border = awaiting) -->
+      <div style="background: rgba(255,204,128,0.08); border: 1px solid rgba(255,204,128,0.40); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+
+        <!-- Header -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="width: 26px; height: 26px; border-radius: 999px; background: rgba(255,204,128,0.18); display: flex; align-items: center; justify-content: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFCC80" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-3.6 7-9.4V5.4L12 2.6 5 5.4v7.2C5 18.4 12 22 12 22z"/></svg>
+          </span>
+          <div style="display: flex; flex-direction: column;">
+            <div class="mono" style="font-size: 12px; color: var(--sand-80); font-weight: 600;">bash.exec</div>
+            <div class="mono" style="font-size: 10px; color: var(--night-on-surface-var);">@ash · 1.4s ago · awaiting your decision</div>
+          </div>
+          <span style="flex: 1"></span>
+          <span class="mono" style="font-size: 10px; color: var(--sand-80); text-transform: uppercase; letter-spacing: 1.2px; animation: shimmer 1.4s ease-in-out infinite;">⚠ awaiting</span>
+        </div>
+
+        <!-- "It wants to" -->
+        <div style="background: var(--night-bg); border: 1px solid var(--night-outline-var); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;">
+          <div class="kicker">It wants to</div>
+          <div class="mono" style="font-size: 12px; color: var(--sand-80);">adb shell pm grant com.whatsapp android.permission.READ_CONTACTS</div>
+          <div style="font-size: 13px; color: var(--night-on-surface-var); line-height: 18px;">
+            On <span class="mono" style="font-size: 12px;">node_s22</span> · required for the contact-resolution step that comes next.
+          </div>
+        </div>
+
+        <!-- Meta row -->
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span class="kicker" style="text-transform: none; letter-spacing: 0; font-size: 11px; color: var(--night-on-surface-var);">Risk</span>
+            <span class="mono" style="font-size: 11px; color: var(--sand-80);">mutating · grants a runtime permission</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span class="kicker" style="text-transform: none; letter-spacing: 0; font-size: 11px; color: var(--night-on-surface-var);">Reversible</span>
+            <span class="mono" style="font-size: 11px; color: var(--teal-80);">yes · pm revoke</span>
+          </div>
+        </div>
+
+        <!-- Approve / Deny -->
+        <div style="display: flex; gap: 8px;">
+          <button style="flex: 1; height: 44px; border-radius: 999px; background: var(--teal-40); color: var(--night-on-surface); font-size: 14px; font-weight: 600; border: 0; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4.5 4.5L19 7"/></svg>
+            Approve
+          </button>
+          <button style="flex: 1; height: 44px; border-radius: 999px; background: transparent; border: 1px solid var(--coral-40); color: var(--coral-80); font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            Deny
+          </button>
+        </div>
+
+        <!-- Lock-in chips (the 4-option grill pattern) -->
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+          <span class="kicker" style="text-transform: none; letter-spacing: 0; color: var(--night-on-surface-var); font-size: 10px;">Lock-in</span>
+          <button class="mono" style="padding: 5px 10px; border-radius: 999px; background: transparent; border: 1px solid var(--night-outline); color: var(--night-on-surface-var); font-size: 10px; cursor: pointer;">Once</button>
+          <button class="mono" style="padding: 5px 10px; border-radius: 999px; background: transparent; border: 1px solid var(--night-outline); color: var(--night-on-surface-var); font-size: 10px; cursor: pointer;">This session</button>
+          <button class="mono" style="padding: 5px 10px; border-radius: 999px; background: rgba(179,182,242,0.18); border: 1px solid var(--indigo-80); color: var(--indigo-90); font-size: 10px; font-weight: 600;">Always for this verb</button>
+          <span style="flex: 1"></span>
+          <button style="padding: 5px 10px; border-radius: 999px; background: transparent; border: 1px solid var(--coral-40); color: var(--coral-80); font-size: 10px; font-weight: 500; cursor: pointer;">Always deny</button>
+        </div>
+      </div>
+
+      <!-- Receipt preview (after approval) -->
+      <div style="background: rgba(128,203,196,0.06); border: 1px solid rgba(128,203,196,0.30); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--status-ok)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4.5 4.5L19 7"/></svg>
+          <span class="mono" style="font-size: 12px; color: var(--status-ok); font-weight: 600;">bash.exec · approved</span>
+          <span style="flex: 1"></span>
+          <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var);">0.4s</span>
+        </div>
+        <div class="mono" style="font-size: 11px; color: var(--night-on-surface-var);">Granted · user has now 1 active grant for this verb</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────── Panel B · approvals queue in ContextPanel ─────────────── -->
+  <div style="width: 390px; background: var(--night-bg); border-radius: 20px; border: 1px solid var(--night-outline); overflow: hidden;">
+    <div style="padding: 14px 16px; border-bottom: 1px solid var(--night-outline-var); display: flex; align-items: center; gap: 10px;">
+      <span class="kicker">B · approvals queue · lives in ContextPanel · oldest first</span>
+    </div>
+
+    <div style="padding: 14px 12px; display: flex; flex-direction: column; gap: 14px;">
+
+      <!-- Section header -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="kicker">Approvals</span>
+        <span style="flex: 1"></span>
+        <span class="mono" style="font-size: 10px; color: var(--night-on-surface-var);">3 pending · oldest 2m</span>
+      </div>
+
+      <!-- Pending 1 (oldest) -->
+      <div style="background: var(--night-surface-cont); border: 1px solid rgba(255,204,128,0.30); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="mono" style="font-size: 12px; color: var(--sand-80); font-weight: 600;">git.push</span>
+          <span style="flex: 1"></span>
+          <span class="mono" style="font-size: 10px; color: var(--sand-80);">2m</span>
+        </div>
+        <div class="mono" style="font-size: 11px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">origin main · 2 commits · @ash</div>
+        <div style="display: flex; gap: 6px;">
+          <button style="flex: 1; height: 36px; border-radius: 999px; background: var(--teal-40); color: var(--night-on-surface); font-size: 12px; font-weight: 600; border: 0;">Approve</button>
+          <button style="flex: 1; height: 36px; border-radius: 999px; background: transparent; border: 1px solid var(--coral-40); color: var(--coral-80); font-size: 12px; font-weight: 600;">Deny</button>
+        </div>
+      </div>
+
+      <!-- Pending 2 -->
+      <div style="background: var(--night-surface-cont); border: 1px solid rgba(255,204,128,0.30); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="mono" style="font-size: 12px; color: var(--sand-80); font-weight: 600;">bash.exec</span>
+          <span style="flex: 1"></span>
+          <span class="mono" style="font-size: 10px; color: var(--sand-80);">48s</span>
+        </div>
+        <div class="mono" style="font-size: 11px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">adb shell pm grant … READ_CONTACTS · @ash</div>
+        <div style="display: flex; gap: 6px;">
+          <button style="flex: 1; height: 36px; border-radius: 999px; background: var(--teal-40); color: var(--night-on-surface); font-size: 12px; font-weight: 600; border: 0;">Approve</button>
+          <button style="flex: 1; height: 36px; border-radius: 999px; background: transparent; border: 1px solid var(--coral-40); color: var(--coral-80); font-size: 12px; font-weight: 600;">Deny</button>
+        </div>
+      </div>
+
+      <!-- Pending 3 -->
+      <div style="background: var(--night-surface-cont); border: 1px solid rgba(255,204,128,0.30); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="mono" style="font-size: 12px; color: var(--sand-80); font-weight: 600;">file.write</span>
+          <span style="flex: 1"></span>
+          <span class="mono" style="font-size: 10px; color: var(--sand-80);">14s</span>
+        </div>
+        <div class="mono" style="font-size: 11px; color: var(--night-on-surface-var); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">app/src/main/java/.../HermesComponents.kt · @knight</div>
+        <div style="display: flex; gap: 6px;">
+          <button style="flex: 1; height: 36px; border-radius: 999px; background: var(--teal-40); color: var(--night-on-surface); font-size: 12px; font-weight: 600; border: 0;">Approve</button>
+          <button style="flex: 1; height: 36px; border-radius: 999px; background: transparent; border: 1px solid var(--coral-40); color: var(--coral-80); font-size: 12px; font-weight: 600;">Deny</button>
+        </div>
+      </div>
+
+      <!-- Queue footer -->
+      <div style="display: flex; align-items: center; gap: 8px; padding-top: 4px;">
+        <button style="display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 999px; background: transparent; border: 1px solid var(--night-outline); color: var(--night-on-surface-var); font-size: 12px; cursor: pointer;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4.5 4.5L19 7"/></svg>
+          Approve all (read-only)
+        </button>
+        <span style="flex: 1"></span>
+        <button class="mono" style="font-size: 11px; color: var(--night-on-surface-var); background: transparent; border: 0; cursor: pointer;">Manage locks →</button>
+      </div>
+
+      <!-- Footnote -->
+      <div style="font-size: 11px; color: var(--night-on-surface-var); line-height: 16px; padding: 4px 0;">
+        "Approve all" is only available when every queued verb is read-only
+        (file.read, search.query). Mutating verbs require an explicit decision.
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":446,"height":900}}'>
+class Component extends DCLogic { constructor(props) { super(props); } }
+</script>
+</body>
+</html>
