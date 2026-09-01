@@ -28,7 +28,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,9 +91,19 @@ fun V1LeftRail(
     val activeRoute by vm.activeRoute.collectAsStateWithLifecycle()
     val inboxCount by vm.inboxCount.collectAsStateWithLifecycle()
 
+    // Bug #18: was a static Box. Now a rememberSaveable text field that
+    // filters the visible thread list by handle / title.
+    var query by rememberSaveable { mutableStateOf("") }
+
     // Flatten sessions across gateways/profiles into a single grouped list.
-    val grouped: Map<TimeGroup, List<ThreadRowView>> = remember(fleet) {
-        buildThreadRows(fleet)
+    val grouped: Map<TimeGroup, List<ThreadRowView>> = remember(fleet, query) {
+        val rows = buildThreadRows(fleet)
+        if (query.isBlank()) rows else rows.mapValues { (_, list) ->
+            list.filter {
+                it.handleDisplay.contains(query, ignoreCase = true) ||
+                    it.session.title.contains(query, ignoreCase = true)
+            }
+        }.filter { it.value.isNotEmpty() }
     }
 
     Column(
@@ -117,15 +130,19 @@ fun V1LeftRail(
                     ),
                     maxLines = 1,
                 )
+                // Bug #38: was hardcoded "3 unread". Now driven by the
+                // inboxCount state flow (filtered by AwaitingApproval items).
                 Text(
-                    text = if (isDrawerVariant) "3 unread" else "Companion",
+                    text = if (isDrawerVariant) {
+                        if (inboxCount > 0) "$inboxCount unread" else "All caught up"
+                    } else "Companion",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                 )
             }
-            // Inbox indicator
-            InboxIndicator(count = inboxCount, onClick = {})
+            // Inbox indicator — Bug #17: wired to the profile switcher.
+            InboxIndicator(count = inboxCount, onClick = { vm.openProfileSheet() })
             if (showCloseButton && onClose != null) {
                 IconButton(onClick = onClose, modifier = Modifier.size(36.dp)) {
                     Icon(Icons.Filled.Close, contentDescription = "Close drawer")
@@ -165,31 +182,46 @@ fun V1LeftRail(
             }
         }
 
-        // ── Search ─────────────────────────────────────────────────
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp)
-                .height(36.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp))
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Icon(
-                Icons.Filled.Search,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(14.dp),
-            )
-            Text(
-                "Search threads",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        // ── Search ───────────────────────────────────────────────
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp)
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp))
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        Icons.Filled.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    // Bug #18: was a static "Search threads" Text. Now a
+                    // BasicTextField that filters the thread list via `query`.
+                    if (query.isEmpty()) {
+                        Text(
+                            "Search threads",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    androidx.compose.foundation.text.BasicTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        singleLine = true,
+                        textStyle = androidx.compose.ui.text.TextStyle(
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        ),
+                        cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.onSurface),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
 
         // ── Thread list (grouped) ──────────────────────────────────
         LazyColumn(
@@ -449,10 +481,17 @@ private fun buildThreadRows(fleet: Fleet): Map<TimeGroup, List<ThreadRowView>> {
     return groups.toSortedMap(compareBy { it.ordinal })
 }
 
-private fun timeGroupFor(session: Session): TimeGroup = when (session.runState) {
-    RunState.Streaming, RunState.AwaitingApproval, RunState.Completed -> TimeGroup.Today
-    RunState.Idle -> TimeGroup.Yesterday
-    RunState.Failed -> TimeGroup.PreviousWeek
+// Bug #42: Session has no timestamp, so a real "Today / Yesterday / 7d
+// ago" bucketing would require extending the domain model. We approximate
+// by surfacing the *attention* state instead: anything that needs user
+// action or is actively running lands in Today, untouched threads fall
+// through to Earlier. Once the model gets `lastTouchedAt` the ordinal
+// layout already supports it without a refactor.
+private fun timeGroupFor(session: Session): TimeGroup = when {
+    session.runState == RunState.Streaming -> TimeGroup.Today
+    session.runState == RunState.AwaitingApproval -> TimeGroup.Today
+    session.unreadCount > 0 -> TimeGroup.Today
+    else -> TimeGroup.Earlier
 }
 
 private fun previewFor(session: Session): String = when (session.runState) {

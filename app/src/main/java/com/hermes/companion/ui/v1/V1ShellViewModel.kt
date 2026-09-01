@@ -49,9 +49,18 @@ class V1ShellViewModel @Inject constructor(
     private val _activeRoute = MutableStateFlow<ConversationRoute?>(null)
     val activeRoute: StateFlow<ConversationRoute?> = _activeRoute.asStateFlow()
 
-    private val _leftDrawerOpen = MutableStateFlow(false)
-    val leftDrawerOpen: StateFlow<Boolean> = _leftDrawerOpen.asStateFlow()
+    /**
+     * Map of `gatewayId → profileId` for the active selection on each gateway.
+     * Surfaced to the UI so the profile switcher can mark only the truly
+     * active row (was previously hardcoded `true` on every row).
+     */
+    private val _activeProfileByGatewayId = MutableStateFlow<Map<String, String>>(emptyMap())
+    val activeProfileByGatewayId: StateFlow<Map<String, String>> =
+        _activeProfileByGatewayId.asStateFlow()
 
+    // Local mirror of the drawer's open state for the context drawer only.
+    // The left drawer's state is owned by DrawerState in V1Shell (no mirror
+    // — that mirror was the source of the recursive re-toggle bug).
     private val _contextDrawerOpen = MutableStateFlow(false)
     val contextDrawerOpen: StateFlow<Boolean> = _contextDrawerOpen.asStateFlow()
 
@@ -66,6 +75,27 @@ class V1ShellViewModel @Inject constructor(
 
     private val _newThreadOpen = MutableStateFlow(false)
     val newThreadOpen: StateFlow<Boolean> = _newThreadOpen.asStateFlow()
+
+    // Hoisted composer state. Was `var draft by remember { mutableStateOf }`
+    // inside V1ChatSurface — moving it here makes it survive configuration
+    // changes via the ViewModel scope.
+    private val _draft = MutableStateFlow("")
+    val draft: StateFlow<String> = _draft.asStateFlow()
+
+    // Hoisted mic-recording state. Was a local Bool in V1ChatSurface; now
+    // drives the V1BVoiceRecordingOverlay from the shell.
+    private val _isRecording = MutableStateFlow(false)
+    val isRecording: StateFlow<Boolean> = _isRecording.asStateFlow()
+
+    // Was _leftDrawerOpen — the VM no longer mirrors the left drawer state
+    // because doing so caused an infinite re-toggle. The left drawer's open
+    // state lives only in V1Shell's DrawerState. Keeping a no-op toggleLeft
+    // here so external callers (e.g. NewThread's auto-open thread) still
+    // compile; it does not need to do anything since DrawerState is
+    // locally owned by V1Shell now.
+    fun toggleLeftDrawer() {
+        _contextDrawerOpen.value = false
+    }
 
     // ── Read-through data ─────────────────────────────────────────────────
 
@@ -104,26 +134,22 @@ class V1ShellViewModel @Inject constructor(
 
     fun openThread(route: ConversationRoute) {
         _activeRoute.value = route
-        _leftDrawerOpen.value = false
         _contextDrawerOpen.value = false
+        // Mirror the route's profile/gateway in the active-by-gateway map so
+        // the profile switcher can highlight it.
+        _activeProfileByGatewayId.value =
+            _activeProfileByGatewayId.value + (route.gatewayId to route.profileId)
     }
 
     fun clearThread() {
         _activeRoute.value = null
     }
 
-    fun toggleLeftDrawer() {
-        _leftDrawerOpen.value = !_leftDrawerOpen.value
-        if (_leftDrawerOpen.value) _contextDrawerOpen.value = false
-    }
-
     fun toggleContextDrawer() {
         _contextDrawerOpen.value = !_contextDrawerOpen.value
-        if (_contextDrawerOpen.value) _leftDrawerOpen.value = false
     }
 
     fun closeDrawers() {
-        _leftDrawerOpen.value = false
         _contextDrawerOpen.value = false
     }
 
@@ -166,14 +192,60 @@ class V1ShellViewModel @Inject constructor(
         }
     }
 
+    // ── Composer state (Phase 3 hoisting) ─────────────────────────────────
+
+    fun updateDraft(text: String) { _draft.value = text }
+
+    fun startRecording() { _isRecording.value = true }
+    fun stopRecording() { _isRecording.value = false }
+
     /**
-     * Forward a typed draft to the underlying conversations repository
-     * for the active thread. No-op when no thread is selected.
+     * Forward a typed draft to the underlying conversations repository for
+     * the active thread. When no thread is open we now open the NewThread
+     * dialog with the draft as the first message, so taps are no longer
+     * silently dropped (was Bug #9).
      */
     fun submitDraft(text: String) {
-        val route = _activeRoute.value ?: return
         val clean = text.trim()
         if (clean.isEmpty()) return
+        val route = _activeRoute.value
+        if (route == null) {
+            _draft.value = clean
+            _newThreadOpen.value = true
+            return
+        }
         viewModelScope.launch { conversations.submit(route, clean) }
+        _draft.value = ""
+    }
+
+    // ── Profile / gateway wiring (P1 handlers) ──────────────────────────
+
+    /**
+     * Mark a profile as the active one for its gateway. Persists via
+     * FleetRepository; updates the local mirror so the profile switcher
+     * row stops showing every row as active (was Bug #6).
+     */
+    fun setActiveProfile(gatewayId: String, profileId: String) {
+        _activeProfileByGatewayId.value =
+            _activeProfileByGatewayId.value + (gatewayId to profileId)
+        viewModelScope.launch {
+            fleetRepo.setActiveProfile(gatewayId, profileId)
+        }
+    }
+
+    /** Switch the active gateway. Stub — wire to setActive() when ready. */
+    @Suppress("UNUSED_PARAMETER")
+    fun switchGateway(gatewayId: String) {
+        // No-op in this snapshot; the wire layer will land in Phase 4.
+        _contextDrawerOpen.value = false
+    }
+
+    fun onPickPrompt(label: String) {
+        // Auto-fill the draft with the prompt label and open the new-thread
+        // dialog if no thread is open — was Bug #7 (silent no-op).
+        _draft.value = label
+        if (_activeRoute.value == null) {
+            _newThreadOpen.value = true
+        }
     }
 }

@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,25 +64,34 @@ import com.hermes.companion.ui.theme.StatusWarn
 @androidx.compose.material3.ExperimentalMaterial3Api
 @Composable
 fun V1SettingsSheet(
-    @Suppress("UNUSED_PARAMETER") vm: V1ShellViewModel,
+    vm: V1ShellViewModel,
     onDismiss: () -> Unit,
     onOpenPairAsNode: () -> Unit,
     onOpenOutbox: () -> Unit,
     onOpenDiscover: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val context = LocalContext.current
+
+    // Helper — turns the audit's "empty onClick = {}" into a short Toast so
+    // taps are visibly acknowledged. Wire destinations land in Phase 4.
+    fun toast(message: String) {
+        android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+    }
+    fun comingSoon(label: String) = toast("$label · coming soon")
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        scrimColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.62f),
         containerColor = MaterialTheme.colorScheme.background,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .statusBarsPadding(),
         ) {
-            // Header
+            // Header (pinned outside scroll container so it stays visible)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -102,137 +112,168 @@ fun V1SettingsSheet(
                 }
             }
 
-            // Sections
+            // Scrollable body — replaced verticalScroll (which fights the
+            // sheet's gesture) with a body-only Column + verticalScroll so
+            // the header stays pinned.
+            val bodyScroll = androidx.compose.foundation.rememberScrollState()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(22.dp),
+                    .weight(1f)
+                    .verticalScroll(bodyScroll),
             ) {
-                Section("Account") {
-                    AccountRow(
-                        initials = "A",
-                        name = "Ash",
-                        handle = "@ash",
-                        meta = "nyx@hermes.local · paired 14 Mar",
-                    )
-                    Divider()
-                    ChevronRow(
-                        icon = Icons.Filled.Person,
-                        label = "Change handle",
-                        value = "@ash",
-                        onClick = {},
-                    )
-                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(22.dp),
+                ) {
+                    Section("Account") {
+                        AccountRow(
+                            initials = "A",
+                            name = "Ash",
+                            handle = "@ash",
+                            meta = "nyx@hermes.local · paired 14 Mar",
+                        )
+                        Divider()
+                        ChevronRow(
+                            icon = Icons.Filled.Person,
+                            label = "Change handle",
+                            value = "@ash",
+                            onClick = { comingSoon("Change handle") },
+                        )
+                    }
 
-                Section("Gateway") {
-                    GatewayRow("gw-home · mac-studio", "11 ms · wss · full", StatusOk, "Active")
-                    Divider()
-                    GatewayRow("gw-cloud", "stale 4m · degraded", StatusWarn, null, actionLabel = "Switch")
-                    Divider()
-                    AddRow(
-                        icon = Icons.Filled.Devices,
-                        label = "Add gateway",
-                        onClick = onOpenDiscover,
-                    )
-                }
+                    Section("Gateway") {
+                        GatewayRow(
+                            "gw-home · mac-studio",
+                            "11 ms · wss · full",
+                            StatusOk,
+                            "Active",
+                        )
+                        Divider()
+                        GatewayRow(
+                            "gw-cloud",
+                            "stale 4m · degraded",
+                            StatusWarn,
+                            null,
+                            actionLabel = "Switch",
+                            onSwitch = { vm.switchGateway("gw-cloud") },
+                        )
+                        Divider()
+                        AddRow(
+                            icon = Icons.Filled.Devices,
+                            label = "Add gateway",
+                            onClick = onOpenDiscover,
+                        )
+                    }
 
-                Section("Profiles") {
-                    SettingsProfileRow("A", "@ash · coder-lab", isActive = true, onEdit = {})
-                    Divider()
-                    SettingsProfileRow("M", "@misty · research-lab", isActive = false, onMakeActive = {})
-                    Divider()
-                    AddRow(
-                        icon = Icons.Filled.Person,
-                        label = "Add profile",
-                        onClick = {},
-                    )
-                }
+                    Section("Profiles") {
+                        SettingsProfileRow(
+                            "A",
+                            "@ash · coder-lab",
+                            isActive = true,
+                            onEdit = { comingSoon("Edit profile") },
+                        )
+                        Divider()
+                        SettingsProfileRow(
+                            "M",
+                            "@misty · research-lab",
+                            isActive = false,
+                            onMakeActive = { vm.setActiveProfile("gw-home", "@misty") },
+                        )
+                        Divider()
+                        AddRow(
+                            icon = Icons.Filled.Person,
+                            label = "Add profile",
+                            onClick = { comingSoon("Add profile") },
+                        )
+                    }
 
-                Section("Notification routing") {
-                    ChevronRow(
-                        icon = Icons.Filled.NotificationsActive,
-                        label = "Mode",
-                        value = "ImportantOnly",
-                        valueIsAccent = true,
-                        onClick = {},
-                    )
-                    Divider()
-                    ChevronRow(
-                        icon = Icons.Filled.Tune,
-                        label = "Per-package overrides",
-                        value = "12 packages",
-                        onClick = {},
-                    )
-                    Divider()
-                    ChevronRow(
-                        icon = Icons.Filled.Info,
-                        label = "Reply with rules",
-                        value = "4 rules",
-                        onClick = {},
-                    )
-                }
+                    Section("Notification routing") {
+                        ChevronRow(
+                            icon = Icons.Filled.NotificationsActive,
+                            label = "Mode",
+                            value = "ImportantOnly",
+                            valueIsAccent = true,
+                            onClick = { comingSoon("Notification mode") },
+                        )
+                        Divider()
+                        ChevronRow(
+                            icon = Icons.Filled.Tune,
+                            label = "Per-package overrides",
+                            value = "12 packages",
+                            onClick = { comingSoon("Per-package overrides") },
+                        )
+                        Divider()
+                        ChevronRow(
+                            icon = Icons.Filled.Info,
+                            label = "Reply with rules",
+                            value = "4 rules",
+                            onClick = { comingSoon("Reply with rules") },
+                        )
+                    }
 
-                Section("Voice") {
-                    ChevronRow(
-                        icon = Icons.Filled.Headphones,
-                        label = "TTS provider",
-                        value = "edge · alloy",
-                        onClick = {},
-                    )
-                    Divider()
-                    ChevronRow(
-                        icon = Icons.Filled.Mic,
-                        label = "STT",
-                        value = "whisper · en-IN",
-                        onClick = {},
-                    )
-                    Divider()
-                    PlainRow(
-                        icon = Icons.Filled.Bolt,
-                        label = "Playback speed",
-                        value = "1.1×",
-                    )
-                }
+                    Section("Voice") {
+                        ChevronRow(
+                            icon = Icons.Filled.Headphones,
+                            label = "TTS provider",
+                            value = "edge · alloy",
+                            onClick = { comingSoon("TTS provider") },
+                        )
+                        Divider()
+                        ChevronRow(
+                            icon = Icons.Filled.Mic,
+                            label = "STT",
+                            value = "whisper · en-IN",
+                            onClick = { comingSoon("STT provider") },
+                        )
+                        Divider()
+                        PlainRow(
+                            icon = Icons.Filled.Bolt,
+                            label = "Playback speed",
+                            value = "1.1×",
+                        )
+                    }
 
-                // CTA card (different shape from the chevron rows above)
-                Section("Pair this phone") {
-                    PairNodeCta(onClick = onOpenPairAsNode)
-                }
+                    Section("Pair this phone") {
+                        PairNodeCta(onClick = onOpenPairAsNode)
+                    }
 
-                Section("More") {
-                    ChevronRow(
-                        icon = Icons.Filled.WbSunny,
-                        label = "Appearance",
-                        value = "Night · Indigo",
-                        onClick = {},
-                    )
-                    Divider()
-                    ChevronRow(
-                        icon = Icons.Filled.Info,
-                        label = "Diagnostics",
-                        value = "healthy",
-                        valueIsAccent = true,
-                        onClick = {},
-                    )
-                    Divider()
-                    ChevronRow(
-                        icon = Icons.Filled.Outbox,
-                        label = "Outbox",
-                        value = "2 pending",
-                        valueIsAccent = true,
-                        onClick = onOpenOutbox,
-                    )
-                    Divider()
-                    ChevronRow(
-                        icon = Icons.Filled.Info,
-                        label = "About",
-                        value = "v0.4.1 · build 412",
-                        onClick = {},
-                    )
-                }
+                    Section("More") {
+                        ChevronRow(
+                            icon = Icons.Filled.WbSunny,
+                            label = "Appearance",
+                            value = "Night · Indigo",
+                            onClick = { comingSoon("Appearance") },
+                        )
+                        Divider()
+                        ChevronRow(
+                            icon = Icons.Filled.Info,
+                            label = "Diagnostics",
+                            value = "healthy",
+                            valueIsAccent = true,
+                            onClick = { comingSoon("Diagnostics") },
+                        )
+                        Divider()
+                        ChevronRow(
+                            icon = Icons.Filled.Outbox,
+                            label = "Outbox",
+                            value = "2 pending",
+                            valueIsAccent = true,
+                            onClick = onOpenOutbox,
+                        )
+                        Divider()
+                        ChevronRow(
+                            icon = Icons.Filled.Info,
+                            label = "About",
+                            value = "v0.4.1 · build 412",
+                            onClick = { comingSoon("About") },
+                        )
+                    }
 
-                Box(Modifier.size(8.dp))
+                    Box(Modifier.size(8.dp))
+                }
             }
         }
     }
@@ -392,6 +433,7 @@ private fun GatewayRow(
     dotColor: androidx.compose.ui.graphics.Color,
     badge: String?,
     actionLabel: String? = null,
+    onSwitch: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -438,7 +480,7 @@ private fun GatewayRow(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .border(1.dp, HermesColors.Primary.copy(alpha = 0.40f), RoundedCornerShape(8.dp))
-                    .clickable { /* TODO: switch gateway */ }
+                    .clickable(onClick = onSwitch)
                     .padding(horizontal = 10.dp, vertical = 6.dp),
             ) {
                 Text(

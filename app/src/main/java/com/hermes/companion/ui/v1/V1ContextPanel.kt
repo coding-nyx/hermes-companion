@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,12 +57,13 @@ fun V1ContextPanel(
     vm: V1ShellViewModel,
     isDrawerVariant: Boolean,
     onClose: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
     val activeRoute by vm.activeRoute.collectAsStateWithLifecycle()
     val conversation by vm.conversation.collectAsStateWithLifecycle()
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
             .verticalScroll(rememberScrollState()),
@@ -70,6 +72,7 @@ fun V1ContextPanel(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(horizontal = 14.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -312,10 +315,18 @@ private fun RecentFilesSection() {
 
 @Composable
 private fun FileRow(name: String, size: String) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* TODO: open file */ }
+            .clickable {
+                // Bug #25: was a TODO. Now show a Toast (the proper
+                // open-file intent lands in Phase 4 once the file
+                // repository is wired).
+                android.widget.Toast
+                    .makeText(context, "Opening $name · coming soon", android.widget.Toast.LENGTH_SHORT)
+                    .show()
+            }
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -349,6 +360,7 @@ private fun FileRow(name: String, size: String) {
 
 @Composable
 private fun VoiceThreadSection() {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             "VOICE THREAD",
@@ -422,7 +434,14 @@ private fun VoiceThreadSection() {
                     .height(36.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .border(1.dp, StatusOk.copy(alpha = 0.40f), RoundedCornerShape(8.dp))
-                    .clickable { /* TODO: open voice thread */ }
+                    .clickable {
+                        // Bug #26: was a TODO. Surface a Toast; the
+                        // voice-thread route lands once the audio
+                        // thread view is built in Phase 4.
+                        android.widget.Toast
+                            .makeText(ctx, "Opening voice thread · coming soon", android.widget.Toast.LENGTH_SHORT)
+                            .show()
+                    }
                     .padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center,
             ) {

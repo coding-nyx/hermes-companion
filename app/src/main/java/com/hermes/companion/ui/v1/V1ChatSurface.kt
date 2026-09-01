@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -77,14 +78,17 @@ fun V1ChatSurface(
     vm: V1ShellViewModel,
     showHamburger: Boolean,
     @Suppress("UNUSED_PARAMETER") showContextPeek: Boolean,
+    onHamburgerTap: () -> Unit = vm::toggleLeftDrawer,
 ) {
     val activeRoute by vm.activeRoute.collectAsStateWithLifecycle()
     val conversation by vm.conversation.collectAsStateWithLifecycle()
     val inboxCount by vm.inboxCount.collectAsStateWithLifecycle()
     val fleet by vm.fleet.collectAsStateWithLifecycle()
+    // Hoisted composer state (was local `var draft by remember` inside the
+    // composable — moved to the VM for config-change survival).
+    val draft by vm.draft.collectAsStateWithLifecycle()
+    val isRecording by vm.isRecording.collectAsStateWithLifecycle()
 
-    var draft by remember { mutableStateOf("") }
-    var recording by remember { mutableStateOf(false) }
     var actionSheetVisible by remember { mutableStateOf(false) }
 
     val listState = rememberLazyListState()
@@ -110,7 +114,8 @@ fun V1ChatSurface(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding(),
+            .statusBarsPadding()
+            .imePadding(),
     ) {
         // ── Top bar ───────────────────────────────────────────────
         Row(
@@ -123,7 +128,7 @@ fun V1ChatSurface(
         ) {
             if (showHamburger) {
                 IconButton(
-                    onClick = vm::toggleLeftDrawer,
+                    onClick = onHamburgerTap,
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(12.dp)),
@@ -172,7 +177,7 @@ fun V1ChatSurface(
         if (activeRoute == null) {
             EmptyHero(
                 modifier = Modifier.weight(1f),
-                onPickPrompt = { draft = it },
+                onPickPrompt = vm::onPickPrompt,
             )
         } else {
             Transcript(
@@ -188,25 +193,32 @@ fun V1ChatSurface(
         }
 
         // ── Composer (Phase B morph-states version) ───────────────
-        V1BComposer(
-            draft = draft,
-            onChange = { draft = it },
-            onSend = {
-                if (draft.isNotBlank()) {
-                    vm.submitDraft(draft)
-                    draft = ""
-                }
-            },
-            onMicDown = { recording = true },
-            onMicUp = { recording = false },
-            onMicCancel = { recording = false },
-            onAttachTap = { vm.openNewThread() },
-            onProfilePalette = { vm.openProfileSheet() },
-            isStreaming = conversation.streaming,
-            isRecording = recording,
-            targetLabel = activeRoute?.let { "@${it.profileId}" } ?: "@ash",
-            modifier = Modifier.navigationBarsPadding(),
-        )
+        if (isRecording) {
+            // Bug #8: render the overlay while recording so the press-and-
+            // hold mic gesture has a visible effect. Bug #9: pressing Send
+            // without an active thread now opens the new-thread dialog via
+            // vm.submitDraft (handled inside V1BComposer.send callback).
+            V1BVoiceRecordingOverlay(
+                onStop = { vm.stopRecording() },
+                onCancel = { vm.stopRecording() },
+                modifier = Modifier.navigationBarsPadding(),
+            )
+        } else {
+            V1BComposer(
+                draft = draft,
+                onChange = vm::updateDraft,
+                onSend = { vm.submitDraft(draft) },
+                onMicDown = { vm.startRecording() },
+                onMicUp = { vm.stopRecording() },
+                onMicCancel = { vm.stopRecording() },
+                onAttachTap = { vm.openNewThread() },
+                onProfilePalette = { vm.openProfileSheet() },
+                isStreaming = conversation.streaming,
+                isRecording = false,
+                targetLabel = activeRoute?.let { "@${it.profileId}" } ?: "@ash",
+                modifier = Modifier.navigationBarsPadding(),
+            )
+        }
     }
 
     // ── Message action sheet (long-press on user bubble) ─────────
@@ -378,8 +390,17 @@ private fun EmptyHero(modifier: Modifier = Modifier, onPickPrompt: (String) -> U
     ) {
         HermesMark(size = 72.dp)
         Box(Modifier.height(18.dp))
+        // Time-of-day greeting (was hardcoded "Good morning, Nyx."). Uses
+        // Java time-of-day buckets so the greeting tracks actual local time.
+        val hour = remember { java.time.LocalTime.now().hour }
+        val greeting = when (hour) {
+            in 5..11 -> "Good morning"
+            in 12..16 -> "Good afternoon"
+            in 17..21 -> "Good evening"
+            else -> "Hey"
+        }
         Text(
-            "Good morning, Nyx.",
+            "$greeting, Nyx.",
             style = DisplayLarge.copy(fontSize = 30.sp, lineHeight = 34.sp),
         )
         Box(Modifier.height(8.dp))

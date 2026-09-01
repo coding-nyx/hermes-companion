@@ -14,7 +14,9 @@
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
-        <domain includeSubdomains="true">100.88.4.63</domain>
-        <domain includeSubdomains="true">100.83.141.111</domain>
+        <!-- Tailscale CGNAT IPs (100.88.4.63 hub-11, 100.83.141.111 mac-mini) removed from
+             the install-time cleartext allowlist. Tailscale classification is now handled
+             at runtime by transport/discovery/TransportTiers.kt (100.64.0.0/10 + *.ts.net).
+             Do not re-add here; the TransportTiers check is the right place. -->
     </domain-config>
 </network-security-config>

@@ -24,11 +24,11 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,6 +36,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 
 /**
  * Top-level Phase A shell.
@@ -58,17 +59,22 @@ fun V1Shell(
 ) {
     val expanded = size.widthSizeClass != WindowWidthSizeClass.Compact
 
-    val leftOpen by vm.leftDrawerOpen.collectAsStateWithLifecycle()
     val contextOpen by vm.contextDrawerOpen.collectAsStateWithLifecycle()
 
+    // Single source of truth = the DrawerState. VM no longer mirrors this
+    // flag (it was the source of the recursive re-toggle that pinned the
+    // drawer in a "peek" state). vm.toggleLeftDrawer() drives the VM's
+    // gesture handler below, not the open/close flag itself.
     val leftState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    // Sync the left drawer state with our VM flag.
-    LaunchedEffect(leftOpen) {
-        if (leftOpen) leftState.open() else leftState.close()
-    }
-    LaunchedEffect(leftState.isOpen) {
-        if (!leftState.isOpen && leftOpen) vm.toggleLeftDrawer()
+    // Hamburger / drawer-close → drive the DrawerState directly. The VM
+    // no longer holds a mirror of `leftDrawerOpen` for the chat surface,
+    // so the only sync point is here.
+    val toggleLeft: () -> Unit = {
+        scope.launch {
+            if (leftState.isClosed) leftState.open() else leftState.close()
+        }
     }
 
     val chatContent: @Composable () -> Unit = {
@@ -76,6 +82,7 @@ fun V1Shell(
             vm = vm,
             showHamburger = !expanded,
             showContextPeek = !expanded,
+            onHamburgerTap = toggleLeft,
         )
     }
 
@@ -127,7 +134,7 @@ fun V1Shell(
                     vm = vm,
                     isDrawerVariant = true,
                     showCloseButton = true,
-                    onClose = { vm.toggleLeftDrawer() },
+                    onClose = toggleLeft,
                 )
             },
             scrimColor = Color.Black.copy(alpha = 0.62f),
@@ -164,6 +171,7 @@ fun V1Shell(
                                 vm = vm,
                                 isDrawerVariant = true,
                                 onClose = { vm.toggleContextDrawer() },
+                                modifier = Modifier.width(320.dp),
                             )
                         }
                     }
@@ -229,7 +237,10 @@ fun V1Shell(
             vm.openPairAsNode()
         },
         onOpenOutbox = vm::closeSettingsSheet,
-        onOpenDiscover = vm::closeSettingsSheet,
+        onOpenDiscover = {
+            vm.closeSettingsSheet()
+            vm.openPairAsNode()
+        },
     )
 
     val pairOpen by vm.pairAsNodeOpen.collectAsStateWithLifecycle()

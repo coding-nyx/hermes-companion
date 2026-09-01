@@ -67,6 +67,7 @@ fun V1ProfileSwitcher(
     onDismiss: () -> Unit,
 ) {
     val fleet by vm.fleet.collectAsStateWithLifecycle()
+    val activeByGateway by vm.activeProfileByGatewayId.collectAsStateWithLifecycle()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -116,11 +117,18 @@ fun V1ProfileSwitcher(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 fleet.gateways.forEach { gateway ->
+                    val activeProfileId = activeByGateway[gateway.gateway.id]
                     item(key = "group-${gateway.gateway.id}") {
                         GatewayGroupHeader(gateway)
                     }
                     items(gateway.profiles, key = { "p-${gateway.gateway.id}-${it.profile.profileId}" }) { pv ->
-                        ProfileSwitcherRow(pv.profile)
+                        ProfileSwitcherRow(
+                            profile = pv.profile,
+                            isActive = activeProfileId == pv.profile.profileId,
+                            onActivate = {
+                                vm.setActiveProfile(gateway.gateway.id, pv.profile.profileId)
+                            },
+                        )
                     }
                 }
                 if (fleet.gateways.isEmpty()) {
@@ -222,9 +230,11 @@ private fun GatewayGroupHeader(gateway: GatewayView) {
 }
 
 @Composable
-private fun ProfileSwitcherRow(profile: AgentProfile) {
-    // Treat the first profile as the "active" one — sufficient for the visual.
-    val isActive = true
+private fun ProfileSwitcherRow(
+    profile: AgentProfile,
+    isActive: Boolean,
+    onActivate: () -> Unit,
+) {
     val rowShape = RoundedCornerShape(14.dp)
     val containerColor = if (isActive) HermesColors.Primary.copy(alpha = 0.10f) else MaterialTheme.colorScheme.surfaceVariant
     val borderColor = if (isActive) HermesColors.Primary.copy(alpha = 0.55f) else MaterialTheme.colorScheme.outlineVariant
@@ -237,7 +247,7 @@ private fun ProfileSwitcherRow(profile: AgentProfile) {
             .clip(rowShape)
             .background(containerColor)
             .border(1.dp, borderColor, rowShape)
-            .clickable { /* TODO: route activation */ }
+            .clickable(onClick = onActivate)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),

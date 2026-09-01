@@ -25,6 +25,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -65,10 +67,20 @@ fun V1PairAsNodeFlow(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var mode by remember { mutableStateOf(PairMode.Discover) }
     var scanning by remember { mutableStateOf(true) }
+    // State for the manual entry fields — moved out of the static Text
+    // mocks so the Pair button can actually submit and the Paste button
+    // can populate the setup code.
+    var gatewayUrl by remember { mutableStateOf("wss://mac-studio.local:7800") }
+    var setupCode by remember { mutableStateOf("amber-lattice-9042") }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    fun toast(msg: String) =
+        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
+        scrimColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.62f),
         containerColor = MaterialTheme.colorScheme.background,
     ) {
         Column(
@@ -135,8 +147,52 @@ fun V1PairAsNodeFlow(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 when (mode) {
-                    PairMode.Discover -> DiscoverBody(scanning = scanning, onToggleScan = { scanning = !scanning })
-                    PairMode.Manual -> ManualBody(onPair = onPaired)
+                    PairMode.Discover -> DiscoverBody(
+                        scanning = scanning,
+                        onToggleScan = {
+                            scanning = !scanning
+                            toast(if (scanning) "Scanning for gateways…" else "Scan stopped")
+                        },
+                        onPickCandidate = { name ->
+                            toast("Picking $name · pairing flow coming soon")
+                            onPaired()
+                        },
+                    )
+                    PairMode.Manual -> ManualBody(
+                        url = gatewayUrl,
+                        code = setupCode,
+                        onUrlChange = { gatewayUrl = it },
+                        onCodeChange = { setupCode = it },
+                        onPaste = {
+                            val clipboard = context
+                                .getSystemService(android.content.Context.CLIPBOARD_SERVICE)
+                                as? android.content.ClipboardManager
+                            val clip = clipboard?.primaryClip?.getItemAt(0)?.text?.toString()
+                            if (!clip.isNullOrBlank()) {
+                                setupCode = clip
+                                toast("Pasted from clipboard")
+                            } else {
+                                toast("Clipboard is empty")
+                            }
+                        },
+                        onPair = {
+                            val url = gatewayUrl.trim()
+                            val code = setupCode.trim()
+                            when {
+                                !url.startsWith("ws://") && !url.startsWith("wss://") && !url.startsWith("http://") && !url.startsWith("https://") -> {
+                                    toast("Gateway URL must start with ws://, wss://, http://, or https://")
+                                }
+                                code.length != 11 || code[3] != '-' || code[7] != '-' -> {
+                                    toast("Setup code must be like XXX-XXX-XXX")
+                                }
+                                else -> {
+                                    toast("Pairing with $url… (network not yet wired)")
+                                    // TODO: wire to vm.beginPair(gatewayUrl=url, setupCode=code, ...) when VM method exists
+                                    onPaired()
+                                }
+                            }
+                        },
+                    )
                 }
             }
         }
@@ -176,7 +232,11 @@ private fun SegmentedButton(
 }
 
 @Composable
-private fun DiscoverBody(scanning: Boolean, onToggleScan: () -> Unit) {
+private fun DiscoverBody(
+    scanning: Boolean,
+    onToggleScan: () -> Unit,
+    onPickCandidate: (String) -> Unit,
+) {
     // Scan status row
     Row(
         modifier = Modifier
@@ -217,9 +277,9 @@ private fun DiscoverBody(scanning: Boolean, onToggleScan: () -> Unit) {
     if (scanning) {
         repeat(2) { SkeletonCandidateCard() }
     } else {
-        CandidateCard("mac-studio", "mac-studio.local:7800", "wss", "This Wi-Fi, over mDNS · _hermes._tcp.local", isBest = true)
-        CandidateCard("studio-cloud", "mac-studio.tail9f2c.ts.net:7800", "wss", "Your tailnet, over wide-area DNS-SD")
-        CandidateCard("pi-shed", "pi-shed.local:7800", "ws · limited", "This Wi-Fi, cleartext only — chat, never a node", isWarn = true)
+        CandidateCard("mac-studio", "mac-studio.local:7800", "wss", "This Wi-Fi, over mDNS · _hermes._tcp.local", isBest = true, onPick = { onPickCandidate("mac-studio") })
+        CandidateCard("studio-cloud", "mac-studio.tail9f2c.ts.net:7800", "wss", "Your tailnet, over wide-area DNS-SD", onPick = { onPickCandidate("studio-cloud") })
+        CandidateCard("pi-shed", "pi-shed.local:7800", "ws · limited", "This Wi-Fi, cleartext only — chat, never a node", isWarn = true, onPick = { onPickCandidate("pi-shed") })
     }
 
     // Where it looks
@@ -299,6 +359,7 @@ private fun CandidateCard(
     hint: String,
     isBest: Boolean = false,
     isWarn: Boolean = false,
+    onPick: () -> Unit = {},
 ) {
     val borderColor = if (isBest) StatusOk.copy(alpha = 0.40f) else MaterialTheme.colorScheme.outlineVariant
     val rowShape = RoundedCornerShape(12.dp)
@@ -308,7 +369,7 @@ private fun CandidateCard(
             .clip(rowShape)
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .border(1.dp, borderColor, rowShape)
-            .clickable { /* TODO: pick candidate */ }
+            .clickable(onClick = onPick)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
@@ -372,7 +433,14 @@ private fun SkeletonCandidateCard() {
 }
 
 @Composable
-private fun ManualBody(onPair: () -> Unit) {
+private fun ManualBody(
+    url: String,
+    code: String,
+    onUrlChange: (String) -> Unit,
+    onCodeChange: (String) -> Unit,
+    onPaste: () -> Unit,
+    onPair: () -> Unit,
+) {
     // Gateway URL
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
@@ -401,14 +469,19 @@ private fun ManualBody(onPair: () -> Unit) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(14.dp),
             )
-            Text(
-                "wss://mac-studio.local:7800",
-                style = MaterialTheme.typography.bodyLarge.copy(
+            OutlinedTextField(
+                value = url,
+                onValueChange = onUrlChange,
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
                     fontFamily = PlexMono,
                     fontSize = 14.sp,
                 ),
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+                    unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+                ),
             )
         }
         Text(
@@ -447,21 +520,26 @@ private fun ManualBody(onPair: () -> Unit) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(14.dp),
             )
-            Text(
-                "amber-lattice-9042",
-                style = MaterialTheme.typography.bodyLarge.copy(
+            OutlinedTextField(
+                value = code,
+                onValueChange = onCodeChange,
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
                     fontFamily = PlexMono,
                     fontSize = 14.sp,
                     letterSpacing = 1.5.sp,
                 ),
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+                    unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
+                ),
             )
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
-                    .clickable { /* TODO: paste from clipboard */ }
+                    .clickable(onClick = onPaste)
                     .padding(horizontal = 10.dp, vertical = 6.dp),
             ) {
                 Text(
